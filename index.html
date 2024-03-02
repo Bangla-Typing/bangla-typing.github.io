@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="styles.css">
+  <script src="words.js" defer></script>
+  <script src="script.js" defer></script>
+
+  <title>Bangla Typing Speed Test</title>
+</head>
+<body>
+
+
+  
+  <div class="parent">
+    
+  <div class="header-wrapper">
+    <div class="header">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M64 112c-8.8 0-16 7.2-16 16V384c0 8.8 7.2 16 16 16H512c8.8 0 16-7.2 16-16V128c0-8.8-7.2-16-16-16H64zM0 128C0 92.7 28.7 64 64 64H512c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM176 320H400c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H176c-8.8 0-16-7.2-16-16V336c0-8.8 7.2-16 16-16zm-72-72c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H120c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H120c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H200c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H200c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H280c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H280c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H360c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H360c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H440c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H440c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16z"/></svg>
+      বাংলা টাইপিং স্পিড টেস্ট
+    </div>
+  </div>
+
+
+  
+  <div class="settings-panel clickable" id="settings">
+   
+    <div class="textmode-setting-panel">
+      <span style="color:green;">টাইপিং মোড:</span>
+      <input type="radio"  name="textMode" id="RadioBornomala">
+      <label class="option" for="RadioBornomala">বর্ণমালা</label>
+
+      <input type="radio"  name="textMode" id="RadioJuktoborno">
+      <label class="option" for="RadioJuktoborno">যুক্তবর্ণ</label>
+
+      <input type="radio"  name="textMode" id="RadioRandomWords">
+      <label class="option" for="RadioRandomWords">এলোমেলো শব্দ</label>
+
+      <input type="radio"  name="textMode" checked id="RadioStory">
+      <label class="option" for="RadioStory">গল্প</label>
+    </div>
+    
+    <!--
+    <div class="textmode-setting-panel" id="options">
+      <p id="alphabets" class="option">বর্ণমালা</p>
+      <p id="juktoborno" class="option">যুক্তবর্ণ</p>
+      <p id="random" class="option">শব্দ</p>
+      <p id="story" class="option active">গল্প</p>
+   </div>
+
+  -->
+
+   <div class="time-setting-panel" id="duration">
+    <span style="color:blue;">সময়:</span>
+    <input type="radio" name="timeLimit" checked id="30">
+      <label class="option" for="30">৩০</label>
+
+      <input type="radio" name="timeLimit" id="60">
+      <label class="option" for="60">৬০</label>
+
+      <input type="radio" name="timeLimit" id="120">
+      <label class="option" for="120">১২০</label>
+
+      <input type="radio" name="timeLimit" id="300">
+      <label class="option" for="300">৩০০</label>
+  </div>
+  </div>
+
+  
+  <div class="container">   
+    
+    <div id="popup" class="hidden">
+      <div id="result" style=" display: grid; justify-items: center;">
+        
+
+
+
+      </div>
+      <div style="display:flex; justify-content: center;">
+        <button tabindex=2, id="close-popup">আরেকবার</button>
+      </div>
+      
+
+      <div style="text-align: left; font-size: 1rem;" id="comment">সরকারি চাকরিতে টাইপিং এর গতি প্রতি মিনিটে সাধারণত বাংলায় ২৫ ও ইংরেজিতে ৩০ টি শব্দ চাওয়া হয়। 
+        অফিসের সাধারণ কাজের জন্য বাংলায় প্রতি মিনিটে ৩৫-৪০ শব্দ এবং ইংরেজিতে ৫০-৫৫ শব্দকে যথেষ্ট ভাল গতি মনে করা হয়। </div>
+    </div>
+
+
+    <div id="typingGameCanvas">
+      <div class="quote-display" id="quoteDisplay"></div>
+      <textarea tabindex="0" id="quoteInput" class="quote-input" autofocus></textarea>
+  
+  
+      <div class="bottomPanel">
+        <div class="timer" id="timer"></div>
+        <div class="reload" onclick="startNewGame()">
+          <svg tabindex="1" id="svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M463.5 224H472c13.3 0 24-10.7 24-24V72c0-9.7-5.8-18.5-14.8-22.2s-19.3-1.7-26.2 5.2L413.4 96.6c-87.6-86.5-228.7-86.2-315.8 1c-87.5 87.5-87.5 229.3 0 316.8s229.3 87.5 316.8 0c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0c-62.5 62.5-163.8 62.5-226.3 0s-62.5-163.8 0-226.3c62.2-62.2 162.7-62.5 225.3-1L327 183c-6.9 6.9-8.9 17.2-5.2 26.2s12.5 14.8 22.2 14.8H463.5z"/></svg>
+        </div>
+        <div style="font-size:0.5rem; color:gray">by Mehedi Hasan</div>
+      </div>
+    </div>
+    
+    
+  </div>
+</div>
+</body>
+</html>

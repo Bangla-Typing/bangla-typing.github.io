@@ -1,0 +1,233 @@
+:root{
+  --pageWidth:90vw;
+  --maxWidth:90%;
+}
+* {
+  box-sizing: border-box;
+}
+
+table{
+  margin-top: 0.5rem;
+  font-size: 1rem;
+}
+th{
+  text-align: right;
+  width: 50%;
+}
+tr{
+  width: 100%;
+}
+
+
+.bottomPanel{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.reload svg{
+  width: 20px;
+  fill: black;
+}
+.reload svg:hover{
+  fill: green;
+  cursor:pointer;
+}
+
+
+.unclickable{
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.clickable{
+  opacity: 1;
+  pointer-events:all;
+}
+
+.header-wrapper{
+  width: var(--pageWidth);
+  max-width: var(--maxWidth);
+  
+}
+.header svg{
+  height: 2rem;
+  fill: #F0DB4F;
+}
+.header{
+  color: #F0DB4F;
+  display: flex;
+  column-gap: 10px;
+  align-items: center;
+  font-size: 2rem;
+}
+
+.parent {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 0.5fr 0.3fr 2fr;
+  grid-row-gap: 0.5rem;
+  justify-items: center;
+  align-items: end;
+  }
+
+body {
+  font-size: 1.5rem;
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  background-color: rgb(49 49 49);
+}
+
+body, .quote-input {
+  font-family: 'Kalpurush', sans-serif;
+}
+
+.container {
+  background-color: #F0DB4F;
+  padding: 1rem;
+  border-radius: .5rem;
+  width: var(--pageWidth);
+  max-width: var(--maxWidth);
+}
+
+.timer {
+  width: 1.5rem;
+  height: 1.5rem; /* add this line to make the width and height equal */
+  padding: 0.2rem;
+  font-size: 1rem;
+  color: #4509c8;
+  font-weight: bold;
+  border-radius: 50%;
+  background-color: #72f0ed;
+  display: flex; /* add this line to enable flexbox */
+  justify-content: center; /* center the text horizontally */
+  align-items: center; /* center the text vertically */
+}
+
+
+.quote-display {
+  overflow: hidden;
+  height: 16rem;
+  margin-bottom: 1rem;
+  margin-left: calc(1rem + 2px);
+  margin-right: calc(1rem + 2px);
+  -webkit-user-select: none; /* Chrome, Safari, Opera */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* Standard syntax */
+}
+.quote-display div {
+  display: inline;
+}
+
+.currentWord {
+  background-color: aqua;
+}
+
+.quote-input {
+  background-color: transparent;
+  border: 2px solid #A1922E;
+  outline: none;
+  width: 100%;
+  height: 8rem;
+  margin: auto;
+  resize: none;
+  padding: .5rem 1rem;
+  font-size: inherit;
+  border-radius: .5rem;
+  overflow: auto; /* Add scroll if needed, but not visible */
+  scrollbar-width: none; /* For Firefox */
+  -ms-overflow-style: none;  /* For Internet Explorer and Edge */
+}
+
+.quote-input::-webkit-scrollbar {
+  width: 0px; /* For Chrome, Safari, and Opera */
+}
+
+.quote-input:focus {
+  border-color: black;
+}
+
+.correct {
+  color: green;
+}
+
+.incorrect {
+  color: red;
+  text-decoration: underline;
+}
+
+.hidden {
+  display: none;
+}
+
+
+#close-popup {
+  background-color: rgb(0 184 213);
+  color: #fff;
+  padding: 5px 55px;
+  border: none;
+  cursor: pointer;
+  font-size: 1.6rem;
+  margin: 5px;
+  border-radius: 5px;
+  font-family: inherit;
+}
+
+#close-popup:hover {
+  background-color: rgb(30, 16, 217);
+}
+
+.option {
+  color: rgb(120, 120, 120); /* dim color */
+  cursor: pointer;
+}
+
+
+
+input[type=radio] {
+  display: none;
+}
+
+.textmode-setting-panel input[type=radio]:checked + .option {
+  color: green;
+  font-weight: bold;
+}
+
+.time-setting-panel input[type=radio]:checked + .option {
+  color: blue;
+  font-weight: bold;
+}
+
+.settings-panel{
+  user-select: none;
+  font-size: 1rem;
+  height: 50px;
+  display: flex;
+  justify-content: space-between;
+  width: var(--pageWidth);
+  max-width: var(--maxWidth);
+}
+
+.textmode-setting-panel{
+  display: flex;
+  justify-content: space-around; /* add this line to space the options evenly */
+  background-color: #e7c113;
+  border-radius: 0.5rem;
+  width: 59%;
+  align-items: center;
+}
+
+
+
+.time-setting-panel{
+  display: flex;
+  justify-content: space-around; /* add this line to space the options evenly */
+  background-color: #e7c113;
+  border-radius: 0.5rem;
+  width: 40%;
+  align-items: center;
+}
