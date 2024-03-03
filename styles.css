@@ -62,6 +62,14 @@ tr{
   font-size: 2rem;
 }
 
+h1 {
+    /* Reset all default styling */
+    margin: 0;
+    padding: 0;
+    font-size: inherit;
+    font-weight: inherit;
+}
+
 .parent {
   display: grid;
   grid-template-columns: 1fr;
