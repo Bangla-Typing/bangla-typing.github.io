@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Doctor Queue Tracker</title>
+		<style>
+			/* General Styles */
+            body {
+				font-family: "Roboto", sans-serif;
+				background-color: #f5f5f5;
+				margin: 0;
+				padding: 0;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				height: 100vh;
+			}
+
+			#app {
+				max-width: 800px;
+				width: 100%;
+				background: #fff;
+				border-radius: 10px;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+				overflow: hidden;
+			}
+
+            @media (max-width: 768px) {
+            /* Styles for mobile devices */
+            html, body #app {
+                height: 100%;
+                overflow: auto;
+            }}
+
+			header {
+                height: 5rem;
+				background: #4caf50;
+				color: #fff;
+				padding: 20px;
+				text-align: center;
+			}
+
+			header h1 {
+				/*font-size: 3rem;*/
+				margin: 0;
+			}
+
+			header p {
+				font-size: 1.1rem;
+				margin: 5px 0 0;
+			}
+
+			/* Doctor Info Section */
+			#doctor-info {
+				padding: 20px;
+				display: flex;
+				align-items: stretch;
+				cursor: pointer;
+				border-bottom: 1px solid #ddd;
+				flex-direction: column;
+				row-gap: 20px;
+			}
+
+			.doctor-card {
+				display: flex;
+				align-items: center;
+				gap: 15px;
+			}
+
+			.selected-doctor {
+				color: green;
+				background-color: red;
+			}
+
+			#info-panel {
+				display: flex;
+				flex-direction: column;
+			}
+
+			.table-container {
+				text-align: left;
+				width: 100%;
+				margin: 0 auto;
+				font-size: 1.2em;
+			}
+
+			.table-container table {
+				width: 100%;
+				border-collapse: collapse;
+				
+				background-color: #fff;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			}
+
+			.table-container th,
+			.table-container td {
+				padding: 12px;
+				border: 1px solid #ddd;
+				text-align: left;
+			}
+
+			.table-container th {
+				background-color: #898989;
+				color: white;
+			}
+			
+			
+			#message-container{
+				display: flex;
+				row-gap: 0.3rem;
+				flex-direction: column-reverse;
+				text-align: left;
+				padding: 10px;
+				border-radius: 10px;
+			}
+			
+			.timeInfo {
+				color: #4caf50;
+			}
+	/* Add this to your CSS */
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message-item {
+    background-color: rgb(239, 239, 239);
+    padding: 0.3em;
+    border-radius: 5px;
+    animation: fadeIn 0.5s ease-out; /* Default animation */
+}
+
+.message-item.new {
+    animation: fadeIn 0.5s ease-out;
+}
+
+			
+			#messageBoard p{
+				font-weight: bold;
+				margin-bottom: 0px;
+				margin-left: 10px;
+				font-size: large;
+			}
+
+			.collapsible {
+				/*background-color: #4caf50;
+				color: white;*/
+				padding: 10px;
+				font-size: 1.2em;
+				width: 100%;
+				border: none;
+				/*text-align: left;*/
+				cursor: pointer;
+				border-radius: 5px;
+			}
+
+			.active,
+			.collapsible:hover {
+				background-color: #dddddd;
+			}
+
+			.content {
+				display: none;
+				overflow: hidden;
+				background-color: #f1f1f1;
+			}
+
+			.info-subsection {
+				padding: 20px;
+				display: flex;
+				align-items: stretch;
+				cursor: pointer;
+				border-bottom: 1px solid #ddd;
+				border-top: 1px solid #ddd;
+				flex-direction: column;
+				row-gap: 20px;
+			}
+
+			.doctor-photo {
+				width: 60px;
+				height: 60px;
+				border-radius: 50%;
+				object-fit: cover;
+				border: 2px solid #ddd;
+			}
+
+			.doctor-details {
+				flex-grow: 1;
+			}
+
+			.doctor-name {
+				font-size: 18px;
+				font-weight: bold;
+			}
+
+			.doctor-description {
+				font-size: 14px;
+				color: #666;
+			}
+
+			#serial-number {
+				display: flex;
+				justify-content: space-evenly;
+				align-items: center;
+				margin: 20px;
+			}
+
+			.serial-caption {
+				font-size: 1.7rem;
+				font-weight: bold;
+			}
+            #doctorOnBreak{
+                display: none;
+                background-color: red;
+                color: white;
+                padding: 0.5rem;
+                flex: 1;
+                font-size: 2rem;
+                text-align: center;
+                justify-content: center;
+            }
+
+			.serial-circle {
+				min-width: 5rem;
+				min-height: 5rem;
+				max-width: 5rem;
+				max-height: 5rem;
+				border-radius: 50%;
+				background: #4caf50;
+				color: white;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				font-size: 3rem;
+				font-weight: bold;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			}
+			.serial-animation {
+				animation: pulse 0.5s ease-in-out;
+			}
+
+			@keyframes pulse {
+				0% {
+					transform: scale(1);
+					background-color: #4caf50;
+				}
+				50% {
+					transform: scale(1.2);
+					background-color: #66bb6a;
+				}
+				100% {
+					transform: scale(1);
+					background-color: #4caf50;
+				}
+			}
+
+			/* Loader */
+			#loader {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				height: 100vh;
+				background: rgba(255, 255, 255, 0.8);
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+			}
+
+			.loader-icon {
+				border: 4px solid #f3f3f3;
+				border-radius: 50%;
+				border-top: 4px solid #4caf50;
+				width: 30px;
+				height: 30px;
+				animation: spin 1s linear infinite;
+			}
+
+			@keyframes spin {
+				0% {
+					transform: rotate(0deg);
+				}
+				100% {
+					transform: rotate(360deg);
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div id="loader">
+			<div class="loader-icon"></div>
+		</div>
+		<div id="app" style="display: none">
+			<header>
+				<h1>Doctor Queue Tracker</h1>
+				<p>Stay informed about your doctor's schedule and reduce your waiting time.</p>
+			</header>
+			<div id="doctor-info" onclick="selectAnotherDoctor()"></div>
+			<div id="info-panel">
+				<div id="serial-number">
+					<div class="serial-caption" id="serial-circle-label">Ongoing serial number:</div>
+					<div class="serial-circle" id="current-serial">Loading...</div>
+                    <div id="doctorOnBreak">Doctor on Break</div>
+				</div>
+                <div class="table-container">
+                    <button class="collapsible">Show More Details</button>
+                    <div class="content">
+                        <table id="patients-table">
+                            <thead>
+                                <tr>
+                                    <th>Serial Number</th>
+                                    <th>Time Entered</th>
+                                    <th>Time Left</th>
+                                    <th>Duration Stayed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+				<div id="messageBoard">
+					<p>Messages:</p>
+					<div id="message-container">
+						<!-- Messages will appear here -->
+					</div>
+				</div>
+            
+		    </div>
+            
+
+		<script type="module">
+			// Import Firebase functions
+			import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+			import { getDatabase, ref, get, child, onValue } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+
+			// Firebase configuration
+			const firebaseConfig = {
+				apiKey: "AIzaSyC9uZtQbIewB3BFP_kJPRXBk17KTn_Ha60",
+				authDomain: "doctorserialforpatients.firebaseapp.com",
+				projectId: "doctorserialforpatients",
+				storageBucket: "doctorserialforpatients.firebasestorage.app",
+				messagingSenderId: "8342215441",
+				appId: "1:8342215441:web:f975e5ee7638216fbe4ab0",
+			};
+
+			// Initialize Firebase
+			const app = initializeApp(firebaseConfig);
+			const db = getDatabase();
+
+			const loader = document.getElementById("loader");
+			const appContainer = document.getElementById("app");
+			const doctorInfo = document.getElementById("doctor-info");
+			const currentSerial = document.getElementById("current-serial");
+			const infoPanel = document.getElementById("info-panel");
+
+			let selectedDoctorId = localStorage.getItem("selectedDoctorId");
+
+			function renderDoctor(doctor, doctorId) {
+				selectedDoctorId = doctorId;
+
+				// Update doctor card
+				doctorInfo.innerHTML = `
+			     <div class="doctor-card">
+			       <img src="${doctor.photo}" alt="Doctor Photo" class="doctor-photo">
+			       <div class="doctor-details">
+			         <div class="doctor-name">${doctor.name}</div>
+			         <div class="doctor-description">${doctor.description}</div>
+			       </div>
+			     </div>
+			   `;
+
+				// Save selected doctor ID
+				localStorage.setItem("selectedDoctorId", doctorId);
+
+				console.log("selected doc:" + doctorId);
+
+				// Update serial
+				updateDoctorSerial(doctorId);
+
+				event.stopPropagation();
+			}
+
+			function updateDoctorSerial(doctorId) {
+				infoPanel.style.display = "flex";
+				console.log("update function: id supplied: " + doctorId);
+
+				const doctorRef = ref(db, `/doctors/${doctorId}/currentSerial`);
+
+				onValue(doctorRef, (snapshot) => {
+					console.log("on value in update doc serial:" + doctorId);
+					if (localStorage.getItem("selectedDoctorId") != null) {
+						if (localStorage.getItem("selectedDoctorId") != doctorId) {
+							return;
+						}
+					}
+					if (snapshot.exists()) {
+						const newSerial = snapshot.val();
+						if (currentSerial.textContent !== newSerial) {
+							currentSerial.textContent = newSerial;
+
+							// Add the animation class
+							currentSerial.classList.add("serial-animation");
+
+							// Remove the animation class after it completes
+							setTimeout(() => {
+								currentSerial.classList.remove("serial-animation");
+							}, 500); // Match the animation duration
+						}
+                        //check if a a break, if so make serial container red
+                        if (snapshot.val()=="Break") {
+                            document.querySelector('#serial-circle-label').style.display='none';
+                            currentSerial.style.display='none';
+                            document.querySelector('#doctorOnBreak').style.display='flex';
+                        }else{
+                            document.querySelector('#serial-circle-label').style.display='flex';
+                            currentSerial.style.display='flex';
+                            document.querySelector('#doctorOnBreak').style.display='none';
+                        } 
+                        displayLastFivePatients(doctorId);
+                        displayMessages(doctorId);
+					} else {
+						currentSerial.textContent = "Not Available";
+					}
+				});
+			}
+
+			function selectAnotherDoctor() {
+				//hide currentserial number
+				infoPanel.style.display = "none";
+
+				const doctorsRef = ref(db, "doctors");
+				get(doctorsRef).then((snapshot) => {
+					if (snapshot.exists()) {
+						const doctors = snapshot.val();
+						const doctorOptions = Object.entries(doctors)
+							.map(
+								([id, doctor]) => `
+			           <div onclick="selectDoctor('${id}', ${JSON.stringify(doctor).replace(/"/g, "&quot;")})"
+			             class="doctor-card">
+			             <img src="${doctor.photo}" alt="Doctor Photo" class="doctor-photo">
+			             <div class="doctor-details">
+			               <div class="doctor-name">${doctor.name}</div>
+			               <div class="doctor-description">${doctor.description}</div>
+			             </div>
+			           </div>
+			         `
+							)
+							.join("");
+
+						doctorInfo.innerHTML = doctorOptions;
+					}
+				});
+			}
+
+            const displayMessages = (doctorId) => {
+    const messagesRef = ref(db, `/doctors/${doctorId}/messages`);
+    
+    onValue(messagesRef, (snapshot) => {
+        const messageContainer = document.getElementById("message-container");
+        messageContainer.innerHTML = ""; // Clear previous messages
+
+        if (snapshot.exists()) {
+            const messages = snapshot.val();
+
+            // Ensure messages is an array
+            const lastFiveMessages = Array.isArray(messages) ? messages.slice(-5) : [];
+
+            lastFiveMessages.forEach((message) => {
+                const messageDiv = document.createElement("div");
+                messageDiv.className = "message-item new"; // Add 'new' class for animation
+
+                const date = new Date(message.time);
+                const formattedDate = date.toLocaleDateString('en-GB');
+                const formattedTime = date.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                });
+                const formattedDateTime = `${formattedDate}, ${formattedTime}`;
+
+                messageDiv.innerHTML = `
+                    <div class="timeInfo">${formattedDateTime}</div>
+                    <div class="messegeText">${message.text}</div>
+                `;
+
+                messageContainer.appendChild(messageDiv);
+
+                // Remove 'new' class after the animation finishes
+                setTimeout(() => {
+                    messageDiv.classList.remove('new');
+                }, 500); // Match the animation duration
+            });
+        } else {
+            // No messages found
+            messageContainer.innerHTML = "<p>No messages available.</p>";
+        }
+    }, (error) => {
+        console.error("Error fetching messages:", error);
+    });
+};
+
+
+
+			const collapsible = document.querySelector(".collapsible");
+			collapsible.addEventListener("click", function () {
+				this.classList.toggle("active");
+				const content = this.nextElementSibling;
+				if (content.style.display === "block") {
+					content.style.display = "none";
+                    collapsible.innerHTML="See More Details"
+				} else {
+					content.style.display = "block";
+                    collapsible.innerHTML="See Less Details"
+				}
+			});
+			const displayLastFivePatients = (doctorId) => {
+				const doctorRef = ref(db, `/doctors/${doctorId}/lastFivePatients`);
+				get(doctorRef)
+					.then((snapshot) => {
+						if (snapshot.exists()) {
+							const lastFivePatients = snapshot.val();
+							const tableBody = document.querySelector("#patients-table tbody");
+							tableBody.innerHTML = ""; // Clear previous data
+
+							lastFivePatients.forEach((patient) => {
+								const row = document.createElement("tr");
+								const entryTime = new Date(patient.entryTime).toLocaleTimeString();
+								const exitTime = patient.exitTime ? new Date(patient.exitTime).toLocaleTimeString() : "In Progress";
+								const duration = patient.duration ? `${Math.floor(patient.duration / 60)}m ${Math.floor(patient.duration % 60)}s` : "N/A";
+
+								row.innerHTML = `
+                  <td>${patient.serial}</td>
+                  <td>${entryTime}</td>
+                  <td>${exitTime}</td>
+                  <td>${duration}</td>
+                `;
+								tableBody.appendChild(row);
+							});
+						} else {
+							console.log("No patients found.");
+						}
+					})
+					.catch((error) => {
+						console.error("Error fetching last patients:", error);
+					});
+			};
+
+			window.selectAnotherDoctor = selectAnotherDoctor;
+			window.selectDoctor = (id, doctor) => renderDoctor(doctor, id);
+
+			// Initial setup
+			if (selectedDoctorId) {
+				const doctorRef = ref(db, `/doctors/${selectedDoctorId}`);
+				console.log("initial function trigger, id :" + selectedDoctorId);
+				get(doctorRef).then((snapshot) => {
+					if (snapshot.exists()) {
+						renderDoctor(snapshot.val(), selectedDoctorId);
+						appContainer.style.display = "block";
+						loader.style.display = "none";
+					}
+				});
+			} else {
+				selectAnotherDoctor();
+				loader.style.display = "none";
+				appContainer.style.display = "block";
+			}
+		</script>
+	</body>
+</html>
