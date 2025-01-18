@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Update Patient Serial</title>
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+		<style>
+			* {
+				box-sizing: border-box;
+				padding: 0;
+				margin: 0;
+			}
+			body {
+				font-family: "Roboto", sans-serif;
+				background-color: #f4f4f9;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				min-height: 100vh;
+				text-align: center;
+				padding: 20px;
+			}
+
+			h1 {
+				font-size: 2.5em;
+				color: #333;
+				margin-bottom: 20px;
+			}
+
+			select,
+			button,
+			input {
+				font-size: 1.2em;
+				padding: 10px;
+				margin: 10px 0;
+				width: 100%;
+				max-width: 300px;
+				border-radius: 5px;
+				border: 1px solid #ddd;
+				outline: none;
+			}
+
+			button:hover,
+			select:hover,
+			input:focus {
+				border-color: #4caf50;
+			}
+
+			#current-serial {
+				font-size: 2em;
+				font-weight: bold;
+				margin: 10px 0;
+			}
+
+			#nextButton {
+				background-color: #4caf50;
+				color: white;
+				border: none;
+			}
+
+			#nextButton:hover {
+				background-color: #45a049;
+			}
+
+			#sign-out-btn {
+				/*position: absolute;*/
+				top: 20px;
+				left: 20px;
+				padding: 10px;
+				background-color: #f44336;
+				color: white;
+				border: none;
+				border-radius: 5px;
+				cursor: pointer;
+			}
+
+			#sign-out-btn:hover {
+				background-color: #e53935;
+			}
+
+			.table-container {
+				width: 100%;
+				max-width: 800px;
+				margin-top: 30px;
+				text-align: left;
+			}
+
+			.table-container table {
+				width: 100%;
+				border-collapse: collapse;
+				background-color: white;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			}
+
+			.table-container th,
+			.table-container td {
+				padding: 12px;
+				border: 1px solid #ddd;
+				text-align: left;
+			}
+
+			.table-container th {
+				background-color: #4caf50;
+				color: white;
+			}
+
+			.message-container {
+				width: 100%;
+				max-width: 600px;
+				margin-top: 20px;
+				text-align: left;
+			}
+
+			.message-item {
+				background-color: #fff;
+				padding: 10px;
+				margin: 10px 0;
+				border-radius: 5px;
+				box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+				display: flex;
+				justify-content: space-between;
+			}
+
+			.message-item p {
+				margin: 0;
+				width: 70%;
+			}
+
+			.message-item .delete-btn,
+			.message-item .edit-btn {
+				cursor: pointer;
+				font-size: 1.2em;
+				color: #ff5733;
+				border: none;
+				background: transparent;
+				margin-left: auto;
+				width: 15%;
+			}
+
+			.message-item .delete-btn:hover,
+			.message-item .edit-btn:hover {
+				color: #d32f2f;
+			}
+		</style>
+	</head>
+	<body>
+		<button id="sign-out-btn">Sign Out</button>
+		<h1>Update Patient Serial</h1>
+
+		<select id="doctorListDropdown"></select>
+		<h2 id="current-serial">Select a Doctor from the List</h2>
+
+		<button id="nextButton">Next</button>
+		<button id="resetSerialButton">Reset Serial</button>
+		<button id="breakButton">Take Break</button>
+		<button id="stopBreakButton" style="display: none">Stop Break</button>
+
+		<!-- Message List Section -->
+		<div id="message-container" class="message-container">
+			<h3>Messages:</h3>
+			<!-- Messages will appear here -->
+		</div>
+		<!-- <button id="deleteAllMessagesButton">Delete All Messages</button> -->
+
+		<!-- Message Input Section -->
+		<div id="message-input-container">
+			<input type="text" id="messageInput" placeholder="Enter message" />
+			<button id="sendMessageButton">Send Message</button>
+		</div>
+
+		<div class="table-container">
+			<button class="collapsible">Last 5 Patients Time Details</button>
+			<div class="content">
+				<table id="patients-table">
+					<thead>
+						<tr>
+							<th>Serial Number</th>
+							<th>Time Entered</th>
+							<th>Time Left</th>
+							<th>Duration Stayed</th>
+						</tr>
+					</thead>
+					<tbody>
+						<!-- Data will be populated here -->
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<script type="module">
+			import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+			import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+			import { getDatabase, set, get, update, ref, child } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+
+			const firebaseConfig = {
+				apiKey: "AIzaSyC9uZtQbIewB3BFP_kJPRXBk17KTn_Ha60",
+				authDomain: "doctorserialforpatients.firebaseapp.com",
+				projectId: "doctorserialforpatients",
+				storageBucket: "doctorserialforpatients.firebasestorage.app",
+				messagingSenderId: "8342215441",
+				appId: "1:8342215441:web:f975e5ee7638216fbe4ab0",
+			};
+
+			const firebase = initializeApp(firebaseConfig);
+			const auth = getAuth(firebase);
+			const db = getDatabase();
+
+			const checkAuthState = async () => {
+				onAuthStateChanged(auth, (user) => {
+					if (user) {
+						console.log("signed in as " + user.email);
+					} else {
+						window.location.href = "login.html";
+					}
+				});
+			};
+
+			const userSignOut = async () => {
+				await signOut(auth);
+			};
+
+			checkAuthState();
+			document.getElementById("sign-out-btn").addEventListener("click", userSignOut);
+
+			const populateDoctorDropdown = (dropdownId) => {
+				const doctorsRef = ref(db);
+				get(child(doctorsRef, "doctors/"))
+					.then((snapshot) => {
+						if (snapshot.exists()) {
+							const doctors = snapshot.val();
+							const dropdown = document.getElementById(dropdownId);
+							dropdown.innerHTML = '<option value="">Select a Doctor</option>';
+							for (const doctorId in doctors) {
+								const doctor = doctors[doctorId];
+								const option = document.createElement("option");
+								option.value = doctorId;
+								option.textContent = doctor.name;
+								dropdown.appendChild(option);
+							}
+						} else {
+							console.error("Couldn't retrieve doctors data");
+						}
+					})
+					.catch((error) => {
+						console.error("Error fetching doctors:", error);
+					});
+			};
+
+			populateDoctorDropdown("doctorListDropdown");
+
+			const updateSerial = async (doctorId, newSerial = null, isBreak = false) => {
+				const doctorRef = ref(db, `/doctors/${doctorId}`);
+				const now = Date.now();
+
+				try {
+					const snapshot = await get(doctorRef);
+					if (snapshot.exists()) {
+						const doctor = snapshot.val();
+						const lastFive = doctor.lastFivePatients || [];
+						const breakInfo = doctor.breakInfo || null;
+
+						if (isBreak) {
+							if (!breakInfo) {
+								// Start break
+								if (lastFive.length > 0) {
+									lastFive[lastFive.length - 1].exitTime = now;
+									lastFive[lastFive.length - 1].duration = (now - lastFive[lastFive.length - 1].entryTime) / 1000;
+								}
+
+								console.log("update serial function, serial before on break start" + doctor.currentSerial);
+
+								await update(doctorRef, {
+									breakInfo: {
+										startTime: now,
+										endTime: null,
+										duration: null,
+									},
+									serialBeforeBreak: doctor.serialBeforeBreak || 0, // Save current serial before break
+									currentSerial: "Break", // Update currentSerial to "Break"
+									lastFivePatients: lastFive,
+								});
+
+								console.log("Break started successfully!");
+							} else {
+								// End break
+								const breakStart = breakInfo.startTime;
+								const breakDuration = (now - breakStart) / 1000;
+
+								lastFive.push({
+									serial: "Break", // Log "Break" in the patient list
+									entryTime: breakStart,
+									exitTime: now,
+									duration: breakDuration,
+								});
+
+								if (lastFive.length > 5) {
+									lastFive.shift();
+								}
+
+								console.log("update serial function, serial before on break end function: current:" + doctor.currentSerial + "serial before" + doctor.serialBeforeBreak);
+
+								const nextSerial = (doctor.currentSerial || 0) + 1;
+								console.log("next serial:" + nextSerial);
+
+								await update(doctorRef, {
+									breakInfo: null,
+									currentSerial: nextSerial, // Increment serial correctly after break
+									lastFivePatients: lastFive,
+									serialBeforeBreak: null, // Reset serialBeforeBreak
+								});
+
+								console.log("Break ended successfully!");
+							}
+						} else {
+							// Regular serial update
+							if (lastFive.length > 0) {
+								lastFive[lastFive.length - 1].exitTime = now;
+								lastFive[lastFive.length - 1].duration = (now - lastFive[lastFive.length - 1].entryTime) / 1000;
+							}
+
+							lastFive.push({
+								serial: newSerial,
+								entryTime: now,
+								exitTime: null,
+								duration: null,
+							});
+
+							if (lastFive.length > 5) {
+								lastFive.shift();
+							}
+
+							await update(doctorRef, {
+								currentSerial: newSerial,
+								lastFivePatients: lastFive,
+							});
+
+							console.log("Serial updated successfully!");
+						}
+
+						getCurrentSerial(); // Refresh UI after updates
+					} else {
+						console.error("Doctor not found!");
+					}
+				} catch (error) {
+					console.error("Error updating serial:", error);
+				}
+			};
+
+			document.getElementById("nextButton").addEventListener("click", () => {
+				const doctorId = document.getElementById("doctorListDropdown").value;
+				if (doctorId == "") {
+					alert("Please select a doctor first.");
+				} else {
+					const currentSerial = parseInt(document.getElementById("current-serial").innerText);
+					updateSerial(doctorId, currentSerial + 1);
+				}
+			});
+
+			const getCurrentSerial = () => {
+				const doctorId = document.getElementById("doctorListDropdown").value;
+				const doctorRef = ref(db, `/doctors/${doctorId}`);
+				get(child(doctorRef, "currentSerial"))
+					.then((snapshot) => {
+						if (snapshot.exists()) {
+							const currentSerialData = snapshot.val();
+							if (currentSerialData == "Break") {
+								document.getElementById("nextButton").style.display = "none";
+								document.getElementById("breakButton").style.display = "none";
+								document.getElementById("stopBreakButton").style.display = "block";
+							} else {
+								document.getElementById("nextButton").style.display = "inline-block";
+								document.getElementById("stopBreakButton").style.display = "none";
+								document.getElementById("breakButton").style.display = "block";
+							}
+							document.getElementById("current-serial").innerText = currentSerialData;
+							displayLastFivePatients(doctorId);
+						}
+					})
+					.catch((error) => {
+						console.error("Error fetching current serial:", error);
+					});
+			};
+
+			const collapsible = document.querySelector(".collapsible");
+			collapsible.addEventListener("click", function () {
+				this.classList.toggle("active");
+				const content = this.nextElementSibling;
+				if (content.style.display === "block") {
+					content.style.display = "none";
+				} else {
+					content.style.display = "block";
+				}
+			});
+
+			// Edit and Delete Message
+			const displayMessages = (doctorId) => {
+				const messagesRef = ref(db, `/doctors/${doctorId}/messages`);
+				get(messagesRef)
+					.then((snapshot) => {
+						const messageContainer = document.getElementById("message-container");
+						messageContainer.innerHTML = ""; // Clear previous messages
+
+						if (snapshot.exists()) {
+							const messages = snapshot.val();
+
+							// Ensure messages is an array
+							const messageArray = Array.isArray(messages) ? messages : Object.values(messages);
+
+							messageArray.forEach((message, index) => {
+								const messageDiv = document.createElement("div");
+								messageDiv.className = "message-item";
+								messageDiv.innerHTML = `
+			                                <p><strong>${message.time}</strong>: ${message.text}</p>
+			                                <button class="edit-btn" data-index="${index}">Edit</button>
+			                                <button class="delete-btn" data-index="${index}">Delete</button>
+			                            `;
+								messageContainer.appendChild(messageDiv);
+							});
+
+							// Add event listeners for edit and delete buttons
+							document.querySelectorAll(".edit-btn").forEach((btn) => {
+								btn.addEventListener("click", (e) => {
+									const index = e.target.dataset.index;
+									const newText = prompt("Edit message:", messageArray[index].text);
+									if (newText !== null) {
+										messageArray[index].text = newText;
+										set(messagesRef, messageArray)
+											.then(() => displayMessages(doctorId))
+											.catch((error) => console.error("Error editing message:", error));
+									}
+								});
+							});
+
+							document.querySelectorAll(".delete-btn").forEach((btn) => {
+								btn.addEventListener("click", (e) => {
+									const index = e.target.dataset.index;
+									messageArray.splice(index, 1);
+									set(messagesRef, messageArray)
+										.then(() => displayMessages(doctorId))
+										.catch((error) => console.error("Error deleting message:", error));
+								});
+							});
+						} else {
+							messageContainer.innerHTML = "<p>No messages available.</p>";
+						}
+					})
+					.catch((error) => console.error("Error fetching messages:", error));
+			};
+
+			// Call displayMessages after selecting a doctor
+			document.getElementById("doctorListDropdown").addEventListener("change", () => {
+				const doctorId = document.getElementById("doctorListDropdown").value;
+				if (doctorId !== "") {
+					displayMessages(doctorId);
+					getCurrentSerial();
+				}
+			});
+
+			// Take Break
+			document.getElementById("breakButton").addEventListener("click", () => {
+				const doctorId = document.getElementById("doctorListDropdown").value;
+				if (doctorId == "") {
+					alert("Please select a doctor first.");
+				} else {
+					const doctorRef = ref(db, `/doctors/${doctorId}`);
+					get(doctorRef)
+						.then((snapshot) => {
+							if (snapshot.exists()) {
+								const doctor = snapshot.val();
+								const currentSerial = doctor.currentSerial;
+
+								update(doctorRef, {
+									serialBeforeBreak: currentSerial,
+									currentSerial: "Break",
+								})
+									.then(() => {
+										console.log("Break started!");
+										document.getElementById("nextButton").style.display = "none";
+										document.getElementById("breakButton").style.display = "none";
+										document.getElementById("stopBreakButton").style.display = "inline-block";
+									})
+									.catch((error) => console.error("Error setting break:", error));
+								updateSerial(doctorId, null, true);
+								//getCurrentSerial();
+							} else {
+								console.error("Doctor not found!");
+							}
+						})
+						.catch((error) => console.error("Error fetching doctor data:", error));
+				}
+			});
+
+			// Stop Break
+			document.getElementById("stopBreakButton").addEventListener("click", () => {
+				const doctorId = document.getElementById("doctorListDropdown").value;
+				if (doctorId == "") {
+					alert("Please select a doctor first.");
+				} else {
+					const doctorRef = ref(db, `/doctors/${doctorId}`);
+					get(doctorRef)
+						.then((snapshot) => {
+							if (snapshot.exists()) {
+								const doctor = snapshot.val();
+								const previousSerial = doctor.serialBeforeBreak || 1; // Restore previous serial
+
+								update(doctorRef, {
+									currentSerial: previousSerial, // Set the current serial to the last serial before break
+									serialBeforeBreak: null, // Reset serialBeforeBreak after resuming
+								})
+									.then(() => {
+										console.log("Break ended and serial restored!");
+
+										document.getElementById("nextButton").style.display = "inline-block";
+										document.getElementById("breakButton").style.display = "inline-block";
+										document.getElementById("stopBreakButton").style.display = "none";
+									})
+									.catch((error) => console.error("Error ending break:", error));
+
+								updateSerial(doctorId, null, true); // Reset serial properly after break
+								//getCurrentSerial();
+							} else {
+								console.error("Doctor not found!");
+							}
+						})
+						.catch((error) => console.error("Error fetching doctor data:", error));
+				}
+			});
+
+			// Send Message Feature
+			document.getElementById("sendMessageButton").addEventListener("click", () => {
+				const doctorId = document.getElementById("doctorListDropdown").value;
+				const message = document.getElementById("messageInput").value.trim();
+				if (doctorId == "" || message === "") {
+					alert("Please select a doctor and enter a message.");
+				} else {
+					sendMessage(doctorId, message);
+				}
+			});
+
+			const sendMessage = (doctorId, messageText) => {
+				const messagesRef = ref(db, `/doctors/${doctorId}/messages`);
+				const now = new Date().toLocaleString();
+
+				get(messagesRef)
+					.then((snapshot) => {
+						let messages = [];
+
+						if (snapshot.exists()) {
+							messages = snapshot.val();
+
+							// Ensure messages is an array
+							if (!Array.isArray(messages)) {
+								messages = Object.values(messages); // Convert object to array if necessary
+							}
+						}
+
+						// Add the new message
+						messages.push({
+							text: messageText,
+							time: now,
+						});
+
+						// Keep only the last 5 messages
+						if (messages.length > 5) {
+							messages = messages.slice(-5);
+						}
+
+						// Save back to the database
+						set(messagesRef, messages)
+							.then(() => {
+								document.getElementById("messageInput").innerText = "";
+								console.log("Message sent successfully!");
+								displayMessages(doctorId); // Refresh messages on the page
+							})
+							.catch((error) => console.error("Error sending message:", error));
+					})
+					.catch((error) => console.error("Error fetching messages:", error));
+			};
+
+			const displayLastFivePatients = (doctorId) => {
+				const doctorRef = ref(db, `/doctors/${doctorId}/lastFivePatients`);
+				get(doctorRef)
+					.then((snapshot) => {
+						if (snapshot.exists()) {
+							const lastFivePatients = snapshot.val();
+							const tableBody = document.querySelector("#patients-table tbody");
+							tableBody.innerHTML = ""; // Clear previous data
+
+							lastFivePatients.forEach((patient) => {
+								const row = document.createElement("tr");
+
+								let serialInfo = patient.serial;
+								if (serialInfo === "Break") {
+									serialInfo = '<span style="color: red;">Break</span>';
+								}
+
+								const entryTime = new Date(patient.entryTime).toLocaleTimeString();
+								const exitTime = patient.exitTime ? new Date(patient.exitTime).toLocaleTimeString() : "In Progress";
+								const duration = patient.duration ? `${Math.floor(patient.duration / 60)}m ${Math.floor(patient.duration % 60)}s` : "N/A";
+
+								row.innerHTML = `
+			    <td>${patient.serial === "Break" ? "Break" : patient.serial}</td>
+			    <td>${new Date(patient.entryTime).toLocaleTimeString()}</td>
+			    <td>${patient.exitTime ? new Date(patient.exitTime).toLocaleTimeString() : "In Progress"}</td>
+			    <td>${patient.duration ? `${Math.floor(patient.duration / 60)}m ${Math.floor(patient.duration % 60)}s` : "N/A"}</td>
+			`;
+								tableBody.appendChild(row);
+							});
+						} else {
+							console.log("No patients found.");
+						}
+					})
+					.catch((error) => console.error("Error fetching last patients:", error));
+			};
+
+			// Call this after selecting a doctor
+			document.getElementById("doctorListDropdown").addEventListener("change", () => {
+				const doctorId = document.getElementById("doctorListDropdown").value;
+				if (doctorId) {
+					displayMessages(doctorId);
+				}
+			});
+
+			// Reset Serial to 1
+			document.getElementById("resetSerialButton").addEventListener("click", () => {
+				const doctorId = document.getElementById("doctorListDropdown").value;
+				if (doctorId === "") {
+					alert("Please select a doctor first.");
+				} else {
+					const doctorRef = ref(db, `/doctors/${doctorId}`);
+					update(ref(db, `doctors/${doctorId}`), {
+						currentSerial: 0, // Reset the serial number
+						lastFivePatients: [], // Clear the last five patients data
+					})
+						.then(() => {
+							console.log("Serial reset to 0!");
+							getCurrentSerial();
+							updateSerial();
+							displayLastFivePatients();
+						})
+						.catch((error) => console.error("Error resetting serial:", error));
+				}
+			}); // <-- Missing closing parenthesis and brace for the addEventListener function
+
+			// Delete All Messages
+			document.getElementById("deleteAllMessagesButton").addEventListener("click", () => {
+				const doctorId = document.getElementById("doctorListDropdown").value;
+				if (doctorId === "") {
+					alert("Please select a doctor first.");
+				} else {
+					const messagesRef = ref(db, `/doctors/${doctorId}/messages`);
+					set(messagesRef, [])
+						.then(() => {
+							console.log("All messages deleted!");
+							displayMessages(doctorId);
+						})
+						.catch((error) => console.error("Error deleting messages:", error));
+				}
+			});
+
+			document.getElementById("doctorListDropdown").addEventListener("change", getCurrentSerial);
+		</script>
+	</body>
+</html>
