@@ -416,19 +416,18 @@ function generateQuestion(operations, questionCount) {
 				answer = num1 * num2;
 				break;
 			case "division":
-				let divMin = Math.abs(minNumber-1);
-				let divMax = Math.abs(maxNumber - 3);
-				num2 = Math.floor(Math.random() * (divMax - divMin + 1)) + divMin;
-				if (num2 === 0) num2 = 1; // Avoid division by zero
-
-				num1 = num2 * (Math.floor(Math.random() * (divMax / num2)) + 1); // Ensure num1 is a multiple of num2
-
-				operationSymbol = "/";
-				score = Math.ceil((num1 / num2) * 3 + num2 / 2); // Higher scores for harder division
-				answer = num1 / num2;
-				break;
+			    let divMin = Math.max(2, minNumber); // Ensure minimum is at least 2
+			    let divMax = Math.max(divMin + 2, maxNumber); // Ensure max is always larger
+			
+			    num2 = Math.floor(Math.random() * (divMax - divMin + 1)) + divMin; // Random divisor
+			
+			    num1 = num2 * (Math.floor(Math.random() * (divMax / num2)) + 1); // Ensure num1 is a multiple of num2
+			
+			    operationSymbol = "÷";
+			    score = Math.ceil((num1 / num2) * 3 + num2 / 2); // Higher scores for harder division
+			    answer = num1 / num2;
+			    break;
 		}
-
 		const question = `${num1} ${operationSymbol} ${num2}`;
 		console.log(minNumber, maxNumber, operation, num1, num2, answer, "score:" + score);
 		questions.push({ question, answer, score });
