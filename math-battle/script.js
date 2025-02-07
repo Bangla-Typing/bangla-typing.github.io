@@ -416,8 +416,8 @@ function generateQuestion(operations, questionCount) {
 				answer = num1 * num2;
 				break;
 			case "division":
-				let divMin = Math.abs(minNumber - 5);
-				let divMax = Math.abs(maxNumber - 7);
+				let divMin = Math.abs(minNumber-1);
+				let divMax = Math.abs(maxNumber - 3);
 				num2 = Math.floor(Math.random() * (divMax - divMin + 1)) + divMin;
 				if (num2 === 0) num2 = 1; // Avoid division by zero
 
