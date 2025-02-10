@@ -153,13 +153,13 @@ svg {
 }
 
 .question-display {
-	font-size: 5em;
+	font-size: 4em;
 	text-align: center;
 	margin-bottom: 0.3em;
 	background: aquamarine;
 	border-radius: 10px;
 	padding: 0px 20px;
-	width: 70%;
+	width: auto;
 }
 
 .answer-input {
