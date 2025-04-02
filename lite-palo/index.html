@@ -212,6 +212,26 @@
 				margin-bottom: 10px;
 				text-align: center;
 			}
+			.modal-actions {
+				margin-top: 5px;
+				display: block;
+			}
+
+			#tts-play,
+			#tts-stop {
+				background: rgba(255, 255, 255, 0.2);
+				border: 1px solid white;
+				color: white;
+				border-radius: 4px;
+				padding: 5px 10px;
+				cursor: pointer;
+				font-size: 14px;
+			}
+
+			#tts-play:hover,
+			#tts-stop:hover {
+				background: rgba(255, 255, 255, 0.3);
+			}
 		</style>
 	</head>
 	<body>
@@ -230,6 +250,11 @@
 			<div class="modal-content">
 				<div class="modal-header">
 					<h2 class="modal-title" id="modal-title"></h2>
+					<div class="modal-actions">
+						<button id="tts-play" title="Read aloud">🔊 Play</button>
+						<button id="tts-stop" title="Stop reading" style="display: none">⏹ Stop</button>
+						<span id="tts-status" style="margin-left: 10px; font-size: 14px"></span>
+					</div>
 					<span class="close-modal" onclick="closeModal()">&times;</span>
 				</div>
 				<div class="modal-body" id="modal-body"></div>
@@ -238,6 +263,9 @@
 
 		<script>
 			const ProthomAloLogoURL = "https://media.prothomalo.com/prothomalo/import/default/2016/03/15/4d3620a7127d4a031a05a962fcc4b253-palo-logo.jpg";
+			let ttsEnabled = false;
+			let ttsUtterance = null;
+
 			let allArticles = [];
 			let filteredArticles = [];
 			let displayedArticles = 0;
@@ -288,7 +316,58 @@
 					newsContainer.innerHTML = `<div class="error">Failed to load news: ${error.message}</div>`;
 				}
 			}
+			// Add this function to your existing code
+			function setupTTS() {
+				const ttsPlay = document.getElementById("tts-play");
+				const ttsStop = document.getElementById("tts-stop");
+				const ttsStatus = document.getElementById("tts-status");
 
+				ttsPlay.addEventListener("click", () => {
+					if (!window.speechSynthesis) {
+						ttsStatus.textContent = "Text-to-speech not supported in your browser";
+						return;
+					}
+
+					// Cancel any ongoing speech
+					window.speechSynthesis.cancel();
+
+					// Get all text content from modal
+					const modalText = document.getElementById("modal-body").textContent;
+
+					// Create a new utterance
+					ttsUtterance = new SpeechSynthesisUtterance(modalText);
+					ttsUtterance.lang = "bn-BD"; // Bangla (Bangladesh)
+					ttsUtterance.rate = 1.0; // Normal speed
+
+					// Event handlers
+					ttsUtterance.onstart = () => {
+						ttsPlay.style.display = "none";
+						ttsStop.style.display = "inline-block";
+						ttsStatus.textContent = "Reading...";
+					};
+
+					ttsUtterance.onend = () => {
+						ttsPlay.style.display = "inline-block";
+						ttsStop.style.display = "none";
+						ttsStatus.textContent = "";
+					};
+
+					ttsUtterance.onerror = (event) => {
+						console.error("TTS Error:", event);
+						ttsStatus.textContent = "Error: " + event.error;
+					};
+
+					// Start speaking
+					window.speechSynthesis.speak(ttsUtterance);
+				});
+
+				ttsStop.addEventListener("click", () => {
+					window.speechSynthesis.cancel();
+					ttsPlay.style.display = "inline-block";
+					ttsStop.style.display = "none";
+					ttsStatus.textContent = "Stopped";
+				});
+			}
 			// In the extractCategories() function, replace with:
 			function extractCategories() {
 				const categorySet = new Set();
@@ -554,6 +633,17 @@
 				cards.forEach((card) => {
 					if (card.getAttribute("onclick") && card.getAttribute("onclick").includes(originalLink)) {
 						card.classList.add("read");
+					}
+				});
+
+				// Add this at the end of the function
+				setupTTS();
+
+				// Also make sure to cancel any speech when modal closes
+				const modalW = document.getElementById("article-modal");
+				modalW.addEventListener("close", () => {
+					if (window.speechSynthesis) {
+						window.speechSynthesis.cancel();
 					}
 				});
 			}
