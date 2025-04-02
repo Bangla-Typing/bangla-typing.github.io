@@ -292,7 +292,7 @@
 					document.getElementById("no-more-articles").style.display = "none";
 
 					// Make API request
-					const response = await fetch("https://www.prothomalo.com/api/v1/collections/latest?limit=250");
+					const response = await fetch("https://corsproxy.io/?url=https://www.prothomalo.com/api/v1/collections/latest?limit=150");
 
 					if (!response.ok) {
 						throw new Error(`HTTP error! status: ${response.status}`);
