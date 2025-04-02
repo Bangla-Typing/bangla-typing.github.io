@@ -1232,6 +1232,7 @@
 				textInput.value = "";
 				// console.log("Cleared text area.");
 				charCountElement.textContent = convertToBengaliNumber(textInput.value.length) + " টি বর্ণ"; //update char count in textarea
+				clearTTScache() //also clear cache to free up memory.
 				// Maybe trigger an input event
 				// textInput.dispatchEvent(new Event('input'));
 			}
