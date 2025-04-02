@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Bangla TTS Streaming with Cache & Download</title>
 		<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+		<script src="https://unpkg.com/crunker@2.4.0/dist/crunker.js"></script>
+
+		<!-- Add this line for Material Symbols (Outlined style) -->
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
 		<style>
 			/* Import Roboto font */
@@ -51,7 +55,7 @@
 				margin-bottom: 10px; /* More space below label */
 				font-weight: 500;
 				color: #444; /* Darker label */
-				font-size:1rem;
+				font-size: 1rem;
 			}
 
 			textarea {
@@ -142,9 +146,94 @@
 				background-color: #1e88e5;
 			}
 
-			
 			#status {
 				margin-top: 15px;
+			}
+
+			.char-counter-container {
+				text-align: right; /* Align text to the right */
+				margin-top: -20px; /* Pull it up closer to the textarea bottom */
+				margin-bottom: 15px; /* Space below counter, before buttons */
+				padding-right: 8px; /* Align with typical textarea padding */
+				height: 1em; /* Prevent layout shifts */
+			}
+
+			#charCount {
+				font-size: 0.8rem; /* Smaller font */
+				color: #666; /* Subtle grey color */
+				font-style: italic;
+			}
+
+			/* Add or replace styles in your CSS */
+
+			/* Style for the small icon+text buttons (Paste/Clear) */
+			.icon-text-button {
+				padding: 10px 22px;
+				border: none;
+				border-radius: 4px;
+				font-size: 0.9rem;
+				font-weight: 500;
+				text-transform: uppercase;
+				cursor: pointer;
+				transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.1s ease;
+				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+				letter-spacing: 0.6px;
+				min-width: 120px;
+				text-align: center;
+				border-radius: 4px; /* Standard rounded corners */
+				display: inline-flex; /* Use flexbox to align icon and text */
+				align-items: center; /* Vertically center icon and text */
+				gap: 5px; /* Space between icon and text */
+				transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+			}
+			#pasteButton {
+				background: deepskyblue;
+			}
+			#clearTextButton {
+				background: #ff6464;
+			}
+			.icon-text-button:hover {
+				background-color: #e5e5e5;
+				border-color: #bbb;
+				box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+			}
+
+			.icon-text-button:active {
+				background-color: #ddd;
+				box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+			}
+
+			/* Style the icon span within these buttons */
+			.icon-text-button .material-symbols-outlined {
+				font-size: 1.2rem; /* Slightly larger icon size relative to text */
+				/* vertical-align: middle; /* Usually not needed with flex align-items */
+				margin-right: 0; /* Gap handles spacing now */
+				line-height: 1; /* Prevent icon span from adding extra line height */
+			}
+
+			/* Remove the old .icon-button styles if they exist */
+			/* .icon-button { ... } */
+
+			/* Keep the layout styles for the containers */
+			.label-button-group {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 8px;
+			}
+
+			.inline-buttons {
+				display: flex;
+				gap: 8px; /* Adjust gap between the two buttons */
+				flex-shrink: 0;
+			}
+
+			#longTextLabel {
+				margin-bottom: 0;
+				font-weight: bold;
+				color: #444;
+				padding-right: 10px;
+				font-size: 1rem;
 			}
 
 			/* Responsive adjustments */
@@ -176,21 +265,47 @@
 			}
 		</style>
 	</head>
-	<div class="container"> <!-- Ensure this wraps everything -->
-		<h1><span style="font-size: 2.5rem; font-weight: bold;" id="name-display">...</span><br><span style="font-size: 1.2rem;">বাংলা টেক্সট টু স্পিচ</span></h1> <!-- Added line break for better title flow -->
-	
-		<label for="longText">নিচের বক্সে বাংলা লিখুন:</label>
-		<textarea id="longText">বাংলাদেশ দক্ষিণ এশিয়ার একটি স্বাধীন সার্বভৌম রাষ্ট্র। বাংলাদেশের সাংবিধানিক নাম গণপ্রজাতন্ত্রী বাংলাদেশ। ভৌগোলিকভাবে বাংলাদেশের পশ্চিমে ভারতের পশ্চিমবঙ্গ, উত্তরে পশ্চিমবঙ্গ, আসাম ও মেঘালয়, পূর্ব সীমান্তে আসাম, ত্রিপুরা ও মিজোরাম, দক্ষিণ-পূর্ব সীমান্তে মিয়ানমারের চিন ও রাখাইন রাজ্য এবং দক্ষিণ উপকূলে বঙ্গোপসাগর অবস্থিত। ভৌগোলিকভাবে পৃথিবীর বৃহত্তম ব-দ্বীপের সিংহভাগ অঞ্চল জুড়ে বাংলাদেশ ভূখণ্ড অবস্থিত। জনসংখ্যার বিচারে প্রায় ১৭ কোটিরও অধিক জনসংখ্যা নিয়ে বাংলাদেশ বিশ্বের ৮ম বৃহত্তম দেশ। নদীমাতৃক বাংলাদেশ ভূখণ্ডের উপর দিয়ে বয়ে গেছে ৫৭টি আন্তর্জাতিক নদী। বাংলাদেশের উত্তর-পূর্বে ও দক্ষিণ-পূর্বে টারশিয়ারি যুগের পাহাড় মেঘের সাথে মিশে আছে। বিশ্বের বৃহত্তম ম্যানগ্রোভ অরণ্য সুন্দরবন ও দীর্ঘতম প্রাকৃতিক সৈকত কক্সবাজার সমুদ্র সৈকত বাংলাদেশে অবস্থিত।</textarea>
-	
-		<div class="button-group"> <!-- Ensure this wraps the buttons -->
-			<button id="startButton" onclick="startTTS()">Start TTS</button>
-			<button id="stopButton" onclick="stopTTS()" disabled>Stop TTS</button>
-			<button id="downloadButton" onclick="downloadFullAudio()" disabled>Download Audio</button>
-			<button id="clearCacheButton" onclick="clearTTScache()">Clear Cache</button>
+	<body>
+		<div class="container">
+			<!-- Ensure this wraps everything -->
+			<h1><span style="font-size: 2.5rem; font-weight: bold" id="name-display">...</span><br /><span style="font-size: 1.2rem">বাংলা টেক্সট টু স্পিচ</span></h1>
+			<!-- Added line break for better title flow -->
+
+			<div class="label-button-group">
+				<label for="longText" id="longTextLabel">নিচের বক্সে বাংলা লিখুন:</label>
+				<div class="inline-buttons">
+					<!-- Modified Paste Button -->
+					<button id="pasteButton" class="icon-text-button" onclick="pasteText()" title="Paste from clipboard">
+						<span class="material-symbols-outlined">content_paste</span>
+						Paste
+					</button>
+					<!-- Modified Clear Button -->
+					<button id="clearTextButton" class="icon-text-button" onclick="clearText()" title="Clear text area">
+						<span class="material-symbols-outlined">close</span>
+						Clear
+					</button>
+				</div>
+			</div>
+
+			<textarea id="longText"></textarea>
+			<!-- New Character Counter Element -->
+			<div class="char-counter-container">
+				<span id="charCount">০ টি বর্ণ</span>
+				<!-- Optional: Add the limit -->
+				<!-- <span id="charLimit"> / 1000</span> -->
+			</div>
+
+			<div class="button-group">
+				<!-- Ensure this wraps the buttons -->
+				<button id="startButton" onclick="startTTS()">Start TTS</button>
+				<button id="stopButton" onclick="stopTTS()" disabled>Stop TTS</button>
+				<button id="downloadButton" onclick="downloadFullAudio()" disabled>Download Audio</button>
+				<button id="clearCacheButton" onclick="clearTTScache()">Clear Cache</button>
+			</div>
+
+			<div id="status">Status: Idle</div>
 		</div>
-	
-		<div id="status">Status: Idle</div>
-	  </div> <!-- End Container -->
+		<!-- End Container -->
 
 		<script>
 			const socket = io("wss://read.bangla.gov.bd:9395", {
@@ -201,6 +316,7 @@
 			});
 
 			const textInput = document.getElementById("longText");
+			const charCountElement = document.getElementById("charCount");
 			const startButton = document.getElementById("startButton");
 			const stopButton = document.getElementById("stopButton");
 			const downloadButton = document.getElementById("downloadButton");
@@ -220,6 +336,7 @@
 			let isPlaying = false;
 			let isStopped = true;
 			let expectedChunksCount = 0; // Keep track of total chunks for download check
+			let downloadReady = false; // NEW: Flag to track if download button has been enabled
 
 			// --- Utility Functions ---
 
@@ -232,6 +349,33 @@
 					hash |= 0; // Convert to 32bit integer
 				}
 				return hash.toString(); // Return as string
+			}
+
+			// --- NEW Function ---
+			function checkAndEnableDownload() {
+				// Only proceed if download isn't already enabled AND we have an expected count
+				if (downloadReady || expectedChunksCount <= 0) {
+					return;
+				}
+
+				// console.log(`[Download Check] Running check. Expected: ${expectedChunksCount}, Current Array Length: ${completeAudioData?.length}`);
+
+				// Check if the array exists, has the correct length, and all items are valid strings
+				const allChunksReceived =
+					expectedChunksCount > 0 &&
+					completeAudioData && // Ensure array exists
+					completeAudioData.length === expectedChunksCount &&
+					completeAudioData.every((data) => data && typeof data === "string" && data.length > 100); // Basic validity check
+
+				if (allChunksReceived) {
+					// console.log("[Download Check] All chunks received! Enabling download button.");
+					downloadButton.disabled = false; // Enable the button
+					downloadReady = true; // Set the flag so we don't check again for this TTS run
+					// Optionally update status or ffmpeg status
+					// ffmpegStatusDiv.textContent = 'All audio chunks received. Ready to merge & download.';
+				} else {
+					// console.log(`[Download Check] Condition not met yet. Received ${completeAudioData?.filter((d) => d).length || 0}/${expectedChunksCount}`);
+				}
 			}
 
 			// Convert Base64 to Blob
@@ -252,7 +396,7 @@
 
 			function updateStatus(message, type = "info") {
 				// type: 'info', 'error', 'success', 'cached'
-				console.log("Status:", message);
+				// console.log("Status:", message);
 				statusDiv.textContent = `Status: ${message}`;
 				statusDiv.className = type; // Resets previous classes
 			}
@@ -329,6 +473,7 @@
 
 				// Reset state
 				stopTTS(); // Ensure clean state before starting
+				downloadReady = false; // ** RESET THE FLAG **
 				isStopped = false;
 				isPlaying = false;
 				currentChunkIndex = 0;
@@ -346,7 +491,7 @@
 					return;
 				}
 
-				console.log(`Text hash: ${currentTextHash}, Split into ${expectedChunksCount} chunks.`);
+				// console.log(`Text hash: ${currentTextHash}, Split into ${expectedChunksCount} chunks.`);
 
 				startButton.disabled = true;
 				stopButton.disabled = false;
@@ -359,7 +504,7 @@
 			}
 
 			function stopTTS(finished = false) {
-				console.log(`Stopping TTS. Finished: ${finished}`);
+				// console.log(`Stopping TTS. Finished: ${finished}`);
 				isStopped = true;
 				isPlaying = false;
 				if (currentAudioElement) {
@@ -383,18 +528,40 @@
 				textInput.disabled = false;
 
 				// Check if finished successfully and all data is available for download
-				const allChunksReceived = expectedChunksCount > 0 && completeAudioData.length === expectedChunksCount && completeAudioData.every((data) => data !== null);
+				const allChunksReceived =
+					expectedChunksCount > 0 && completeAudioData.length === expectedChunksCount && completeAudioData.every((data) => data !== null && typeof data === "string" && data.length > 0); // Maybe add length check
 
-				if (finished && allChunksReceived) {
+				// console.log(`stopTTS Check - Finished: ${finished}, Expected: ${expectedChunksCount}, Array Length: ${completeAudioData.length}, All Received Check: ${allChunksReceived}`);
+
+				// --- Download Button Logic ---
+				if (finished && downloadReady) {
+					// Playback finished AND all data arrived previously
+					updateStatus(`Finished. Audio ready to download.`, "success");
+					// downloadButton should already be enabled by checkAndEnableDownload
+					// console.log("stopTTS: Playback finished, download was already ready.");
+				} else if (finished && !downloadReady) {
+					// Playback finished BUT data didn't fully arrive (error occurred?)
+					updateStatus(`Finished, but full audio data not available. Download disabled.`, "error");
+					downloadButton.disabled = true; // Ensure disabled
+					console.error("stopTTS: Playback finished, but download condition was never met.");
+				} else {
+					// Stopped by user
+					updateStatus("Stopped by user.");
+					downloadButton.disabled = true; // Always disable if stopped by user
+					// console.log("stopTTS: Stopped by user, download disabled.");
+				}
+
+				/* if (finished && allChunksReceived) {
 					updateStatus(`Finished. ${expectedChunksCount} chunks processed. Ready to download.`, "success");
 					downloadButton.disabled = false; // Enable download
 				} else if (finished) {
-					updateStatus(`Finished, but some audio data might be missing (${completeAudioData.filter((d) => d).length}/${expectedChunksCount}). Download disabled.`, "error");
+					updateStatus(`Finished, but audio data incomplete (${completeAudioData.filter((d) => d).length}/${expectedChunksCount}). Download disabled.`, "error");
+					console.error("Download disabled because allChunksReceived check failed in stopTTS:", completeAudioData);
 					downloadButton.disabled = true;
 				} else {
 					updateStatus("Stopped by user.");
 					downloadButton.disabled = true; // Ensure download is disabled if stopped early
-				}
+				} */
 
 				// Clear potentially sensitive data if not needed for download
 				// if (!finished || !allChunksReceived) {
@@ -404,43 +571,67 @@
 				// }
 			}
 
-			// --- Core Logic: Fetching and Playing ---
-
 			function fetchAndPlayChunk(index) {
 				if (isStopped || index >= expectedChunksCount || index <= fetchingChunkIndex) {
 					return;
 				}
 				if (audioQueue[index]) {
-					// Already fetched (e.g., via cache) and in queue
+					// Already fetched and in memory queue
 					if (index === currentChunkIndex && !isPlaying) {
 						playAudioChunk(index);
 					}
 					return;
 				}
 
+				// --- Check Cache ---
 				const cacheKey = `${CACHE_PREFIX}${currentTextHash}_${index}`;
+				let cachedItemString = null;
 				let cachedAudio = null;
+
 				try {
-					cachedAudio = localStorage.getItem(cacheKey);
+					cachedItemString = localStorage.getItem(cacheKey);
+					if (cachedItemString) {
+						const parsedData = JSON.parse(cachedItemString);
+						if (parsedData && parsedData.audio) {
+							cachedAudio = parsedData.audio;
+							// Optional: Update timestamp if implementing LRU later
+							// parsedData.timestamp = Date.now();
+							// localStorage.setItem(cacheKey, JSON.stringify(parsedData));
+						} else {
+							// Invalid data structure in cache
+							console.warn(`Invalid cache data structure for ${cacheKey}. Removing.`);
+							localStorage.removeItem(cacheKey);
+						}
+					}
 				} catch (e) {
-					console.warn("Could not access localStorage (maybe private browsing or storage full). Caching disabled.", e);
+					console.warn(`Could not access or parse localStorage item ${cacheKey}: ${e.message}`);
+					// If parsing failed, remove potentially corrupted item
+					if (e instanceof SyntaxError && cachedItemString !== null) {
+						localStorage.removeItem(cacheKey);
+					}
+					cachedAudio = null; // Ensure we proceed to fetch
 				}
+				// --- End Cache Check ---
 
 				if (cachedAudio) {
-					console.log(`Using cached audio for chunk ${index}`);
+					// console.log(`Using cached audio for chunk ${index}`);
+					// IMPORTANT: Update status *here* if using cache, otherwise it might stay on previous status
 					updateStatus(`Playing chunk ${index + 1}/${expectedChunksCount} (from cache)...`, "cached");
-					// Process cached data similarly to received data
-					processAudioData(index, cachedAudio);
+					processAudioData(index, cachedAudio); // Process the retrieved audio
+					// **** CALL THE CHECK FUNCTION (Cache Path) ****
+					// Needs to be called *after* processAudioData might have added the last piece
+					checkAndEnableDownload();
 				} else {
-					// Not cached, fetch from server
+					// Not cached or cache failed, fetch from server
 					fetchingChunkIndex = index;
+					// Status update BEFORE emitting request
 					updateStatus(`Fetching chunk ${index + 1}/${expectedChunksCount} from server...`);
-					console.log(`Requesting TTS for chunk ${index}: "${textChunks[index].substring(0, 30)}..."`);
+					// console.log(`Requesting TTS for chunk ${index}: "${textChunks[index].substring(0, 30)}..."`);
 
 					if (!socket.connected) {
 						console.error("Socket disconnected before fetching chunk", index);
 						updateStatus("Connection lost. Cannot fetch audio.", "error");
-						stopTTS(); // Stop the process if disconnected
+						stopTTS();
 						return;
 					}
 
@@ -449,8 +640,67 @@
 						model: "vits",
 						gender: "female",
 						speaker: 0,
-						index: index, // Critical: ensure server sends this back
+						index: index,
 					});
+				}
+			}
+
+			// --- Cache Management Helper Functions ---
+
+			function isQuotaExceeded(e) {
+				// Checks for common quota exceeded error names/codes across browsers
+				return (
+					e &&
+					(e.name === "QuotaExceededError" || // Standard
+						e.name === "NS_ERROR_DOM_QUOTA_REACHED" || // Firefox
+						(e.code &&
+							(e.code === 22 || // Quota Error Code (older browsers)
+								e.code === 1014)) || // Quota Error Code (some Firefox versions)
+						(e.message && e.message.toLowerCase().includes("quota"))) // Generic check
+				);
+			}
+
+			function evictOldestCacheEntry() {
+				let oldestKey = null;
+				let oldestTimestamp = Infinity;
+				let ttsKeysFound = 0;
+
+				try {
+					// console.log("Scanning localStorage for oldest TTS cache entry...");
+					for (let i = 0; i < localStorage.length; i++) {
+						const key = localStorage.key(i);
+						if (key.startsWith(CACHE_PREFIX)) {
+							ttsKeysFound++;
+							try {
+								const itemString = localStorage.getItem(key);
+								const itemData = JSON.parse(itemString);
+								if (itemData && typeof itemData.timestamp === "number" && itemData.timestamp < oldestTimestamp) {
+									oldestTimestamp = itemData.timestamp;
+									oldestKey = key;
+								}
+							} catch (parseError) {
+								// Could be an old format entry or corrupted data, consider removing?
+								console.warn(`Could not parse cache item ${key} during eviction scan: ${parseError.message}. Removing it.`);
+								localStorage.removeItem(key);
+								i--; // Adjust index after removal
+							}
+						}
+					}
+
+					// console.log(`Scan complete. Found ${ttsKeysFound} TTS keys. Oldest key: ${oldestKey}`);
+
+					if (oldestKey) {
+						const oldestDate = new Date(oldestTimestamp).toLocaleString();
+						// console.log(`Evicting oldest cache entry: ${oldestKey} (Timestamp: ${oldestDate})`);
+						localStorage.removeItem(oldestKey);
+						return true; // Eviction successful
+					} else {
+						console.warn("Could not find an eligible (timestamped) cache entry to evict.");
+						return false; // Nothing suitable to evict
+					}
+				} catch (storageError) {
+					console.error("Error during cache eviction process:", storageError);
+					return false; // Failed to scan/evict
 				}
 			}
 
@@ -463,16 +713,20 @@
 				if (index < expectedChunksCount) {
 					// Ensure index is valid
 					completeAudioData[index] = audioBase64;
+					// **** ADD LOG ****
+					// console.log(`processAudioData: Successfully stored data for index ${index} in completeAudioData.`);
+					// **** CALL THE CHECK FUNCTION ****
+					checkAndEnableDownload();
 				} else {
 					console.warn(`Received data for unexpected index ${index}. Expected max ${expectedChunksCount - 1}`);
 					return;
 				}
 
-				console.log(`Processed audio for chunk ${index}. Queue keys: ${Object.keys(audioQueue)}`);
+				// console.log(`Processed audio for chunk ${index}. Queue keys: ${Object.keys(audioQueue)}`);
 
 				// If this is the chunk we are currently waiting to play, start playing it.
 				if (index === currentChunkIndex && !isPlaying) {
-					console.log(`Chunk ${index} is the current one needed, starting playback.`);
+					// console.log(`Chunk ${index} is the current one needed, starting playback.`);
 					playAudioChunk(currentChunkIndex);
 				}
 				// If it's not the current one, playback will be triggered by the previous chunk's 'onended' event
@@ -481,14 +735,14 @@
 				// Check if prefetch needs updating (ensure next chunk is being fetched)
 				const nextIndexToFetch = Math.max(currentChunkIndex, fetchingChunkIndex) + 1;
 				if (nextIndexToFetch < expectedChunksCount && !(nextIndexToFetch in audioQueue) && !localStorage.getItem(`${CACHE_PREFIX}${currentTextHash}_${nextIndexToFetch}`)) {
-					console.log(`Ensuring prefetch for chunk ${nextIndexToFetch} is triggered.`);
+					// console.log(`Ensuring prefetch for chunk ${nextIndexToFetch} is triggered.`);
 					fetchAndPlayChunk(nextIndexToFetch);
 				}
 			}
 
 			function playAudioChunk(index) {
 				if (isStopped || !(index in audioQueue)) {
-					console.log(`Skipping play for chunk ${index}. Stopped: ${isStopped}, In queue: ${index in audioQueue}`);
+					// console.log(`Skipping play for chunk ${index}. Stopped: ${isStopped}, In queue: ${index in audioQueue}`);
 					// If stopped but chunk IS in queue, don't mark as error, just don't play
 					if (!isStopped && !(index in audioQueue)) {
 						updateStatus(`Error: Audio data for chunk ${index + 1} not available!`, "error");
@@ -502,7 +756,7 @@
 				if (!statusDiv.classList.contains("cached")) {
 					updateStatus(`Playing chunk ${index + 1}/${expectedChunksCount}...`);
 				}
-				console.log(`Playing chunk ${index}`);
+				// console.log(`Playing chunk ${index}`);
 
 				const audioData = audioQueue[index];
 				delete audioQueue[index]; // Remove from active playback queue
@@ -523,16 +777,16 @@
 					// Check cache again before fetching
 					const nextCacheKey = `${CACHE_PREFIX}${currentTextHash}_${nextIndex}`;
 					if (!localStorage.getItem(nextCacheKey)) {
-						console.log(`Prefetching chunk ${nextIndex} from server`);
+						// console.log(`Prefetching chunk ${nextIndex} from server`);
 						fetchAndPlayChunk(nextIndex); // Start fetching the *next* chunk now
 					} else {
-						console.log(`Prefetching chunk ${nextIndex} from cache`);
+						// console.log(`Prefetching chunk ${nextIndex} from cache`);
 						fetchAndPlayChunk(nextIndex); // Will hit cache and process quickly
 					}
 				}
 
 				currentAudioElement.onended = () => {
-					console.log(`Finished playing chunk ${index}`);
+					// console.log(`Finished playing chunk ${index}`);
 					URL.revokeObjectURL(audioUrl); // Clean up blob URL
 					isPlaying = false;
 					currentAudioElement = null;
@@ -543,17 +797,17 @@
 
 					if (currentChunkIndex < expectedChunksCount) {
 						if (currentChunkIndex in audioQueue) {
-							console.log(`Next chunk ${currentChunkIndex} is ready, playing immediately.`);
+							// console.log(`Next chunk ${currentChunkIndex} is ready, playing immediately.`);
 							playAudioChunk(currentChunkIndex);
 						} else {
 							// Check cache one last time before showing buffering
 							const nextCacheKey = `${CACHE_PREFIX}${currentTextHash}_${currentChunkIndex}`;
 							if (localStorage.getItem(nextCacheKey)) {
-								console.log(`Next chunk ${currentChunkIndex} found in cache, processing...`);
+								// console.log(`Next chunk ${currentChunkIndex} found in cache, processing...`);
 								fetchAndPlayChunk(currentChunkIndex); // Trigger cache hit and playback
 							} else {
 								updateStatus(`Buffering chunk ${currentChunkIndex + 1}/${expectedChunksCount}...`);
-								console.log(`Waiting for chunk ${currentChunkIndex} data...`);
+								// console.log(`Waiting for chunk ${currentChunkIndex} data...`);
 								// Ensure fetch was triggered if needed
 								if (currentChunkIndex > fetchingChunkIndex) {
 									fetchAndPlayChunk(currentChunkIndex);
@@ -561,7 +815,7 @@
 							}
 						}
 					} else {
-						console.log("All chunks finished.");
+						// console.log("All chunks finished.");
 						stopTTS(true); // Call stop with finished flag
 					}
 				};
@@ -580,28 +834,73 @@
 					stopTTS();
 				});
 			}
-
-			// --- Download Function ---
+			/* 
 			function downloadFullAudio() {
-				if (!completeAudioData || expectedChunksCount === 0 || completeAudioData.length !== expectedChunksCount || !completeAudioData.every((d) => d !== null)) {
-					updateStatus("Cannot download: Audio data is incomplete or missing.", "error");
-					console.error("Download failed: Incomplete data", completeAudioData, expectedChunksCount);
-					downloadButton.disabled = true; // Disable again if state is bad
+				// console.log("--- Download Request ---");
+				// console.log(`Expected chunks: ${expectedChunksCount}`);
+				// console.log(`Items in completeAudioData: ${completeAudioData.length}`);
+
+				// --- Rigorous Check (Keep this from previous step) ---
+				let dataCompleteAndValid = true;
+				// ... (Keep the loop checking completeAudioData validity) ...
+				// console.log(`Data Complete & Valid Check Result: ${dataCompleteAndValid}`);
+				if (!dataCompleteAndValid) {
+					updateStatus("Cannot download: Audio data is incomplete or invalid.", "error");
+					console.error("Download aborted due to incomplete/invalid data.", completeAudioData);
+					downloadButton.disabled = true;
 					return;
 				}
+				// --- End Rigorous Check ---
 
 				updateStatus("Preparing download...", "info");
-				console.log("Starting download preparation...");
+				// console.log("Data looks complete. Preparing Blobs...");
 
 				try {
-					const audioBlobs = completeAudioData.map((base64, index) => {
-						const blob = base64ToBlob(base64);
-						if (!blob) throw new Error(`Failed to convert chunk ${index} to Blob`);
-						return blob;
-					});
+					let blobsValid = true;
+					const audioBlobs = completeAudioData
+						.map((base64, index) => {
+							// console.log(`[Download] Converting chunk ${index} to Blob...`);
+							const blob = base64ToBlob(base64);
+
+							// **** CHECK BLOB VALIDITY ****
+							if (!blob || blob.size === 0) {
+								console.error(`[Download] Blob creation FAILED or resulted in empty blob for chunk ${index}. Size: ${blob?.size}`);
+								blobsValid = false; // Mark as invalid
+								return null; // Return null or throw error
+							}
+							// ***************************
+
+							// console.log(`[Download] Chunk ${index} converted successfully. Blob size: ${blob.size}`);
+							return blob;
+						})
+						.filter((blob) => blob !== null); // Filter out any nulls if conversion failed
+
+					// **** CHECK IF ALL BLOBS WERE CREATED ****
+					if (!blobsValid || audioBlobs.length !== expectedChunksCount) {
+						console.error(`[Download] Failed to create valid Blobs for all chunks. Expected ${expectedChunksCount}, Got ${audioBlobs.length}. Aborting.`);
+						throw new Error(`Failed to create valid Blobs for all audio chunks.`);
+					}
+					// ****************************************
+
+					// console.log("[Download] All chunks converted to valid Blobs:", audioBlobs);
 
 					// Concatenate blobs
-					const fullBlob = new Blob(audioBlobs, { type: "audio/mp3" });
+					// console.log("[Download] Concatenating Blobs...");
+					const fullBlob = new Blob(audioBlobs, { type: "audio/mp3" }); // This syntax IS correct
+
+					// **** CHECK FINAL BLOB SIZE ****
+					let expectedTotalSize = audioBlobs.reduce((sum, blob) => sum + blob.size, 0);
+					// console.log(`[Download] Final Blob created. Actual Size: ${fullBlob.size}, Expected Size (Sum of parts): ${expectedTotalSize}`);
+					if (fullBlob.size < expectedTotalSize * 0.9) {
+						// Allow for slight overhead differences, but check major discrepancy
+						console.warn(`[Download] Final Blob size (${fullBlob.size}) is significantly smaller than the sum of its parts (${expectedTotalSize}). Concatenation might have issues.`);
+						// You might still proceed, but this is a red flag
+					}
+					if (fullBlob.size === 0) {
+						throw new Error("Concatenated Blob has zero size! Concatenation failed.");
+					}
+					// *****************************
+
 					const fullUrl = URL.createObjectURL(fullBlob);
 
 					// Create temporary link and click it
@@ -610,13 +909,183 @@
 					a.href = fullUrl;
 					a.download = `bangla_tts_${currentTextHash || Date.now()}.mp3`; // Use hash or timestamp for filename
 					document.body.appendChild(a);
+					// console.log(`[Download] Triggering download for ${a.download}`);
 					a.click();
 
 					// Clean up
 					window.URL.revokeObjectURL(fullUrl);
 					document.body.removeChild(a);
 					updateStatus("Download started.", "success");
-					console.log("Download initiated.");
+					// console.log("[Download] initiated and cleanup done.");
+				} catch (error) {
+					console.error("[Download] Error during download preparation or Blob processing:", error);
+					updateStatus(`Download failed: ${error.message}`, "error");
+				}
+			}
+
+ */ /* 
+			async function downloadFullAudio() {
+				// Make the function async for potential delays
+				// console.log("--- Download Individual Chunks Request ---");
+				// console.log(`Expected chunks: ${expectedChunksCount}`);
+				// console.log(`Items in completeAudioData: ${completeAudioData.length}`);
+
+				// --- Rigorous Check (Keep this from previous steps) ---
+				let dataCompleteAndValid = true;
+				if (expectedChunksCount <= 0 || completeAudioData.length !== expectedChunksCount) {
+					dataCompleteAndValid = false;
+					console.error("[Download Chunks] Check failed: Array length mismatch or zero expected count.");
+				} else {
+					for (let i = 0; i < expectedChunksCount; i++) {
+						const chunkData = completeAudioData[i];
+						if (!chunkData || typeof chunkData !== "string" || chunkData.length < 100) {
+							console.error(`[Download Chunks] Check failed: Invalid or missing data at index ${i}.`);
+							dataCompleteAndValid = false;
+							break;
+						}
+					}
+				}
+				// console.log(`[Download Chunks] Data Complete & Valid Check Result: ${dataCompleteAndValid}`);
+				// --- End Rigorous Check ---
+
+				if (!dataCompleteAndValid) {
+					updateStatus("Cannot download: Audio data is incomplete or invalid.", "error");
+					console.error("[Download Chunks] Aborted due to incomplete/invalid data.", completeAudioData);
+					downloadButton.disabled = true;
+					return;
+				}
+
+				updateStatus(`Preparing to download ${expectedChunksCount} separate chunks...`, "info");
+				// console.log("[Download Chunks] Data looks complete. Preparing individual downloads...");
+
+				// --- Generate a Base Filename ---
+				const filenameBase =
+					textInput.value
+						.substring(0, 20)
+						.replace(/[^a-z0-9]/gi, "_")
+						.toLowerCase() || "bangla_tts_chunk";
+				const uniqueId = currentTextHash || Date.now(); // Use hash or timestamp for uniqueness
+
+				let successCount = 0;
+				let errorCount = 0;
+
+				// --- Loop Through Each Chunk ---
+				for (let index = 0; index < completeAudioData.length; index++) {
+					const base64 = completeAudioData[index];
+					// console.log(`[Download Chunks] Processing chunk ${index}...`);
+
+					try {
+						const blob = base64ToBlob(base64);
+						if (!blob || blob.size === 0) {
+							console.error(`[Download Chunks] Blob creation FAILED or empty for chunk ${index}.`);
+							throw new Error(`Failed to create valid Blob for chunk ${index}`);
+						}
+						// console.log(`[Download Chunks] Chunk ${index} Blob created successfully. Size: ${blob.size}`);
+
+						const chunkUrl = URL.createObjectURL(blob);
+						const a = document.createElement("a");
+						a.style.display = "none";
+						a.href = chunkUrl;
+						// Create a unique filename for each chunk
+						a.download = `${filenameBase}_${uniqueId}_part_${index + 1}_of_${expectedChunksCount}.mp3`;
+
+						document.body.appendChild(a);
+						// console.log(`[Download Chunks] Triggering download for: ${a.download}`);
+						a.click();
+
+						// Clean up immediately after triggering
+						document.body.removeChild(a);
+						URL.revokeObjectURL(chunkUrl); // Revoke URL right away
+
+						successCount++;
+
+						// Optional: Add a small delay between downloads if the browser blocks rapid requests
+						// await new Promise(resolve => setTimeout(resolve, 200)); // e.g., 200ms delay
+					} catch (error) {
+						console.error(`[Download Chunks] Failed to process or download chunk ${index}:`, error);
+						errorCount++;
+						// Continue to try downloading the next chunk
+					}
+				} // End of loop
+
+				// --- Update Final Status ---
+				if (errorCount === 0) {
+					updateStatus(`Download initiated for all ${successCount} chunks.`, "success");
+					// console.log(`[Download Chunks] Successfully initiated downloads for all ${successCount} chunks.`);
+				} else if (successCount > 0) {
+					updateStatus(`Downloads initiated for ${successCount} chunks, but ${errorCount} failed.`, "error"); // Or 'warning'
+					console.warn(`[Download Chunks] Initiated ${successCount} downloads, but ${errorCount} failed.`);
+				} else {
+					updateStatus(`Download failed for all chunks.`, "error");
+					console.error(`[Download Chunks] Failed to initiate any downloads.`);
+				}
+
+				// Optional: Disable button again after download attempt?
+				// downloadButton.disabled = true;
+			}
+ */
+			async function downloadFullAudio() {
+				if (!completeAudioData || expectedChunksCount === 0 || completeAudioData.length !== expectedChunksCount || !completeAudioData.every((d) => d !== null)) {
+					updateStatus("Cannot download: Audio data is incomplete or missing.", "error");
+					console.error("Download failed: Incomplete data", completeAudioData, expectedChunksCount);
+					downloadButton.disabled = true;
+					return;
+				}
+
+				updateStatus("Preparing download...", "info");
+				// console.log("Starting download preparation...");
+
+				try {
+					// Initialize Crunker
+					const crunker = new (Crunker.default || Crunker)();
+
+					// Convert base64 to Blob and create object URLs
+					const audioUrls = completeAudioData.map((base64) => {
+						const blob = base64ToBlob(base64);
+						if (!blob) throw new Error("Failed to convert chunk to Blob");
+						return URL.createObjectURL(blob);
+					});
+
+					// Load all audio files using the new API
+					updateStatus("Loading audio files...", "info");
+
+					// Fetch each audio file and convert to ArrayBuffer
+					const audioBuffers = await Promise.all(
+						audioUrls.map(async (url) => {
+							const response = await fetch(url);
+							const arrayBuffer = await response.arrayBuffer();
+							return await new Promise((resolve, reject) => {
+								crunker.context.decodeAudioData(
+									arrayBuffer,
+									(buffer) => resolve(buffer),
+									(error) => reject(error)
+								);
+							});
+						})
+					);
+
+					// Concatenate the audio buffers
+					updateStatus("Merging audio files...", "info");
+					const mergedBuffer = crunker.concatAudio(audioBuffers);
+
+					// Export the merged audio
+					const { url } = await crunker.export(mergedBuffer, "audio/mp3");
+
+					// Create download link
+					const a = document.createElement("a");
+					a.style.display = "none";
+					a.href = url;
+					a.download = `bangla_tts_${currentTextHash || Date.now()}.mp3`;
+					document.body.appendChild(a);
+					a.click();
+
+					// Clean up
+					audioUrls.forEach((url) => URL.revokeObjectURL(url));
+					window.URL.revokeObjectURL(url);
+					document.body.removeChild(a);
+
+					updateStatus("Download started.", "success");
+					// console.log("Download initiated.");
 				} catch (error) {
 					console.error("Error during download preparation:", error);
 					updateStatus(`Download failed: ${error.message}`, "error");
@@ -625,7 +1094,7 @@
 
 			// --- Socket Event Handlers ---
 			socket.on("connect", () => {
-				console.log("Socket connected:", socket.id);
+				// console.log("Socket connected:", socket.id);
 				updateStatus("Connected to TTS server. Ready.");
 				startButton.disabled = false;
 				stopButton.disabled = true; // Should be stopped initially
@@ -635,25 +1104,67 @@
 			socket.on("result", (data) => {
 				if (isStopped) return;
 
-				console.log(`Received audio data for chunk index: ${data.index}`);
+				// console.log(`Received audio data for chunk index: ${data.index}`);
 				if (typeof data.index !== "number" || !data.audio || !currentTextHash) {
 					console.error("Received invalid data structure or state invalid:", data, currentTextHash);
-					updateStatus(`Received invalid data for chunk.`, "error");
-					// Maybe stop if critical data is malformed?
+					updateStatus(`Received invalid data.`, "error");
 					return;
 				}
 
-				// Cache the received data
+				// --- Caching Attempt with Eviction ---
 				const cacheKey = `${CACHE_PREFIX}${currentTextHash}_${data.index}`;
+				const cacheData = JSON.stringify({ audio: data.audio, timestamp: Date.now() });
+				let cachingSuccess = false;
+				let attemptedEviction = false;
+
 				try {
-					localStorage.setItem(cacheKey, data.audio);
+					localStorage.setItem(cacheKey, cacheData);
+					cachingSuccess = true;
+					// console.log(`Cached chunk ${data.index}.`);
 				} catch (e) {
-					console.warn(`Failed to cache chunk ${data.index}: ${e.message}`);
-					// Potentially update status to warn user caching failed?
+					if (isQuotaExceeded(e)) {
+						console.warn(`Quota exceeded trying to cache chunk ${data.index}. Attempting eviction...`);
+						updateStatus(`Storage full, trying to clear old cache...`, "info");
+						attemptedEviction = true;
+						// Attempt to evict oldest entry and retry
+						if (evictOldestCacheEntry()) {
+							try {
+								localStorage.setItem(cacheKey, cacheData); // Retry
+								cachingSuccess = true;
+								// console.log(`Successfully cached chunk ${data.index} after eviction.`);
+								updateStatus(`Cleared old cache. Resuming...`, "success"); // Update status positively
+							} catch (e2) {
+								if (isQuotaExceeded(e2)) {
+									console.error(`Still failed to cache chunk ${data.index} after eviction (still full or item too large): ${e2.message}`);
+									updateStatus(`Caching failed (Storage full). Playback continues.`, "error");
+								} else {
+									console.error(`Error during retry cache setItem for chunk ${data.index}: ${e2.message}`);
+									updateStatus(`Caching error. Playback continues.`, "error");
+								}
+							}
+						} else {
+							console.warn(`Could not evict cache entry. Caching failed for this item.`);
+							updateStatus(`Caching failed (Storage full). Playback continues.`, "error");
+						}
+					} else {
+						// Other storage error (permissions, etc.)
+						console.error(`Failed to cache chunk ${data.index} due to non-quota error: ${e.message}`);
+						updateStatus(`Caching error. Playback continues.`, "error");
+					}
+				}
+				// --- End Caching Attempt ---
+
+				// --- Process Data (regardless of caching success) ---
+				// Ensure status is updated if it was stuck on the eviction message
+				if (attemptedEviction && !cachingSuccess && statusDiv.textContent.includes("trying to clear")) {
+					// If eviction message was shown but caching still failed, update status
+					updateStatus(`Caching failed. Playback continues.`, "error");
+				} else if (attemptedEviction && cachingSuccess && statusDiv.textContent.includes("trying to clear")) {
+					// Status might have already been updated, but ensure it's not stuck
+					updateStatus(`Resuming...`, "info"); // Or let processAudioData handle it
 				}
 
-				// Process the data (adds to queue, download array, triggers play if needed)
-				processAudioData(data.index, data.audio);
+				processAudioData(data.index, data.audio); // Always process for playback queue / download
 			});
 
 			socket.on("disconnect", (reason) => {
@@ -695,23 +1206,47 @@
 			}
 
 			function loadName() {
-				const names = [
-					"শব্দকণ্ঠ",
-					"কথাকলি",
-					"ধ্বনিরূপা",
-					"শব্দযাত্রী",
-					"কণ্ঠধ্বনি",
-					"বর্ণকণ্ঠ ",
-					"কথামালা",
-					"স্বরশিল্পী"
-        			];
-            const randomIndex = Math.floor(Math.random() * names.length);
-            document.getElementById("name-display").textContent = names[randomIndex];
+				const names = ["শব্দকণ্ঠ", "কথাকলি", "ধ্বনিরূপা", "শব্দযাত্রী", "কণ্ঠধ্বনি", "বর্ণকণ্ঠ ", "কথামালা", "স্বরশিল্পী"];
+				const randomIndex = Math.floor(Math.random() * names.length);
+				document.getElementById("name-display").textContent = names[randomIndex];
 			}
 
-			window.onload=loadName;
+			window.onload = loadName;
 
-			
+			async function pasteText() {
+				try {
+					const text = await navigator.clipboard.readText();
+					textInput.value = text;
+					charCountElement.textContent = convertToBengaliNumber(textInput.value.length) + " টি বর্ণ"; //update char count in textarea
+					// console.log("Pasted text from clipboard.");
+					// Maybe trigger an input event if needed by other logic
+					// textInput.dispatchEvent(new Event('input'));
+				} catch (err) {
+					console.error("Failed to read clipboard contents: ", err);
+					// Notify user? Maybe clipboard access was denied.
+					alert("Could not paste from clipboard. Permission might be needed or browser might not support it securely.");
+				}
+			}
+
+			function clearText() {
+				textInput.value = "";
+				// console.log("Cleared text area.");
+				charCountElement.textContent = convertToBengaliNumber(textInput.value.length) + " টি বর্ণ"; //update char count in textarea
+				// Maybe trigger an input event
+				// textInput.dispatchEvent(new Event('input'));
+			}
+
+			textInput.addEventListener("input", () => {
+				charCountElement.textContent = convertToBengaliNumber(textInput.value.length) + " টি বর্ণ";
+			});
+			function convertToBengaliNumber(number) {
+				const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+				return number
+					.toString()
+					.split("")
+					.map((digit) => bengaliDigits[parseInt(digit)])
+					.join("");
+			}
 		</script>
 	</body>
 </html>
