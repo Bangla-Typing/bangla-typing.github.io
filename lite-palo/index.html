@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Latest News from Prothom Alo</title>
+		<style>
+			body {
+				font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+				line-height: 1.6;
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 20px;
+				color: #333;
+				background-color: #f5f5f5;
+			}
+			h1 {
+				color: #d9230f;
+				text-align: center;
+				margin-bottom: 30px;
+			}
+			.news-container {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+				gap: 20px;
+				margin-bottom: 30px;
+			}
+
+			.news-card {
+				background: white;
+				border-radius: 8px;
+				overflow: hidden;
+				box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+				transition: transform 0.3s ease, background-color 0.3s ease, opacity 0.3s ease; /* Added transitions for read state */
+				display: block;
+				cursor: pointer; /* Indicate the whole card is clickable */
+			}
+			.news-card:hover {
+				transform: translateY(-5px);
+			}
+			.news-card.read {
+				opacity: 0.8;
+				background-color: #f8f8f8;
+				position: relative;
+			}
+			.news-card.read::after {
+				content: "✓ Read";
+				position: absolute;
+				top: 10px;
+				right: 10px;
+				background-color: #d9230f;
+				color: white;
+				padding: 3px 8px;
+				border-radius: 4px;
+				font-size: 12px;
+				z-index: 1;
+			}
+			.card-image {
+				width: 100%;
+				height: 200px;
+				object-fit: cover;
+				pointer-events: none; /* Prevent image from interfering with card click */
+			}
+			.card-content {
+				padding-left: 10px;
+				padding-right: 10px;
+			}
+			.card-title {
+				margin-top: 0px;
+				font-size: 18px;
+				font-weight: bold;
+				margin-bottom: 10px;
+				color: #222;
+			}
+			.card-description {
+				font-size: 14px;
+				color: #555;
+				margin-bottom: 10px;
+				display: -webkit-box;
+				-webkit-line-clamp: 3;
+				-webkit-box-orient: vertical;
+				overflow: hidden;
+			}
+			.card-meta {
+				font-size: 12px;
+				padding: 10px;
+				color: #777;
+				display: flex;
+				justify-content: space-between;
+			}
+			.card-category {
+				display: inline-block;
+				background-color: #f0f0f0;
+				color: #555;
+				padding: 3px 8px;
+				border-radius: 4px;
+				font-size: 0.75rem;
+				margin-right: 5px;
+				position: relative;
+				z-index: 2;
+			}
+			.article-meta-inactive {
+				font-size: 0.8rem;
+				color: #666;
+				margin-bottom: 10px;
+				display: flex;
+				justify-content: space-between;
+			}
+			.article-modal {
+				display: none;
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: rgba(0, 0, 0, 0.8);
+				z-index: 1000;
+				overflow-y: auto;
+				padding: 20px;
+			}
+			.modal-content {
+				max-width: 800px;
+				margin: 40px auto;
+				background: white;
+				border-radius: 8px;
+				overflow: hidden;
+			}
+			.modal-header {
+				padding: 20px;
+				background: #d9230f;
+				color: white;
+				position: relative;
+			}
+			.modal-title {
+				font-size: 24px;
+				margin: 0;
+			}
+			.close-modal {
+				position: absolute;
+				top: 20px;
+				right: 20px;
+				font-size: 24px;
+				cursor: pointer;
+			}
+			.modal-body {
+				padding: 20px;
+			}
+			.modal-image {
+				width: 100%;
+				max-height: 400px;
+				object-fit: cover;
+				margin-bottom: 20px;
+				border-radius: 4px;
+			}
+			.modal-text {
+				font-size: 16px;
+				line-height: 1.8;
+			}
+			.loading {
+				text-align: center;
+				padding: 40px;
+				font-size: 18px;
+				color: #666;
+			}
+			.error {
+				color: #d9230f;
+				padding: 20px;
+				background-color: #fde8e8;
+				border-radius: 4px;
+				text-align: center;
+				margin: 20px 0;
+			}
+
+			.filter-container {
+				display: flex;
+				justify-content: center;
+				margin-bottom: 20px;
+				flex-wrap: wrap;
+				gap: 10px;
+			}
+			.filter-btn {
+				padding: 8px 16px;
+				border: 1px solid #ddd;
+				background-color: white;
+				border-radius: 20px;
+				cursor: pointer;
+				transition: all 0.3s ease;
+			}
+			.filter-btn:hover {
+				background-color: #f0f0f0;
+			}
+			.filter-btn.active {
+				background-color: #d9230f;
+				color: white;
+				border-color: #d9230f;
+			}
+			.loading-more {
+				text-align: center;
+				padding: 20px;
+				color: #666;
+				display: none;
+			}
+			.no-more-articles {
+				text-align: center;
+				padding: 20px;
+				color: #666;
+				display: none;
+			}
+			.date {
+				font-size: 1rem;
+				margin-top: -20px;
+				margin-bottom: 10px;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Latest News from Prothom Alo</h1>
+		<div class="date" id="current-date"></div>
+		<hr />
+		<div id="filter-container" class="filter-container"></div>
+
+		<div id="news-container">
+			<div class="loading">Loading latest news...</div>
+		</div>
+		<div id="loading-more" class="loading-more">Loading more articles...</div>
+		<div id="no-more-articles" class="no-more-articles">No more articles to load</div>
+
+		<div id="article-modal" class="article-modal">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h2 class="modal-title" id="modal-title"></h2>
+					<span class="close-modal" onclick="closeModal()">&times;</span>
+				</div>
+				<div class="modal-body" id="modal-body"></div>
+			</div>
+		</div>
+
+		<script>
+			const ProthomAloLogoURL = "https://media.prothomalo.com/prothomalo/import/default/2016/03/15/4d3620a7127d4a031a05a962fcc4b253-palo-logo.jpg";
+			let allArticles = [];
+			let filteredArticles = [];
+			let displayedArticles = 0;
+			const initialLoadCount = 20;
+			const loadMoreCount = 10;
+			let currentCategory = "all";
+			let categories = [];
+			let readArticles = JSON.parse(localStorage.getItem("readArticles")) || [];
+			let isLoading = false;
+
+			// Display current date
+			const options = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
+			const today = new Date().toLocaleDateString("en-US", options);
+			document.getElementById("current-date").textContent = today;
+
+			// Function to fetch latest news
+			async function fetchLatestNews() {
+				const newsContainer = document.getElementById("news-container");
+
+				try {
+					// Show loading state
+					newsContainer.innerHTML = '<div class="loading">Loading latest news...</div>';
+					document.getElementById("loading-more").style.display = "none";
+					document.getElementById("no-more-articles").style.display = "none";
+
+					// Make API request
+					const response = await fetch("https://www.prothomalo.com/api/v1/collections/latest?limit=250");
+
+					if (!response.ok) {
+						throw new Error(`HTTP error! status: ${response.status}`);
+					}
+
+					const data = await response.json();
+
+					// Check if we have articles
+					if (data.items && data.items.length > 0) {
+						allArticles = data.items;
+						extractCategories();
+						createCategoryFilters();
+						filterArticlesByCategory(currentCategory);
+						displayedArticles = 0;
+						renderNewsCards();
+					} else {
+						newsContainer.innerHTML = '<div class="error">No articles found</div>';
+					}
+				} catch (error) {
+					console.error("Error fetching news:", error);
+					newsContainer.innerHTML = `<div class="error">Failed to load news: ${error.message}</div>`;
+				}
+			}
+
+			// In the extractCategories() function, replace with:
+			function extractCategories() {
+				const categorySet = new Set();
+				allArticles.forEach((article) => {
+					const story = article.story || {};
+					// Extract category from URL
+					let category = "";
+					if (story.url) {
+						const urlParts = story.url.split("/");
+						if (urlParts.length > 3) {
+							category = urlParts[3].replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+							if (category) categorySet.add(category);
+						}
+					}
+				});
+				categories = Array.from(categorySet).sort();
+			}
+
+			// Create category filter buttons
+			function createCategoryFilters() {
+				const filterContainer = document.getElementById("filter-container");
+				filterContainer.innerHTML = "";
+
+				// Add "All" button
+				const allButton = document.createElement("button");
+				allButton.className = `filter-btn ${currentCategory === "all" ? "active" : ""}`;
+				allButton.textContent = "All";
+				allButton.onclick = () => filterByCategory("all");
+				filterContainer.appendChild(allButton);
+
+				// Add category buttons
+				categories.forEach((category) => {
+					const button = document.createElement("button");
+					button.className = `filter-btn ${currentCategory === category ? "active" : ""}`;
+					button.textContent = category;
+					button.onclick = () => filterByCategory(category);
+					filterContainer.appendChild(button);
+				});
+			}
+
+			// Filter articles by category
+			function filterByCategory(category) {
+				currentCategory = category;
+				createCategoryFilters();
+				filterArticlesByCategory(category);
+				displayedArticles = 0;
+				renderNewsCards();
+			}
+
+			// In the filterArticlesByCategory() function, replace with:
+			function filterArticlesByCategory(category) {
+				if (category === "all") {
+					filteredArticles = [...allArticles];
+				} else {
+					filteredArticles = allArticles.filter((article) => {
+						const story = article.story || {};
+						if (story.url) {
+							const urlParts = story.url.split("/");
+							if (urlParts.length > 3) {
+								const articleCategory = urlParts[3].replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+								return articleCategory === category;
+							}
+						}
+						return false;
+					});
+				}
+			}
+
+			// Function to render news cards
+			function renderNewsCards() {
+				const newsContainer = document.getElementById("news-container");
+				const articlesToDisplay = filteredArticles.slice(0, displayedArticles + initialLoadCount);
+
+				if (articlesToDisplay.length === 0) {
+					newsContainer.innerHTML = '<div class="error">No articles found</div>';
+					return;
+				}
+
+				const cardsHtml = articlesToDisplay
+					.map((article) => {
+						const item = article.item || {};
+						const story = article.story || {};
+						const originalLink = story.url || " ";
+						const headline = story.headline || item.headline || " ";
+						const summary = story.summary || " ";
+						const imageUrl = story["hero-image-s3-key"] ? `https://media.prothomalo.com/${story["hero-image-s3-key"]}` : ProthomAloLogoURL;
+
+						const publishedAt = story["published-at"]
+							? new Date(story["published-at"]).toLocaleDateString("en-US", {
+									year: "numeric",
+									month: "short",
+									day: "numeric",
+									hour: "2-digit",
+									minute: "2-digit", // time part.
+							  })
+							: "";
+						const author = story["author-name"] || "Unknown author";
+
+						// Get category
+						const urlParts = originalLink.split("/");
+						let category = "";
+						if (urlParts.length > 3) {
+							category = urlParts[3].replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+						}
+
+						// Check if article is read
+						const isRead = readArticles.includes(originalLink);
+
+						return `
+			                 <div class="news-card ${isRead ? "read" : ""}" onclick="openModal('${originalLink}',
+                                 '${encodeURIComponent(headline)}',
+			                     '${encodeURIComponent(summary)}',
+			                     '${encodeURIComponent(imageUrl)}',
+			                     '${encodeURIComponent(story.cards ? JSON.stringify(story.cards) : "[]")}',
+			                     '${encodeURIComponent(publishedAt)}',
+			                     '${encodeURIComponent(author)}',
+								 '${encodeURIComponent(category)}',
+                                 '${story["hero-image-caption"]}')">
+			                     <img src="${imageUrl}" alt="${headline}" class="card-image">
+                                 <div class="card-meta">
+                                        ${category ? `<span class="card-category">${category}</span>` : ""}
+			                             <span>${publishedAt}</span>
+			                         </div>
+			                     <div class="card-content">
+			                         <h3 class="card-title">${headline}</h3>
+			                         <p class="card-description">${summary}</p>
+			                         
+			                     </div>
+			                 </div>
+			             `;
+					})
+					.join("");
+
+				newsContainer.innerHTML = `<div class="news-container">${cardsHtml}</div>`;
+				displayedArticles = articlesToDisplay.length;
+
+				// Show/hide "no more articles" message
+				if (displayedArticles >= filteredArticles.length && filteredArticles.length > 0) {
+					document.getElementById("no-more-articles").style.display = "block";
+				} else {
+					document.getElementById("no-more-articles").style.display = "none";
+				}
+			}
+
+			// Function to load more articles on scroll
+			function checkScroll() {
+				if (isLoading || displayedArticles >= filteredArticles.length) return;
+
+				const scrollPosition = window.innerHeight + window.scrollY;
+				const pageHeight = document.body.offsetHeight;
+				const threshold = 500; // pixels from bottom to start loading
+
+				if (scrollPosition > pageHeight - threshold) {
+					loadMoreArticles();
+				}
+			}
+
+			// Function to load more articles
+			function loadMoreArticles() {
+				if (isLoading || displayedArticles >= filteredArticles.length) return;
+
+				isLoading = true;
+				document.getElementById("loading-more").style.display = "block";
+
+				// Simulate loading delay for better UX
+				setTimeout(() => {
+					renderNewsCards();
+					isLoading = false;
+					document.getElementById("loading-more").style.display = "none";
+				}, 500);
+			}
+
+			// Function to open modal with full article
+			function openModal(originalLink, title, description, imageUrl, cardsJson, date, author, category, coverImgDescription) {
+				// Mark article as read
+				if (!readArticles.includes(originalLink)) {
+					readArticles.push(originalLink);
+					localStorage.setItem("readArticles", JSON.stringify(readArticles));
+				}
+
+				const modal = document.getElementById("article-modal");
+				const modalTitle = document.getElementById("modal-title");
+				const modalBody = document.getElementById("modal-body");
+
+				// Decode the encoded values
+				title = decodeURIComponent(title);
+				description = decodeURIComponent(description);
+				imageUrl = decodeURIComponent(imageUrl);
+				date = decodeURIComponent(date);
+				author = decodeURIComponent(author);
+				category = decodeURIComponent(category);
+
+				// Parse cards data if available
+				let cards = [];
+				try {
+					cards = JSON.parse(decodeURIComponent(cardsJson));
+				} catch (e) {
+					console.error("Error parsing cards data:", e);
+				}
+
+				// Build modal content
+				modalTitle.textContent = title;
+
+				let contentHtml = `
+			             <div class="article-meta" style="margin-bottom: 15px;">
+			                 <span>${author}</span>
+			                 <span>${date}</span>
+			                 ${category ? `<span style="margin-left: 10px; background-color: #d9230f; color: white; padding: 2px 8px; border-radius: 4px;">${category}</span>` : ""}
+			             </div>
+			             <img src="${imageUrl}" alt="${title}" class="modal-image">
+                         ${coverImgDescription ? `<p style="margin-top: -10px; margin-bottom: 10px; text-align: center; font-style: italic;">${coverImgDescription}</p>` : ""}
+			             <p class="modal-text" style="font-weight: bold; margin-bottom: 20px;">${description}</p>
+			         `;
+
+				// Add content from cards if available
+				if (cards.length > 0) {
+					cards.forEach((card) => {
+						if (card["story-elements"]) {
+							card["story-elements"].forEach((element) => {
+								if (element.type === "text" && element.subtype !== "also-read") {
+									contentHtml += `<div class="modal-text">${element.text}</div>`;
+								} else if (element.type === "image") {
+									const imgUrl = element["image-s3-key"] ? `https://media.prothomalo.com/${element["image-s3-key"]}` : imageUrl;
+									contentHtml += `
+			                                 <hr><img src="${imgUrl}" alt="${element.title || ""}" class="modal-image" style="margin: 20px 0;">
+			                                 ${element.title ? `<p style="margin-top: -10px; margin-bottom: 10px; text-align: center; font-style: italic;">${element.title}</p>` : ""}
+											 <hr>`;
+								}
+							});
+						}
+					});
+				} else {
+					contentHtml += `<div class="modal-text">${description}</div>`;
+				}
+
+				//add link to original article
+				contentHtml += `
+                <hr>
+                <div onclick="window.open('${originalLink}', '_blank')" 
+                style="cursor: pointer; font-style: italic; color: blue; text-decoration: underline; display: inline-block;"
+                onmouseover="this.style.color='#0056b3';"
+                onmouseout="this.style.color='blue';">
+                প্রথম আলোর ওয়েবসাইট থেকে মূল লেখা পড়ুন
+                </div>`;
+
+				//add a close button
+				contentHtml += `
+                <div 
+                    onclick="closeModal()" 
+                    style="cursor: pointer; padding: 10px 20px; background-color: #007bff; color: white; border-radius: 8px; text-align: center; width: fit-content; margin: 5px auto;">
+                    Close
+                </div>`;
+
+				modalBody.innerHTML = contentHtml;
+				modal.style.display = "block";
+				document.body.style.overflow = "hidden";
+
+				//scroll to top for better reading
+				modal.scrollTop = 0;
+
+				// Update the article card to show it's been read
+				cards = document.querySelectorAll(".news-card");
+				cards.forEach((card) => {
+					if (card.getAttribute("onclick") && card.getAttribute("onclick").includes(originalLink)) {
+						card.classList.add("read");
+					}
+				});
+			}
+
+			// Function to close modal
+			function closeModal() {
+				const modal = document.getElementById("article-modal");
+				modal.style.display = "none";
+				document.body.style.overflow = "auto";
+			}
+
+			// Close modal when clicking outside content
+			window.onclick = function (event) {
+				const modal = document.getElementById("article-modal");
+				if (event.target === modal) {
+					closeModal();
+				}
+			};
+
+			// Add scroll event listener for infinite scroll
+			window.addEventListener("scroll", checkScroll);
+
+			// Fetch news when page loads
+			document.addEventListener("DOMContentLoaded", fetchLatestNews);
+
+			// Simple HTML escaping function to prevent XSS
+			function escapeHtml(unsafe) {
+				if (!unsafe) return "";
+				return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+			}
+		</script>
+	</body>
+</html>
