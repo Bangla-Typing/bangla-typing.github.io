@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Bangla TTS Streaming with Cache & Download</title>
+		<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+		<style>
+			/* Import Roboto font */
+			@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
+
+			body {
+				font-family: "Roboto", sans-serif;
+				background-color: #f5f5f5; /* Light grey background */
+				margin: 0;
+				padding: 30px 15px; /* Add padding top/bottom and side */
+				color: #333;
+				display: flex; /* Use flex to help center vertically if needed, but main centering is margin:auto */
+				justify-content: center;
+				align-items: flex-start; /* Align container to the top */
+				min-height: 100vh;
+				box-sizing: border-box;
+			}
+
+			/* Container for the main content - THIS IS CRUCIAL */
+			.container {
+				background-color: #ffffff; /* White card */
+				padding: 30px 35px;
+				border-radius: 8px;
+				box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.08); /* Slightly stronger shadow */
+				width: 100%; /* Take available width */
+				max-width: 750px; /* Max width for content card */
+				box-sizing: border-box;
+				/* margin: 30px auto; Remove auto margin if using flex on body */
+			}
+
+			h1 {
+				color: #3f51b5; /* Indigo color */
+				margin-top: 0;
+				margin-bottom: 30px; /* More space below heading */
+				font-weight: 500;
+				text-align: center;
+				border-bottom: 1px solid #e0e0e0; /* Lighter border */
+				padding-bottom: 20px;
+				font-size: 1.75rem; /* Slightly larger heading */
+			}
+
+			label {
+				display: block;
+				margin-bottom: 10px; /* More space below label */
+				font-weight: 500;
+				color: #444; /* Darker label */
+				font-size:1rem;
+			}
+
+			textarea {
+				display: block;
+				width: 100%;
+				height: 40vh; /* Slightly taller */
+				margin-bottom: 25px; /* More space below textarea */
+				padding: 14px 16px;
+				border: 1px solid #d0d0d0; /* Slightly darker border */
+				border-radius: 4px;
+				font-size: 1rem;
+				line-height: 1.6;
+				box-sizing: border-box;
+				resize: vertical;
+				transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+			}
+
+			textarea:focus {
+				border-color: #3f51b5;
+				outline: none;
+				box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.25); /* Slightly more prominent focus */
+			}
+
+			/* Button container */
+			.button-group {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 12px; /* Space between buttons */
+				margin-top: 20px;
+				justify-content: flex-start; /* Align buttons to the start */
+			}
+
+			button {
+				padding: 10px 22px; /* Adjusted padding */
+				border: none;
+				border-radius: 4px;
+				font-size: 0.9rem;
+				font-weight: 500;
+				text-transform: uppercase;
+				cursor: pointer;
+				transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.1s ease;
+				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+				letter-spacing: 0.6px; /* Slightly more letter spacing */
+				min-width: 120px; /* Ensure buttons have a minimum width */
+				text-align: center;
+			}
+
+			button:hover:not(:disabled) {
+				box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+				transform: translateY(-1px); /* Slight lift effect */
+			}
+
+			button:active:not(:disabled) {
+				transform: translateY(1px);
+				box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+			}
+
+			button:disabled {
+				cursor: not-allowed;
+				background-color: #e0e0e0 !important;
+				color: #a0a0a0 !important;
+				box-shadow: none;
+				transform: none;
+			}
+
+			/* Specific button styles */
+			#startButton {
+				background-color: #4caf50; /* Green */
+				color: white;
+			}
+			#startButton:hover:not(:disabled) {
+				background-color: #45a049;
+			}
+
+			#stopButton {
+				background-color: #f44336; /* Red */
+				color: white;
+			}
+			#stopButton:hover:not(:disabled) {
+				background-color: #e53935;
+			}
+
+			#downloadButton {
+				background-color: #2196f3; /* Blue */
+				color: white;
+			}
+			#downloadButton:hover:not(:disabled) {
+				background-color: #1e88e5;
+			}
+
+			
+			#status {
+				margin-top: 15px;
+			}
+
+			/* Responsive adjustments */
+			@media (max-width: 600px) {
+				body {
+					padding: 15px 10px; /* Less padding on small screens */
+				}
+				.container {
+					padding: 20px 15px; /* Less padding inside container */
+				}
+				h1 {
+					font-size: 1.5rem;
+					margin-bottom: 20px;
+					padding-bottom: 15px;
+				}
+				.button-group {
+					flex-direction: column; /* Stack buttons */
+					align-items: stretch; /* Make buttons full width */
+					gap: 10px;
+				}
+				button {
+					width: 100%;
+					min-width: unset; /* Remove min-width when stacked */
+				}
+				textarea {
+					height: 40vh;
+					margin-bottom: 20px;
+				}
+			}
+		</style>
+	</head>
+	<div class="container"> <!-- Ensure this wraps everything -->
+		<h1><span style="font-size: 2.5rem; font-weight: bold;" id="name-display">...</span><br><span style="font-size: 1.2rem;">বাংলা টেক্সট টু স্পিচ</span></h1> <!-- Added line break for better title flow -->
+	
+		<label for="longText">নিচের বক্সে বাংলা লিখুন:</label>
+		<textarea id="longText">স্মার্টফোন ব্যবহারে বাংলাদেশ পিছিয়ে আছে। ব্যবহার বাড়াতে সবার জন্য কিস্তিতে মুঠোফোন কেনার সুবিধা চালু করা প্রয়োজন। একটি বাসার নিরাপত্তাকর্মী হিসেবে কাজ করেন মো. জিয়া। তিন বছর আগে একটি স্মার্টফোন কিনেছিলেন তিনি, সেটি এখন আর ঠিকভাবে কাজ করে না। কলেজপড়ুয়া ছেলেও পড়াশোনার কাজের জন্য মুঠোফোন কিনতে চাচ্ছে। কিন্তু তাঁর পক্ষে একসঙ্গে ৮ থেকে ১০ হাজার টাকা ব্যয় করে মুঠোফোন কেনার সামর্থ্য নেই। জিয়ার কাছে জানতে চাওয়া হয়েছিল, ১০ হাজার টাকার মুঠোফোন যদি কিস্তিতে কেনার সুবিধা থাকত, তাহলে তিনি কিনতেন কি না। জিয়া বলেন, তাহলে এখনই সে সুবিধা তিনি নিতেন। কিন্তু জিয়ার মতো মানুষের আগ্রহ থাকলেও তাঁর জন্য এই কিস্তি সুবিধা নেই। জাপানের মতো উন্নত বিশ্বের দেশেও জনসাধারণের কিস্তিতে মুঠোফোন কেনার সুবিধা আছে। সে দেশে মোবাইল অপারেটররা একটি নির্দিষ্ট সময় পর্যন্ত সিম লক রেখে কিস্তিতে ফোন বিক্রি করে। এমনকি ভারতেও এ সুবিধা আছে। কিন্তু বাংলাদেশে এ সুবিধা চালু করার দাবি দীর্ঘদিনের। একবার এই সুবিধা চালুর সিদ্ধান্ত হয়েও তা কার্যকর হয়নি। শুধু ক্রেডিট কার্ডধারীরা কিস্তি সুবিধায় নির্দিষ্ট কিছু জায়গায় মুঠোফোন কিনতে পারে</textarea>
+	
+		<div class="button-group"> <!-- Ensure this wraps the buttons -->
+			<button id="startButton" onclick="startTTS()">Start TTS</button>
+			<button id="stopButton" onclick="stopTTS()" disabled>Stop TTS</button>
+			<button id="downloadButton" onclick="downloadFullAudio()" disabled>Download Audio</button>
+			<button id="clearCacheButton" onclick="clearTTScache()">Clear Cache</button>
+		</div>
+	
+		<div id="status">Status: Idle</div>
+	  </div> <!-- End Container -->
+
+		<script>
+			const socket = io("wss://read.bangla.gov.bd:9395", {
+				path: "/socket.io/",
+				transports: ["websocket"],
+				reconnectionAttempts: 5,
+				reconnectionDelay: 3000,
+			});
+
+			const textInput = document.getElementById("longText");
+			const startButton = document.getElementById("startButton");
+			const stopButton = document.getElementById("stopButton");
+			const downloadButton = document.getElementById("downloadButton");
+			const clearCacheButton = document.getElementById("clearCacheButton");
+			const statusDiv = document.getElementById("status");
+
+			const MAX_CHUNK_LENGTH = 950;
+			const CACHE_PREFIX = "ttsCache_";
+
+			let textChunks = [];
+			let audioQueue = {}; // For playback management { index: base64data }
+			let completeAudioData = []; // Stores all chunks for download [base64data, base64data, ...]
+			let currentTextHash = null; // Hash of the full input text for caching
+			let currentChunkIndex = 0;
+			let fetchingChunkIndex = -1;
+			let currentAudioElement = null;
+			let isPlaying = false;
+			let isStopped = true;
+			let expectedChunksCount = 0; // Keep track of total chunks for download check
+
+			// --- Utility Functions ---
+
+			// Simple hash function (for cache key)
+			function simpleHash(str) {
+				let hash = 0;
+				for (let i = 0; i < str.length; i++) {
+					const char = str.charCodeAt(i);
+					hash = (hash << 5) - hash + char;
+					hash |= 0; // Convert to 32bit integer
+				}
+				return hash.toString(); // Return as string
+			}
+
+			// Convert Base64 to Blob
+			function base64ToBlob(base64, contentType = "audio/mp3") {
+				try {
+					const byteCharacters = atob(base64);
+					const byteNumbers = new Array(byteCharacters.length);
+					for (let i = 0; i < byteCharacters.length; i++) {
+						byteNumbers[i] = byteCharacters.charCodeAt(i);
+					}
+					const byteArray = new Uint8Array(byteNumbers);
+					return new Blob([byteArray], { type: contentType });
+				} catch (e) {
+					console.error("Error converting base64 to Blob:", e);
+					return null;
+				}
+			}
+
+			function updateStatus(message, type = "info") {
+				// type: 'info', 'error', 'success', 'cached'
+				console.log("Status:", message);
+				statusDiv.textContent = `Status: ${message}`;
+				statusDiv.className = type; // Resets previous classes
+			}
+
+			function clearTTScache() {
+				let keysToRemove = [];
+				for (let i = 0; i < localStorage.length; i++) {
+					if (localStorage.key(i).startsWith(CACHE_PREFIX)) {
+						keysToRemove.push(localStorage.key(i));
+					}
+				}
+				keysToRemove.forEach((key) => localStorage.removeItem(key));
+				updateStatus(`Cleared ${keysToRemove.length} items from TTS cache.`, "success");
+			}
+
+			// --- Text Splitting (same as before) ---
+			function splitText(text, maxLength) {
+				const chunks = [];
+				let startIndex = 0;
+				const sentenceEndings = /[।?!.]\s+/g;
+				const whitespace = /\s+/g;
+
+				while (startIndex < text.length) {
+					let endIndex = startIndex + maxLength;
+					if (endIndex >= text.length) {
+						chunks.push(text.substring(startIndex).trim());
+						break;
+					}
+
+					let splitIndex = -1;
+					let tempText = text.substring(startIndex, endIndex);
+					let lastSentenceEnd = -1;
+					let match;
+					sentenceEndings.lastIndex = 0;
+					while ((match = sentenceEndings.exec(tempText)) !== null) {
+						lastSentenceEnd = match.index + match[0].length;
+					}
+
+					if (lastSentenceEnd > 0 && lastSentenceEnd > maxLength * 0.6) {
+						// Prefer sentence split if reasonably placed
+						splitIndex = startIndex + lastSentenceEnd;
+					} else {
+						tempText = text.substring(startIndex, endIndex);
+						whitespace.lastIndex = 0;
+						let lastSpace = -1;
+						while ((match = whitespace.exec(tempText)) !== null) {
+							lastSpace = match.index;
+						}
+						if (lastSpace > 0 && lastSpace < tempText.length - 1) {
+							// Avoid splitting at the very end if possible
+							splitIndex = startIndex + lastSpace + 1;
+						} else {
+							splitIndex = endIndex;
+						}
+					}
+					const chunk = text.substring(startIndex, splitIndex).trim();
+					if (chunk) chunks.push(chunk);
+					startIndex = splitIndex;
+				}
+				return chunks.filter((chunk) => chunk.length > 0);
+			}
+
+			// --- Control Functions ---
+			function startTTS() {
+				const longText = textInput.value.trim();
+				if (!longText) {
+					updateStatus("Please enter some text.", "error");
+					return;
+				}
+				if (!socket.connected) {
+					updateStatus("Error: Not connected to TTS server.", "error");
+					return;
+				}
+
+				// Reset state
+				stopTTS(); // Ensure clean state before starting
+				isStopped = false;
+				isPlaying = false;
+				currentChunkIndex = 0;
+				fetchingChunkIndex = -1;
+				audioQueue = {};
+				completeAudioData = []; // Reset array for download
+				currentTextHash = simpleHash(longText); // Generate hash for this text
+				textChunks = splitText(longText, MAX_CHUNK_LENGTH);
+				expectedChunksCount = textChunks.length; // Store expected count
+				completeAudioData = new Array(expectedChunksCount).fill(null); // Initialize download array
+
+				if (expectedChunksCount === 0) {
+					updateStatus("Text could not be split.", "error");
+					isStopped = true; // Go back to stopped state
+					return;
+				}
+
+				console.log(`Text hash: ${currentTextHash}, Split into ${expectedChunksCount} chunks.`);
+
+				startButton.disabled = true;
+				stopButton.disabled = false;
+				downloadButton.disabled = true; // Disable download until finished
+				textInput.disabled = true;
+				updateStatus(`Split into ${expectedChunksCount} chunks. Starting...`);
+
+				// Start fetching/playing the first chunk
+				fetchAndPlayChunk(0);
+			}
+
+			function stopTTS(finished = false) {
+				console.log(`Stopping TTS. Finished: ${finished}`);
+				isStopped = true;
+				isPlaying = false;
+				if (currentAudioElement) {
+					currentAudioElement.pause();
+					currentAudioElement.src = "";
+					currentAudioElement.onended = null;
+					currentAudioElement.onerror = null;
+					currentAudioElement = null;
+				}
+
+				// Reset most state variables
+				// Note: We keep completeAudioData and currentTextHash until startTTS or download is done
+				textChunks = []; // Clear text chunks
+				audioQueue = {};
+				currentChunkIndex = 0;
+				fetchingChunkIndex = -1;
+				// expectedChunksCount should remain until next start
+
+				startButton.disabled = socket.connected ? false : true; // Enable start only if connected
+				stopButton.disabled = true;
+				textInput.disabled = false;
+
+				// Check if finished successfully and all data is available for download
+				const allChunksReceived = expectedChunksCount > 0 && completeAudioData.length === expectedChunksCount && completeAudioData.every((data) => data !== null);
+
+				if (finished && allChunksReceived) {
+					updateStatus(`Finished. ${expectedChunksCount} chunks processed. Ready to download.`, "success");
+					downloadButton.disabled = false; // Enable download
+				} else if (finished) {
+					updateStatus(`Finished, but some audio data might be missing (${completeAudioData.filter((d) => d).length}/${expectedChunksCount}). Download disabled.`, "error");
+					downloadButton.disabled = true;
+				} else {
+					updateStatus("Stopped by user.");
+					downloadButton.disabled = true; // Ensure download is disabled if stopped early
+				}
+
+				// Clear potentially sensitive data if not needed for download
+				// if (!finished || !allChunksReceived) {
+				//     completeAudioData = [];
+				//     currentTextHash = null;
+				//     expectedChunksCount = 0;
+				// }
+			}
+
+			// --- Core Logic: Fetching and Playing ---
+
+			function fetchAndPlayChunk(index) {
+				if (isStopped || index >= expectedChunksCount || index <= fetchingChunkIndex) {
+					return;
+				}
+				if (audioQueue[index]) {
+					// Already fetched (e.g., via cache) and in queue
+					if (index === currentChunkIndex && !isPlaying) {
+						playAudioChunk(index);
+					}
+					return;
+				}
+
+				const cacheKey = `${CACHE_PREFIX}${currentTextHash}_${index}`;
+				let cachedAudio = null;
+				try {
+					cachedAudio = localStorage.getItem(cacheKey);
+				} catch (e) {
+					console.warn("Could not access localStorage (maybe private browsing or storage full). Caching disabled.", e);
+				}
+
+				if (cachedAudio) {
+					console.log(`Using cached audio for chunk ${index}`);
+					updateStatus(`Playing chunk ${index + 1}/${expectedChunksCount} (from cache)...`, "cached");
+					// Process cached data similarly to received data
+					processAudioData(index, cachedAudio);
+				} else {
+					// Not cached, fetch from server
+					fetchingChunkIndex = index;
+					updateStatus(`Fetching chunk ${index + 1}/${expectedChunksCount} from server...`);
+					console.log(`Requesting TTS for chunk ${index}: "${textChunks[index].substring(0, 30)}..."`);
+
+					if (!socket.connected) {
+						console.error("Socket disconnected before fetching chunk", index);
+						updateStatus("Connection lost. Cannot fetch audio.", "error");
+						stopTTS(); // Stop the process if disconnected
+						return;
+					}
+
+					socket.emit("text_transmit", {
+						text: textChunks[index],
+						model: "vits",
+						gender: "female",
+						speaker: 0,
+						index: index, // Critical: ensure server sends this back
+					});
+				}
+			}
+
+			// --- Central function to handle received/cached audio data ---
+			function processAudioData(index, audioBase64) {
+				if (isStopped) return; // Ignore if stopped
+
+				// Store for playback queue and for final download
+				audioQueue[index] = audioBase64;
+				if (index < expectedChunksCount) {
+					// Ensure index is valid
+					completeAudioData[index] = audioBase64;
+				} else {
+					console.warn(`Received data for unexpected index ${index}. Expected max ${expectedChunksCount - 1}`);
+					return;
+				}
+
+				console.log(`Processed audio for chunk ${index}. Queue keys: ${Object.keys(audioQueue)}`);
+
+				// If this is the chunk we are currently waiting to play, start playing it.
+				if (index === currentChunkIndex && !isPlaying) {
+					console.log(`Chunk ${index} is the current one needed, starting playback.`);
+					playAudioChunk(currentChunkIndex);
+				}
+				// If it's not the current one, playback will be triggered by the previous chunk's 'onended' event
+				// or if playback catches up to this index later.
+
+				// Check if prefetch needs updating (ensure next chunk is being fetched)
+				const nextIndexToFetch = Math.max(currentChunkIndex, fetchingChunkIndex) + 1;
+				if (nextIndexToFetch < expectedChunksCount && !(nextIndexToFetch in audioQueue) && !localStorage.getItem(`${CACHE_PREFIX}${currentTextHash}_${nextIndexToFetch}`)) {
+					console.log(`Ensuring prefetch for chunk ${nextIndexToFetch} is triggered.`);
+					fetchAndPlayChunk(nextIndexToFetch);
+				}
+			}
+
+			function playAudioChunk(index) {
+				if (isStopped || !(index in audioQueue)) {
+					console.log(`Skipping play for chunk ${index}. Stopped: ${isStopped}, In queue: ${index in audioQueue}`);
+					// If stopped but chunk IS in queue, don't mark as error, just don't play
+					if (!isStopped && !(index in audioQueue)) {
+						updateStatus(`Error: Audio data for chunk ${index + 1} not available!`, "error");
+						stopTTS(); // Stop if essential data is missing unexpectedly
+					}
+					return;
+				}
+
+				isPlaying = true;
+				// Update status only if not from cache (cache status set in fetchAndPlayChunk)
+				if (!statusDiv.classList.contains("cached")) {
+					updateStatus(`Playing chunk ${index + 1}/${expectedChunksCount}...`);
+				}
+				console.log(`Playing chunk ${index}`);
+
+				const audioData = audioQueue[index];
+				delete audioQueue[index]; // Remove from active playback queue
+
+				const audioBlob = base64ToBlob(audioData);
+				if (!audioBlob) {
+					updateStatus(`Error creating audio object for chunk ${index + 1}.`, "error");
+					stopTTS();
+					return;
+				}
+				const audioUrl = URL.createObjectURL(audioBlob);
+
+				currentAudioElement = new Audio(audioUrl);
+
+				// --- Prefetch next chunk (important!) ---
+				const nextIndex = index + 1;
+				if (nextIndex < expectedChunksCount && !(nextIndex in audioQueue) && nextIndex > fetchingChunkIndex) {
+					// Check cache again before fetching
+					const nextCacheKey = `${CACHE_PREFIX}${currentTextHash}_${nextIndex}`;
+					if (!localStorage.getItem(nextCacheKey)) {
+						console.log(`Prefetching chunk ${nextIndex} from server`);
+						fetchAndPlayChunk(nextIndex); // Start fetching the *next* chunk now
+					} else {
+						console.log(`Prefetching chunk ${nextIndex} from cache`);
+						fetchAndPlayChunk(nextIndex); // Will hit cache and process quickly
+					}
+				}
+
+				currentAudioElement.onended = () => {
+					console.log(`Finished playing chunk ${index}`);
+					URL.revokeObjectURL(audioUrl); // Clean up blob URL
+					isPlaying = false;
+					currentAudioElement = null;
+					statusDiv.classList.remove("cached"); // Clear cached status indicator
+					currentChunkIndex++;
+
+					if (isStopped) return;
+
+					if (currentChunkIndex < expectedChunksCount) {
+						if (currentChunkIndex in audioQueue) {
+							console.log(`Next chunk ${currentChunkIndex} is ready, playing immediately.`);
+							playAudioChunk(currentChunkIndex);
+						} else {
+							// Check cache one last time before showing buffering
+							const nextCacheKey = `${CACHE_PREFIX}${currentTextHash}_${currentChunkIndex}`;
+							if (localStorage.getItem(nextCacheKey)) {
+								console.log(`Next chunk ${currentChunkIndex} found in cache, processing...`);
+								fetchAndPlayChunk(currentChunkIndex); // Trigger cache hit and playback
+							} else {
+								updateStatus(`Buffering chunk ${currentChunkIndex + 1}/${expectedChunksCount}...`);
+								console.log(`Waiting for chunk ${currentChunkIndex} data...`);
+								// Ensure fetch was triggered if needed
+								if (currentChunkIndex > fetchingChunkIndex) {
+									fetchAndPlayChunk(currentChunkIndex);
+								}
+							}
+						}
+					} else {
+						console.log("All chunks finished.");
+						stopTTS(true); // Call stop with finished flag
+					}
+				};
+
+				currentAudioElement.onerror = (e) => {
+					console.error(`Error playing audio for chunk ${index}:`, e);
+					URL.revokeObjectURL(audioUrl);
+					updateStatus(`Error playing chunk ${index + 1}. Stopping.`, "error");
+					stopTTS();
+				};
+
+				currentAudioElement.play().catch((error) => {
+					console.error(`Error initiating playback for chunk ${index}:`, error);
+					URL.revokeObjectURL(audioUrl);
+					updateStatus(`Playback error chunk ${index + 1}.`, "error");
+					stopTTS();
+				});
+			}
+
+			// --- Download Function ---
+			function downloadFullAudio() {
+				if (!completeAudioData || expectedChunksCount === 0 || completeAudioData.length !== expectedChunksCount || !completeAudioData.every((d) => d !== null)) {
+					updateStatus("Cannot download: Audio data is incomplete or missing.", "error");
+					console.error("Download failed: Incomplete data", completeAudioData, expectedChunksCount);
+					downloadButton.disabled = true; // Disable again if state is bad
+					return;
+				}
+
+				updateStatus("Preparing download...", "info");
+				console.log("Starting download preparation...");
+
+				try {
+					const audioBlobs = completeAudioData.map((base64, index) => {
+						const blob = base64ToBlob(base64);
+						if (!blob) throw new Error(`Failed to convert chunk ${index} to Blob`);
+						return blob;
+					});
+
+					// Concatenate blobs
+					const fullBlob = new Blob(audioBlobs, { type: "audio/mp3" });
+					const fullUrl = URL.createObjectURL(fullBlob);
+
+					// Create temporary link and click it
+					const a = document.createElement("a");
+					a.style.display = "none";
+					a.href = fullUrl;
+					a.download = `bangla_tts_${currentTextHash || Date.now()}.mp3`; // Use hash or timestamp for filename
+					document.body.appendChild(a);
+					a.click();
+
+					// Clean up
+					window.URL.revokeObjectURL(fullUrl);
+					document.body.removeChild(a);
+					updateStatus("Download started.", "success");
+					console.log("Download initiated.");
+				} catch (error) {
+					console.error("Error during download preparation:", error);
+					updateStatus(`Download failed: ${error.message}`, "error");
+				}
+			}
+
+			// --- Socket Event Handlers ---
+			socket.on("connect", () => {
+				console.log("Socket connected:", socket.id);
+				updateStatus("Connected to TTS server. Ready.");
+				startButton.disabled = false;
+				stopButton.disabled = true; // Should be stopped initially
+				downloadButton.disabled = true; // Download always starts disabled
+			});
+
+			socket.on("result", (data) => {
+				if (isStopped) return;
+
+				console.log(`Received audio data for chunk index: ${data.index}`);
+				if (typeof data.index !== "number" || !data.audio || !currentTextHash) {
+					console.error("Received invalid data structure or state invalid:", data, currentTextHash);
+					updateStatus(`Received invalid data for chunk.`, "error");
+					// Maybe stop if critical data is malformed?
+					return;
+				}
+
+				// Cache the received data
+				const cacheKey = `${CACHE_PREFIX}${currentTextHash}_${data.index}`;
+				try {
+					localStorage.setItem(cacheKey, data.audio);
+				} catch (e) {
+					console.warn(`Failed to cache chunk ${data.index}: ${e.message}`);
+					// Potentially update status to warn user caching failed?
+				}
+
+				// Process the data (adds to queue, download array, triggers play if needed)
+				processAudioData(data.index, data.audio);
+			});
+
+			socket.on("disconnect", (reason) => {
+				console.warn("Socket disconnected:", reason);
+				updateStatus("Disconnected. Attempting to reconnect...", "error");
+				if (!isStopped) {
+					// If it was playing or fetching
+					stopTTS();
+				}
+				startButton.disabled = true;
+				stopButton.disabled = true;
+				downloadButton.disabled = true;
+			});
+
+			socket.on("connect_error", (err) => {
+				console.error("Socket connection error:", err.message);
+				updateStatus(`Connection Error: ${err.message}.`, "error");
+				if (!isStopped) {
+					stopTTS();
+				}
+				startButton.disabled = true;
+				stopButton.disabled = true;
+				downloadButton.disabled = true;
+			});
+
+			socket.on("error", (err) => {
+				// General errors
+				console.error("Socket error:", err);
+				updateStatus(`Server communication error: ${err.message || err}. Stopping.`, "error");
+				if (!isStopped) {
+					stopTTS();
+				}
+			});
+
+			// --- Initial state ---
+			if (!socket.connected) {
+				updateStatus("Connecting...");
+				startButton.disabled = true;
+			}
+
+			function loadName() {
+				const names = [
+					"শব্দকণ্ঠ",
+					"কথাকলি",
+					"ধ্বনিরূপা",
+					"শব্দযাত্রী",
+					"কণ্ঠধ্বনি",
+					"বর্ণকণ্ঠ ",
+					"কথামালা",
+					"স্বরশিল্পী"
+        			];
+            const randomIndex = Math.floor(Math.random() * names.length);
+            document.getElementById("name-display").textContent = names[randomIndex];
+			}
+
+			window.onload=loadName;
+
+			
+		</script>
+	</body>
+</html>
