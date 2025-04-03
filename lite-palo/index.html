@@ -1128,7 +1128,7 @@
 						return banglaVoices;
 					} else {
 						console.error("TTS Error: No Bangla text-to-speech voice available.");
-						alert("TTS Error: No Bangla text-to-speech voice available.");
+						ttsStatus.textContent = "Can't Load Bangla TTS, Try Again.";
 						return null;
 					}
 				};
@@ -1192,8 +1192,19 @@
 					window.speechSynthesis.speak(ttsUtterance);
 				};
 
-				// Attach play handler to button
+				const stopHandler = () => {
+					if (window.speechSynthesis) {
+						window.speechSynthesis.cancel(); // This should trigger onend event naturally
+					}
+					// Force state reset in case onend doesn't fire quickly
+					ttsPlay.style.display = "inline-block";
+					ttsStop.style.display = "none";
+					ttsStatus.textContent = "Stopped";
+				};
+
+				// Attach play and handler to button
 				ttsPlay.onclick = playHandler;
+				ttsStop.onclick = stopHandler;
 			}
 
 			// --- Global Event Listeners ---
