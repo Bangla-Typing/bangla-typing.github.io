@@ -199,7 +199,7 @@
 				margin-bottom: 15px;
 				text-align: center;
 				font-style: italic;
-				font-size: 0.9em;
+				font-size: 1em;
 				color: #666;
 			}
 			.modal-text {
@@ -623,10 +623,6 @@
 					readArticles = [];
 					document.querySelectorAll(".news-card.read").forEach((card) => {
 						card.classList.remove("read");
-						// Force redraw if needed, though class removal usually suffices
-						// card.style.display = 'none';
-						// card.offsetHeight; // Trigger reflow
-						// card.style.display = '';
 					});
 					alert("Read status has been cleared.");
 				}
@@ -651,14 +647,18 @@
 			}
 
 			function createCardHtml(article, index) {
-				const story = article.story || {};
-				const originalLink = story.url || "#"; // Use # as fallback
-				const headline = story.headline || "";
-				const summary = story.summary || "";
-				const imageUrl = story["hero-image-s3-key"] ? `https://media.prothomalo.com/${story["hero-image-s3-key"]}` : ProthomAloLogoURL;
-				const publishedAt = formatDate(story["published-at"]);
-				const category = getCategoryFromUrl(originalLink);
-				const isRead = readArticles.includes(originalLink);
+				let story = article.story || {};
+				let originalLink = story.url || "#"; // Use # as fallback
+				let headline = story.headline || "";
+				let summary = story.summary || "";
+				let imageUrl = story["hero-image-s3-key"] ? `https://media.prothomalo.com/${story["hero-image-s3-key"]}` : ProthomAloLogoURL;
+				let publishedAt = formatDate(story["published-at"]);
+				let category = getCategoryFromUrl(originalLink);
+				let isRead = readArticles.includes(originalLink);
+
+				if (summary == "") {
+					summary = story.metadata.excerpt;
+				}
 
 				return `
 			                  <div class="news-card ${isRead ? "read" : ""}" data-index="${index}" data-link="${escapeHtml(originalLink)}" onclick="openModalFromCard(${index})">
@@ -761,6 +761,7 @@
 
 				return {
 					index: index,
+					story: story,
 					originalLink: originalLink,
 					headline: story.headline || item.headline || "",
 					summary: story.summary || "",
@@ -794,8 +795,15 @@
 																}
 			                     </div>
 			                     <img src="${articleData.imageUrl}" alt="${escapeHtml(articleData.headline)}" class="modal-image">
-			                     ${articleData.coverImgDescription ? `<p class="modal-image-caption">ছবি: ${escapeHtml(articleData.coverImgDescription)}</p>` : ""}
+			                     ${
+															articleData.coverImgDescription
+																? `<p class="modal-image-caption">${escapeHtml(articleData.coverImgDescription)}${
+																		articleData.story["hero-image-attribution"] ? ` [${escapeHtml(articleData.story["hero-image-attribution"])}]` : ""
+																  }</p>`
+																: ""
+														}
 			                     <p class="modal-text" style="font-weight: bold; margin-bottom: 20px; font-size: 1.1em;">${escapeHtml(articleData.summary)}</p>
+								 
 			                 `;
 
 					const cards = JSON.parse(articleData.cardsJson);
@@ -813,8 +821,14 @@
 										const imgTitle = element.title || "";
 										contentHtml += `
 			                                         <hr style="margin: 20px 0;">
-			                                         <img src="${imgUrl}" alt="ছবি:${escapeHtml(imgTitle)}" class="modal-image" loading="lazy">
-			                                         ${imgTitle ? `<p class="modal-image-caption">ছবি: ${escapeHtml(imgTitle)}</p>` : ""}
+			                                         <img src="${imgUrl}" alt="${escapeHtml(imgTitle)}" class="modal-image" loading="lazy">
+			                                         ${
+																									imgTitle
+																										? `<p class="modal-image-caption">${escapeHtml(imgTitle)}${
+																												articleData.story["hero-image-attribution"] ? ` [${escapeHtml(articleData.story["hero-image-attribution"])}]` : ""
+																										  }`
+																										: ""
+																								}
 			                                         <hr style="margin: 20px 0;">`;
 									}
 									// TODO: Add handlers for other element types (quote, list, etc.) if needed
