@@ -277,6 +277,22 @@
 					margin-left: 0;
 					margin-top: 5px;
 				}
+				.close-modal {
+					font-weight: bold;
+					font-size: 4rem;
+					text-align: center;
+					/*line-height: 0.5;*/
+					background: #000000;
+					position: absolute;
+					top: 0%;
+					transform: translateY(-60%);
+					right: -15px;
+					width: 50px;
+					height: 50px;
+					background-color: rgb(221 132 132 / 66%);
+					border-radius: 50%;
+					cursor: pointer;
+				}
 			}
 
 			#clear-read-btn:hover {
@@ -502,6 +518,9 @@
 			let isLoading = false;
 			let isAnimating = false; // Flag to prevent overlapping animations/clicks
 			let currentModalIndex = -1;
+
+			let availableVoices = [];
+			let ttsInitializationAttempted = false; // Flag to prevent repeated initial calls
 
 			// References to page navigation buttons (declared globally for easier access)
 			let pagePrevBtn = null;
@@ -927,6 +946,44 @@
 				setupTTS(); // Setup TTS for the new content
 			}
 
+			// --- Function to update the global voice list ---
+			function updateVoiceList() {
+				if (!("speechSynthesis" in window)) return; // Guard clause
+				availableVoices = window.speechSynthesis.getVoices();
+				console.log("SpeechSynthesis voices updated. Count:", availableVoices.length);
+				// You could potentially enable TTS buttons here if they were initially disabled
+			}
+
+			// --- Initialize TTS Voice Loading ---
+			function initializeTTS() {
+				if (!("speechSynthesis" in window)) {
+					console.warn("Speech Synthesis not supported by this browser.");
+					// Optionally disable TTS buttons visually if not supported
+					const playBtn = document.getElementById("tts-play");
+					const stopBtn = document.getElementById("tts-stop");
+					if (playBtn) playBtn.disabled = true;
+					if (stopBtn) stopBtn.disabled = true; // Although hidden initially
+					return;
+				}
+
+				if (ttsInitializationAttempted) return; // Only run once
+				ttsInitializationAttempted = true;
+
+				// Listen for the voiceschanged event to update the list when ready
+				window.speechSynthesis.onvoiceschanged = updateVoiceList;
+
+				// Attempt to get voices immediately.
+				// This might return an empty list initially, but it helps trigger the loading
+				// and the onvoiceschanged event on many platforms.
+				updateVoiceList(); // Call it once straight away
+
+				// Sometimes a short delay and another call helps on stubborn platforms
+				setTimeout(() => {
+					updateVoiceList();
+					console.log("Retrying voice list fetch after short delay.");
+				}, 500); // 500ms delay, adjust if needed
+			}
+
 			function updateNavigationButtons() {
 				if (pagePrevBtn && pageNextBtn) {
 					pagePrevBtn.disabled = isAnimating || currentModalIndex <= 0;
@@ -1113,26 +1170,48 @@
 					return;
 				}
 
+				// Ensure TTS is initialized (safe to call multiple times due to flag)
+				initializeTTS();
+
 				// Reset state
 				ttsPlay.style.display = "inline-block";
 				ttsStop.style.display = "none";
 				ttsStatus.textContent = "";
-				ttsPlay.onclick = null;
-				ttsStop.onclick = null;
+				ttsPlay.onclick = null; // Clear previous handlers
+				ttsStop.onclick = null; // Clear previous handlers
+				ttsPlay.disabled = false; // Re-enable button if it was disabled
 
+				// --- Modified checkBanglaTTS - Checks the global list ---
 				const checkBanglaTTS = () => {
-					const voices = speechSynthesis.getVoices();
-					const banglaVoices = voices.filter((voice) => voice.lang.startsWith("bn"));
+					// Force an update check right before using, especially helpful on Android
+					if ("speechSynthesis" in window) {
+						updateVoiceList();
+					}
+
+					console.log(`Checking for Bangla voice. Available voices: ${availableVoices.length}`);
+					const banglaVoices = availableVoices.filter((voice) => voice.lang.startsWith("bn")); // Check 'bn' or 'bn-BD' etc.
+
 					if (banglaVoices.length > 0) {
-						console.log("Bangla TTS available:", banglaVoices);
-						return banglaVoices;
+						console.log("Bangla TTS voice found:", banglaVoices[0]);
+						return banglaVoices; // Return the array of found voices
 					} else {
-						console.error("TTS Error: No Bangla text-to-speech voice available.");
-						ttsStatus.textContent = "Can't Load Bangla TTS, Try Again.";
-						return null;
+						console.error("TTS Error: No Bangla text-to-speech voice available in the current list.");
+						if (availableVoices.length === 0 && "speechSynthesis" in window && window.speechSynthesis.pending) {
+							ttsStatus.textContent = "Voices loading, please wait...";
+							console.warn("Voice list empty, synthesis pending. Might need another click.");
+						} else if (availableVoices.length === 0) {
+							ttsStatus.textContent = "No voices loaded, try again.";
+							console.warn("Voice list empty. Triggering load again.");
+							// Try triggering load again
+							if ("speechSynthesis" in window) window.speechSynthesis.getVoices();
+						} else {
+							ttsStatus.textContent = "Bangla voice not found.";
+						}
+						return null; // Indicate failure
 					}
 				};
 
+				// --- Modified playHandler - Uses the modified check ---
 				const playHandler = () => {
 					if (isAnimating) return;
 
@@ -1141,13 +1220,21 @@
 						return;
 					}
 
-					// Check for Bangla TTS
+					// *** Key Change: Check for voices *using the updated function* ***
 					const banglaVoices = checkBanglaTTS();
-					if (!banglaVoices) return; // Stop if no Bangla TTS is available
+					if (!banglaVoices || banglaVoices.length === 0) {
+						// checkBanglaTTS now updates the status message itself
+						console.log("Play cancelled: No suitable Bangla voice found at this time.");
+						return; // Stop if no Bangla TTS is available
+					}
 
-					window.speechSynthesis.cancel(); // Cancel any ongoing speech
+					// If speaking, stop previous
+					if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+						console.log("TTS: Cancelling previous utterance.");
+						window.speechSynthesis.cancel();
+					}
 
-					// Extract text more selectively
+					// Extract text (no changes needed here)
 					const title = document.getElementById("modal-title")?.textContent || "";
 					let textToSpeak = title + ". ";
 					const bodyElements = modalContent.querySelectorAll(".modal-text, .modal-image-caption");
@@ -1160,21 +1247,25 @@
 
 					if (!textToSpeak.trim() || textToSpeak.length < title.length + 5) {
 						ttsStatus.textContent = "No text content found";
+						console.log("TTS: No text content found to speak.");
 						return;
 					}
 
+					console.log("TTS: Preparing utterance...");
 					ttsUtterance = new SpeechSynthesisUtterance(textToSpeak);
-					ttsUtterance.lang = "bn-BD"; // Bangla (Bangladesh)
+					ttsUtterance.lang = "bn-BD"; // Specify Bangla (Bangladesh)
 					ttsUtterance.voice = banglaVoices[0]; // Use the first available Bangla voice
 					ttsUtterance.rate = 1.0;
 
 					ttsUtterance.onstart = () => {
+						console.log("TTS: Playback started.");
 						ttsPlay.style.display = "none";
 						ttsStop.style.display = "inline-block";
 						ttsStatus.textContent = "Reading...";
 					};
 
 					ttsUtterance.onend = () => {
+						console.log("TTS: Playback ended.");
 						ttsPlay.style.display = "inline-block";
 						ttsStop.style.display = "none";
 						ttsStatus.textContent = "";
@@ -1182,31 +1273,54 @@
 					};
 
 					ttsUtterance.onerror = (event) => {
-						console.error("TTS Error:", event);
-						ttsStatus.textContent = " " + event.error;
+						console.error("TTS Error:", event.error, event);
+						// Provide more specific error if possible
+						let errorMsg = "TTS Error";
+						if (event.error) {
+							errorMsg += `: ${event.error}`;
+							// Specific known errors
+							if (event.error === "synthesis-failed" || event.error === "audio-busy" || event.error === "network") {
+								errorMsg += ". Please try again.";
+							} else if (event.error === "language-unavailable" || event.error === "voice-unavailable") {
+								errorMsg = "Bangla voice unavailable.";
+							}
+						}
+						ttsStatus.textContent = errorMsg;
 						ttsPlay.style.display = "inline-block";
 						ttsStop.style.display = "none";
 						ttsUtterance = null;
 					};
 
-					window.speechSynthesis.speak(ttsUtterance);
+					// Make sure the voice is actually set before speaking
+					if (!ttsUtterance.voice) {
+						console.error("TTS Error: Selected voice object is invalid/null before speaking.");
+						ttsStatus.textContent = "Voice setup error.";
+						return;
+					}
+
+					console.log(`TTS: Attempting to speak with voice: ${ttsUtterance.voice.name} (${ttsUtterance.voice.lang})`);
+					// Use a small timeout before speak, sometimes helps Android webview
+					setTimeout(() => {
+						window.speechSynthesis.speak(ttsUtterance);
+					}, 50); // Small delay
 				};
 
 				const stopHandler = () => {
 					if (window.speechSynthesis) {
+						console.log("TTS: Stop requested.");
 						window.speechSynthesis.cancel(); // This should trigger onend event naturally
 					}
-					// Force state reset in case onend doesn't fire quickly
+					// Force state reset immediately
 					ttsPlay.style.display = "inline-block";
 					ttsStop.style.display = "none";
 					ttsStatus.textContent = "Stopped";
+					ttsUtterance = null; // Clear utterance reference
 				};
 
-				// Attach play and handler to button
+				// Attach handlers
 				ttsPlay.onclick = playHandler;
 				ttsStop.onclick = stopHandler;
 			}
-
 			// --- Global Event Listeners ---
 			window.onclick = function (event) {
 				// Close modal on overlay click
@@ -1270,6 +1384,7 @@
 				displayCurrentDate();
 				fetchLatestNews();
 				setupClearReadButton(); // Setup the clear button listener
+				initializeTTS(); // Initialize TTS loading early
 			});
 		</script>
 	</body>
