@@ -129,10 +129,16 @@
 				margin: 40px auto;
 				background: white;
 				border-radius: 8px;
-				overflow: visible; /* Allow potential overflow for transforms, parent handles clipping */
-				position: relative; /* Context for close button */
-				box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3); /* Stronger shadow */
-				z-index: 1001; /* Above overlay */
+				overflow: visible; /* Keep this */
+				position: relative;
+				box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+				z-index: 1001;
+
+				/* --- ADD TRANSITION HERE --- */
+				transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
+				/* Default state (visible, centered) - can be handled by JS if needed, but good default */
+				transform: translateX(0%);
+				opacity: 1;
 			}
 			.modal-header {
 				padding: 15px 20px; /* Adjust padding */
@@ -175,14 +181,20 @@
 				overflow: hidden; /* Crucial for clipping sliding animation */
 				border-bottom-left-radius: 8px; /* Match content radius */
 				border-bottom-right-radius: 8px;
+				position: relative; /* Needed for absolute positioning context if required, but transform works fine */
+				background-color: white; /* Ensure bg color */
 			}
 			#modal-scroll-content {
 				/* Inner wrapper for content and padding */
 				padding: 20px;
-				transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out; /* Animation transition */
+				/* --- REMOVE TRANSITION FROM HERE --- */
+				/* transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out; */ /* REMOVED */
 				background-color: white; /* Ensure background during transition */
 				border-bottom-left-radius: 8px; /* Match content radius */
 				border-bottom-right-radius: 8px;
+				/* Make sure transform/opacity defaults don't interfere */
+				transform: none;
+				opacity: 1;
 			}
 			.modal-image {
 				width: 100%;
@@ -264,6 +276,26 @@
 				cursor: pointer;
 				transition: all 0.3s ease;
 				font-size: 0.9em;
+			}
+
+			div > blockquote {
+				border-left: 4px solid red;
+				padding-left: 10px;
+				margin: 20px 0 0px 0;
+				font-size: 18px;
+				font-weight: 500;
+				color: #000;
+				line-height: 1.6;
+			}
+
+			div > blockquote + span {
+				margin-top: 0px;
+				border-left: 4px solid red;
+				display: block;
+				font-size: 14px;
+				color: #666;
+				font-weight: 400;
+				padding-left: 10px;
 			}
 
 			/* Media query for small screens */
@@ -392,38 +424,6 @@
 				background-color: rgba(0, 0, 0, 0.4); /* Keep consistent bg */
 			}
 
-			/* --- Animation Classes --- */
-			.slide-out-left {
-				transform: translateX(0%);
-				opacity: 0;
-				transition: transform 0.4s ease, opacity 0.4s ease;
-			}
-
-			.slide-in-right {
-				transform: translateX(0%);
-				opacity: 0;
-				transition: transform 0.4s ease, opacity 0.4s ease;
-			}
-
-			.slide-out-right {
-				transform: translateX(0%);
-				opacity: 0;
-				transition: transform 0.4s ease, opacity 0.4s ease;
-			}
-
-			.slide-in-left {
-				transform: translateX(0%);
-				opacity: 0;
-				transition: transform 0.4s ease, opacity 0.4s ease;
-			}
-
-			/* Final position */
-			.slide-in {
-				/*			transform: translateX(0);
-				opacity: 1;
-				transition: transform 0.4s ease, opacity 0.4s ease;*/
-			}
-
 			.bottom-container {
 				display: flex;
 				justify-content: space-between;
@@ -483,14 +483,16 @@
 					<span id="news-category" class="news-category"></span>
 					<h2 class="modal-title" id="modal-title"></h2>
 					<div class="modal-actions">
-						<button style="float: right" id="copyNewsText" onclick="copyNewsText()" title="Copy News">&#x2398; Copy This Article</button>
+						<button style="float: right" id="copyNewsText" onclick="copyNewsText()" title="Copy News">⎘ Copy This Article</button>
 						<button id="tts-play" title="Read aloud">🔊 Play</button>
 						<button id="tts-stop" title="Stop reading" style="display: none">⏹ Stop</button>
 						<span id="tts-status"></span>
 					</div>
 					<div onclick="closeModal()" class="close-modal">×<!-- <span class="close-modal" onclick="closeModal()">×</span> --></div>
 				</div>
+				<!-- Modal Body: Clips the animation -->
 				<div class="modal-body" id="modal-body">
+					<!-- Modal Scroll Content: The element that animates -->
 					<div id="modal-scroll-content">
 						<!-- Dynamic content goes here -->
 					</div>
@@ -518,6 +520,7 @@
 			let isLoading = false;
 			let isAnimating = false; // Flag to prevent overlapping animations/clicks
 			let currentModalIndex = -1;
+			const animationDuration = 200; // MUST match CSS transition duration in milliseconds
 
 			let availableVoices = [];
 			let ttsInitializationAttempted = false; // Flag to prevent repeated initial calls
@@ -528,8 +531,14 @@
 
 			// --- Utility Functions ---
 			function escapeHtml(unsafe) {
-				if (!unsafe) return "";
-				return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+				// console.log("html:" + unsafe); // Be careful logging large HTML strings
+				/* Basic escaping - consider a more robust library if needed */
+				/*
+                if (!unsafe) return "";
+				return unsafe.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, """).replace(/'/g, "'");
+                */
+				// Current implementation doesn't seem to need aggressive escaping for the used fields
+				return unsafe;
 			}
 
 			const formatDate = (timestamp) => {
@@ -553,9 +562,12 @@
 				if (!url) return "";
 				const urlParts = url.split("/");
 				if (urlParts.length > 3) {
-					return urlParts[3].replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+					// Handle potential empty category names after splitting
+					const categoryPart = urlParts[3];
+					if (!categoryPart) return "General"; // Assign a default if empty
+					return categoryPart.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 				}
-				return "";
+				return "General"; // Assign a default if no category found
 			};
 
 			// --- Core Application Logic ---
@@ -572,7 +584,10 @@
 				const loadingMoreIndicator = document.getElementById("loading-more");
 				const noMoreIndicator = document.getElementById("no-more-articles");
 
-				const requestURL = "https://corsproxy.io/?url=https://www.prothomalo.com/api/v1/collections/latest?limit=150";
+				// More robust API endpoint handling
+				const baseApiUrl = "https://www.prothomalo.com/api/v1/collections/latest";
+				const limit = 300;
+				const requestURL = `https://corsproxy.io/?url=${encodeURIComponent(`${baseApiUrl}?limit=${limit}`)}`;
 
 				if (loadingIndicator) loadingIndicator.style.display = "block";
 				loadingMoreIndicator.style.display = "none";
@@ -584,11 +599,14 @@
 					if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 					const data = await response.json();
 
-					if (data.items && data.items.length > 0) {
-						allArticles = data.items.filter((article) => article.story && article.story["story-template"] !== "video" && article.story["story-template"] !== "photo");
+					// Filter more carefully for valid story objects and non-video/photo types
+					if (data && data.items && Array.isArray(data.items)) {
+						allArticles = data.items.filter(
+							(item) => item && item.story && typeof item.story === "object" && item.story["story-template"] !== "video" && item.story["story-template"] !== "photo" && item.story.headline // Ensure there's at least a headline
+						);
 
 						if (allArticles.length === 0) {
-							gridContainer.innerHTML = '<div class="error">No non-video articles found</div>';
+							gridContainer.innerHTML = '<div class="error">No suitable articles found in the latest feed.</div>';
 							return;
 						}
 
@@ -598,18 +616,21 @@
 						displayedArticleCount = 0;
 						renderNewsCards(true); // Initial render (true = replace content)
 					} else {
-						gridContainer.innerHTML = '<div class="error">No articles found</div>';
+						gridContainer.innerHTML = '<div class="error">No articles found or invalid API response format.</div>';
 					}
 				} catch (error) {
 					console.error("Error fetching news:", error);
-					gridContainer.innerHTML = `<div class="error">Failed to load news: ${error.message}</div>`;
+					gridContainer.innerHTML = `<div class="error">Failed to load news: ${error.message}. Check console for details.</div>`;
 				} finally {
 					if (loadingIndicator) loadingIndicator.style.display = "none";
 				}
 			}
 
 			function extractCategories() {
-				const categorySet = new Set(allArticles.map((a) => getCategoryFromUrl(a.story?.url)).filter(Boolean));
+				// Filter out potentially empty/null categories before creating the set
+				const categorySet = new Set(
+					allArticles.map((a) => getCategoryFromUrl(a.story?.url)).filter((cat) => cat && cat.trim() !== "") // Ensure category is not null, undefined, or empty string
+				);
 				categories = Array.from(categorySet).sort();
 			}
 
@@ -621,6 +642,7 @@
 					const button = document.createElement("button");
 					button.className = `filter-btn ${currentCategory === categoryValue ? "active" : ""}`;
 					button.textContent = text;
+					button.dataset.category = categoryValue; // Store category value
 					button.onclick = () => filterByCategory(categoryValue);
 					filterContainer.appendChild(button);
 				};
@@ -643,6 +665,8 @@
 					document.querySelectorAll(".news-card.read").forEach((card) => {
 						card.classList.remove("read");
 					});
+					// Re-apply filter to refresh view potentially (though classes are removed directly)
+					// filterByCategory(currentCategory); // Optionally re-render if needed elsewhere
 					alert("Read status has been cleared.");
 				}
 			}
@@ -653,6 +677,8 @@
 				createCategoryFilters(); // Update button styles
 				filterArticlesByCategory(category); // Apply filter logic
 				displayedArticleCount = 0; // Reset display count
+				// Reset scroll position when filter changes
+				window.scrollTo({ top: 0, behavior: "smooth" });
 				renderNewsCards(true); // Re-render grid (true = replace)
 			}
 
@@ -668,23 +694,19 @@
 			function createCardHtml(article, index) {
 				let story = article.story || {};
 				let originalLink = story.url || "#"; // Use # as fallback
-				let headline = story.headline || "";
-				let summary = story.summary || "";
+				let headline = story.headline || "Untitled Article";
+				let summary = story.summary || story.metadata?.excerpt || "No summary available."; // Fallback for summary
 				let imageUrl = story["hero-image-s3-key"] ? `https://media.prothomalo.com/${story["hero-image-s3-key"]}` : ProthomAloLogoURL;
 				let publishedAt = formatDate(story["published-at"]);
 				let category = getCategoryFromUrl(originalLink);
 				let isRead = readArticles.includes(originalLink);
 
-				if (summary == "") {
-					summary = story.metadata.excerpt;
-				}
-
 				return `
-			                  <div class="news-card ${isRead ? "read" : ""}" data-index="${index}" data-link="${escapeHtml(originalLink)}" onclick="openModalFromCard(${index})">
-			                      <img src="${imageUrl}" alt="${escapeHtml(headline)}" class="card-image" loading="lazy">
+			                  <div class="news-card ${isRead ? "read" : ""}" data-index="${index}" data-link="${originalLink}" onclick="openModalFromCard(${index})">
+			                      <img src="${imageUrl}" alt="${escapeHtml(headline)}" class="card-image" loading="lazy" onerror="this.src='${ProthomAloLogoURL}'; this.onerror=null;">
 			                      <div class="card-meta">
 			                         ${category ? `<span class="card-category">${escapeHtml(category)}</span>` : "<span></span>"} <!-- Placeholder span for alignment -->
-			                         <span>${escapeHtml(publishedAt)}</span>
+			                         <span>${publishedAt}</span>
 			                      </div>
 			                      <div class="card-content">
 			                          <h3 class="card-title">${escapeHtml(headline)}</h3>
@@ -707,7 +729,7 @@
 					gridContainer.innerHTML = ""; // Clear previous content
 					displayedArticleCount = 0; // Reset count
 					if (filteredArticles.length === 0) {
-						gridContainer.innerHTML = `<div class="error">No articles found ${currentCategory !== "all" ? "in category: " + currentCategory : ""}</div>`;
+						gridContainer.innerHTML = `<div class="error">No articles found ${currentCategory !== "all" ? "in category: " + escapeHtml(currentCategory) : ""}</div>`;
 						noMoreIndicator.style.display = "none";
 						loadingMoreIndicator.style.display = "none";
 						return; // Stop if no articles for this filter
@@ -742,7 +764,7 @@
 				}
 
 				const scrollPosition = window.innerHeight + window.scrollY;
-				const pageHeight = document.body.offsetHeight;
+				const pageHeight = document.documentElement.scrollHeight; // Use scrollHeight for full page height
 				const threshold = 300; // Pixels from bottom
 
 				if (scrollPosition >= pageHeight - threshold) {
@@ -772,7 +794,9 @@
 				if (index < 0 || index >= filteredArticles.length) return null;
 
 				const article = filteredArticles[index];
-				const story = article.story || {};
+				if (!article || !article.story) return null; // Add extra safety check
+
+				const story = article.story;
 				const item = article.item || {}; // Include item if needed
 
 				const originalLink = story.url || "#";
@@ -780,88 +804,104 @@
 
 				return {
 					index: index,
-					story: story,
+					story: story, // Keep full story object if needed elsewhere
 					originalLink: originalLink,
-					headline: story.headline || item.headline || "",
-					summary: story.summary || "",
+					headline: story.headline || item.headline || "Untitled Article",
+					summary: story.summary || story.metadata?.excerpt || "", // Get summary or excerpt
 					imageUrl: story["hero-image-s3-key"] ? `https://media.prothomalo.com/${story["hero-image-s3-key"]}` : ProthomAloLogoURL,
-					cardsJson: story.cards ? JSON.stringify(story.cards) : "[]",
+					cardsJson: story.cards ? JSON.stringify(story.cards) : "[]", // Keep JSON for parsing
 					publishedAt: formatDate(story["published-at"]),
-					author: story["author-name"] || "Unknown Author",
+					author: story["author-name"] || "Prothom Alo Desk", // Default author
 					category: category,
 					coverImgDescription: story["hero-image-caption"] || "",
+					coverImgAttribution: story["hero-image-attribution"] || "", // Get attribution
 				};
 			}
 
 			// NEW: Helper to build modal body HTML
 			function buildModalBodyHtml(articleData) {
+				if (!articleData) return "<p class='error'>Could not load article data.</p>";
+
 				let contentHtml = "";
 
 				//set category in header too
-				document.getElementById("news-category").textContent = articleData.category;
+				document.getElementById("news-category").textContent = escapeHtml(articleData.category);
 
 				try {
+					// Basic structure with meta, image, caption, summary
 					contentHtml = `
-			                     <div class="article-meta" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; color: #555;">
+			                     <div class="article-meta" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; color: #555; flex-wrap: wrap; gap: 5px;">
 			                         <span>By: ${escapeHtml(articleData.author)}</span>
-			                         <span>${escapeHtml(articleData.publishedAt)}</span>
-			                         ${
-																	articleData.category
-																		? `<span style="margin-left: 10px; background-color: #e9ecef; color: #495057; padding: 2px 8px; border-radius: 4px; font-size: 0.9em;">${escapeHtml(
-																				articleData.category
-																		  )}</span>`
-																		: ""
-																}
+			                         <span>${articleData.publishedAt}</span>
 			                     </div>
-			                     <img src="${articleData.imageUrl}" alt="${escapeHtml(articleData.headline)}" class="modal-image">
+			                     <img src="${articleData.imageUrl}" alt="${escapeHtml(articleData.headline)}" class="modal-image" onerror="this.src='${ProthomAloLogoURL}'; this.onerror=null;">
 			                     ${
-															articleData.coverImgDescription
-																? `<p class="modal-image-caption">${escapeHtml(articleData.coverImgDescription)}${
-																		articleData.story["hero-image-attribution"] ? ` [${escapeHtml(articleData.story["hero-image-attribution"])}]` : ""
+															articleData.coverImgDescription || articleData.coverImgAttribution
+																? `<p class="modal-image-caption">${escapeHtml(articleData.coverImgDescription)} ${
+																		articleData.coverImgAttribution ? ` [${escapeHtml(articleData.coverImgAttribution)}]` : ""
 																  }</p>`
 																: ""
 														}
-			                     <p class="modal-text" style="font-weight: bold; margin-bottom: 20px; font-size: 1.1em;">${escapeHtml(articleData.summary)}</p>
-								 
+			                     ${articleData.summary ? `<p class="modal-text" style="font-weight: bold; margin-bottom: 20px; font-size: 1.1em;">${escapeHtml(articleData.summary)}</p>` : ""}
 			                 `;
 
-					const cards = JSON.parse(articleData.cardsJson);
-					if (cards.length > 0) {
-						cards.forEach((card) => {
-							if (card["story-elements"]) {
-								card["story-elements"].forEach((element) => {
-									if (element.type === "text" && element.subtype !== "also-read") {
-										// Basic sanitization - prefer textContent approach
-										const tempDiv = document.createElement("div");
-										tempDiv.innerHTML = element.text; // Let browser parse potentially unsafe HTML
-										contentHtml += `<div class="modal-text">${escapeHtml(tempDiv.textContent || "")}</div>`; // Use textContent
-									} else if (element.type === "image" && element["image-s3-key"]) {
-										const imgUrl = `https://media.prothomalo.com/${element["image-s3-key"]}`;
-										const imgTitle = element.title || "";
-										contentHtml += `
-			                                         <hr style="margin: 20px 0;">
-			                                         <img src="${imgUrl}" alt="${escapeHtml(imgTitle)}" class="modal-image" loading="lazy">
-			                                         ${
-																									imgTitle
-																										? `<p class="modal-image-caption">${escapeHtml(imgTitle)}${
-																												articleData.story["hero-image-attribution"] ? ` [${escapeHtml(articleData.story["hero-image-attribution"])}]` : ""
-																										  }`
-																										: ""
-																								}
-			                                         <hr style="margin: 20px 0;">`;
-									}
-									// TODO: Add handlers for other element types (quote, list, etc.) if needed
-								});
-							}
-						});
-					} else {
-						// If no cards, the summary is already shown, maybe add a note or repeat summary?
-						// contentHtml += `<div class="modal-text">${escapeHtml(articleData.summary)}</div>`; // Avoid repetition
+					// Process cards for detailed content
+					if (articleData.cardsJson && articleData.cardsJson !== "[]") {
+						const cards = JSON.parse(articleData.cardsJson);
+						if (Array.isArray(cards)) {
+							cards.forEach((card) => {
+								if (card && card["story-elements"] && Array.isArray(card["story-elements"])) {
+									card["story-elements"].forEach((element) => {
+										if (!element || !element.type) return; // Skip invalid elements
+
+										switch (element.type) {
+											case "text":
+												if (element.subtype !== "also-read" && element.text) {
+													// Render text, allowing basic safe HTML (like <strong>, <em>, <a> - DANGER: Assess security implications)
+													// For safer approach, always escape or use a sanitizer library
+													// contentHtml += `<div class="modal-text">${escapeHtml(element.text)}</div>`; // Safest
+													contentHtml += `<div class="modal-text">${element.text}</div>`; // Allows HTML from source (use with caution)
+												}
+												break;
+											case "image":
+												if (element["image-s3-key"]) {
+													const imgUrl = `https://media.prothomalo.com/${element["image-s3-key"]}`;
+													const imgTitle = element.title || "";
+													const imgCaption = element.caption || "";
+													const imgAttr = element.attribution || "";
+													contentHtml += `
+                                                        <hr style="margin: 20px 0;">
+                                                        <img src="${imgUrl}" alt="${escapeHtml(imgTitle || "Article image")}" class="modal-image" loading="lazy" onerror="this.style.display='none';">
+                                                        ${imgCaption || imgAttr ? `<p class="modal-image-caption">${escapeHtml(imgCaption)} ${imgAttr ? ` [${escapeHtml(imgAttr)}]` : ""}</p>` : ""}
+                                                        `;
+												}
+												break;
+											case "quote":
+												if (element.text) {
+													contentHtml += `
+                                                        <blockquote>${escapeHtml(element.text)}</blockquote>
+                                                        ${element.attribution ? `<span>- ${escapeHtml(element.attribution)}</span>` : ""}
+                                                    `;
+												}
+												break;
+											// Add other element types as needed (e.g., list, embed)
+											default:
+												// console.log("Unhandled story element type:", element.type);
+												break;
+										}
+									});
+								}
+							});
+						}
+					} else if (!articleData.summary) {
+						// If no cards and no summary, show a message
+						contentHtml += "<p class='modal-text'><i>No detailed content available for this article.</i></p>";
 					}
 
+					// Footer with link and close button
 					contentHtml += `
 			                     <hr style="margin-top: 25px;">
-			                     <div class="bottom-container"> 
+			                     <div class="bottom-container">
 								 <a href="${articleData.originalLink}" target="_blank" rel="noopener noreferrer"
 			                        style="display: inline-block; margin-top: 10px; margin-bottom: 5px; font-style: italic; color: #0056b3; text-decoration: underline; cursor: pointer;">
 			                        Read original on Prothom Alo
@@ -870,8 +910,8 @@
 								 </div>
 								 `;
 				} catch (e) {
-					console.error("Error building modal content:", e);
-					contentHtml = "<p class='error'>Error loading article content.</p>";
+					console.error("Error building modal content:", e, "Data:", articleData);
+					contentHtml = `<p class='error'>Error loading article content. Details: ${escapeHtml(e.message)}</p>`;
 				}
 				return contentHtml;
 			}
@@ -882,6 +922,7 @@
 				const articleData = getArticleDataByIndex(index);
 				if (!articleData) {
 					console.warn("Could not get article data for index:", index);
+					alert("Error: Could not load article details.");
 					return;
 				}
 				currentModalIndex = index;
@@ -909,13 +950,14 @@
 				// Stop any ongoing TTS
 				if (window.speechSynthesis && window.speechSynthesis.speaking) {
 					window.speechSynthesis.cancel();
+					setupTTS(); // Reset TTS button states
 				}
 
 				modalTitle.textContent = articleData.headline; // Already plain text
 				modalScrollContent.innerHTML = buildModalBodyHtml(articleData); // Build and set content
 
-				// Reset any animation classes immediately before showing
-				modalScrollContent.className = "slide-in"; // Reset to base state visible
+				// *** Reset animation classes and set initial state for opening ***
+				modalScrollContent.className = "slide-in"; // Set directly to visible state
 
 				modal.style.display = "block";
 				document.body.style.overflow = "hidden"; // Prevent background scroll
@@ -926,7 +968,7 @@
 				pageNextBtn = document.getElementById("page-next-article");
 
 				if (pagePrevBtn && pageNextBtn) {
-					// Remove previous listeners before adding new ones
+					// Remove previous listeners before adding new ones to prevent duplicates
 					pagePrevBtn.removeEventListener("click", showPreviousArticle);
 					pageNextBtn.removeEventListener("click", showNextArticle);
 
@@ -935,8 +977,7 @@
 					pageNextBtn.addEventListener("click", showNextArticle);
 
 					// Set initial state and visibility
-					pagePrevBtn.disabled = currentModalIndex <= 0;
-					pageNextBtn.disabled = currentModalIndex >= filteredArticles.length - 1;
+					updateNavigationButtons(); // Use the central function
 					pagePrevBtn.style.display = "block";
 					pageNextBtn.style.display = "block";
 				}
@@ -949,9 +990,17 @@
 			// --- Function to update the global voice list ---
 			function updateVoiceList() {
 				if (!("speechSynthesis" in window)) return; // Guard clause
-				availableVoices = window.speechSynthesis.getVoices();
-				console.log("SpeechSynthesis voices updated. Count:", availableVoices.length);
-				// You could potentially enable TTS buttons here if they were initially disabled
+				try {
+					availableVoices = window.speechSynthesis.getVoices();
+					if (availableVoices.length > 0) {
+						console.log("SpeechSynthesis voices updated. Count:", availableVoices.length);
+					} else {
+						// console.log("Voice list updated, but is empty. Waiting for 'onvoiceschanged'...");
+					}
+				} catch (e) {
+					console.error("Error getting voices:", e);
+					availableVoices = []; // Reset on error
+				}
 			}
 
 			// --- Initialize TTS Voice Loading ---
@@ -970,28 +1019,35 @@
 				ttsInitializationAttempted = true;
 
 				// Listen for the voiceschanged event to update the list when ready
-				window.speechSynthesis.onvoiceschanged = updateVoiceList;
+				// Use try-catch as adding the event listener itself can fail in some environments
+				try {
+					window.speechSynthesis.onvoiceschanged = updateVoiceList;
+				} catch (e) {
+					console.error("Could not set onvoiceschanged listener:", e);
+				}
 
 				// Attempt to get voices immediately.
-				// This might return an empty list initially, but it helps trigger the loading
-				// and the onvoiceschanged event on many platforms.
 				updateVoiceList(); // Call it once straight away
 
 				// Sometimes a short delay and another call helps on stubborn platforms
 				setTimeout(() => {
 					updateVoiceList();
-					console.log("Retrying voice list fetch after short delay.");
+					// console.log("Retrying voice list fetch after short delay.");
 				}, 500); // 500ms delay, adjust if needed
 			}
 
+			// --- NEW: Function to update navigation button states ---
 			function updateNavigationButtons() {
 				if (pagePrevBtn && pageNextBtn) {
+					// Disable based on index boundaries OR if an animation is in progress
 					pagePrevBtn.disabled = isAnimating || currentModalIndex <= 0;
 					pageNextBtn.disabled = isAnimating || currentModalIndex >= filteredArticles.length - 1;
 				}
 			}
 
+			// --- REVISED Central function for modal navigation animation (Targeting .modal-content) ---
 			function navigateModal(direction) {
+				// direction: 1 for next, -1 for previous
 				if (isAnimating) return; // Don't allow navigation during animation
 
 				const newIndex = currentModalIndex + direction;
@@ -999,74 +1055,103 @@
 					return; // Index out of bounds
 				}
 
-				const articleData = getArticleDataByIndex(newIndex);
-				if (!articleData) return;
+				const nextArticleData = getArticleDataByIndex(newIndex);
+				if (!nextArticleData) {
+					console.error("Failed to get article data for next index:", newIndex);
+					alert("Error: Could not load the next article's data.");
+					return; // Failed to get data
+				}
 
 				isAnimating = true;
 				updateNavigationButtons(); // Disable buttons during animation
 
-				const modalScrollContent = document.getElementById("modal-scroll-content");
-				const animationDuration = 400; // Match CSS transition duration
+				// --- GET BOTH ELEMENTS ---
+				const modalContent = document.querySelector("#article-modal .modal-content"); // The element to slide
+				const modalScrollContent = document.getElementById("modal-scroll-content"); // The inner content area
+				const modal = document.getElementById("article-modal"); // The overlay/container
 
-				// 1. Determine animation classes
-				const slideOutClass = direction === 1 ? "slide-out-left" : "slide-out-right";
-				const slideInClass = direction === 1 ? "slide-in-right" : "slide-in-left";
+				if (!modalContent || !modalScrollContent || !modal) {
+					console.error("Modal elements not found!");
+					isAnimating = false; // Reset flag
+					updateNavigationButtons();
+					return;
+				}
 
-				// Apply slide-out animation to current content
-				modalScrollContent.className = slideOutClass;
+				// Stop any ongoing TTS
+				if (window.speechSynthesis && window.speechSynthesis.speaking) {
+					window.speechSynthesis.cancel();
+					setupTTS(); // Reset TTS button states
+				}
 
-				// After a short delay (allow slide-out to start), update content and apply slide-in start state
+				// --- 1. Animate OUT the CURRENT modal ---
+				const slideOutTranslateX = direction === 1 ? "-100%" : "100%"; // Next -> Left, Prev -> Right
+				modalContent.style.transform = `translateX(${slideOutTranslateX})`; // Apply to modal-content
+				modalContent.style.opacity = "0"; // Apply to modal-content
+
+				// --- 2. AFTER slide-out completes, update content and slide IN ---
 				setTimeout(() => {
+					// Update core data
 					currentModalIndex = newIndex;
 
-					// Update modal header title
+					// Update modal header title (still inside modal-content, but updated before it appears)
 					const modalTitle = document.getElementById("modal-title");
-					if (modalTitle) modalTitle.textContent = articleData.headline;
+					if (modalTitle) modalTitle.textContent = nextArticleData.headline;
 
-					// Update modal body content
-					modalScrollContent.innerHTML = buildModalBodyHtml(articleData);
+					// --- UPDATE THE INNER CONTENT AREA ---
+					modalScrollContent.innerHTML = buildModalBodyHtml(nextArticleData);
 
 					// Mark new article as read
-					if (!readArticles.includes(articleData.originalLink)) {
-						readArticles.push(articleData.originalLink);
+					if (!readArticles.includes(nextArticleData.originalLink)) {
+						readArticles.push(nextArticleData.originalLink);
 						localStorage.setItem("readArticles", JSON.stringify(readArticles));
 						const cardElement = document.querySelector(`.news-card[data-index="${newIndex}"]`);
 						if (cardElement) cardElement.classList.add("read");
 					}
 
-					// Apply slide-in starting class (off-screen)
-					modalScrollContent.className = slideInClass;
+					// --- Setup INCOMING modal's START position (Off-screen) ---
+					// Temporarily disable transitions on modal-content
+					modalContent.style.transition = "none";
 
-					// Force reflow to ensure the animation starts
-					void modalScrollContent.offsetWidth;
+					const slideInStartX = direction === 1 ? "100%" : "-100%"; // Next comes from Right, Prev comes from Left
+					modalContent.style.transform = `translateX(${slideInStartX})`; // Apply to modal-content
+					modalContent.style.opacity = "0"; // Start invisible
 
-					// Trigger the slide-in animation
+					// Force browser reflow on the element being animated
+					void modalContent.offsetWidth;
+
+					// --- 3. Re-enable transitions and Animate IN the NEW modal ---
+					modalContent.style.transition = ""; // Re-enable transitions defined in CSS
+
 					requestAnimationFrame(() => {
-						modalScrollContent.className = "slide-in";
+						modalContent.style.transform = "translateX(0%)"; // Animate modal-content to center
+						modalContent.style.opacity = "1"; // Animate modal-content to visible
 					});
 
-					// Reset TTS (important after content change)
-					if (window.speechSynthesis && window.speechSynthesis.speaking) {
-						window.speechSynthesis.cancel();
-					}
-					setupTTS(); // Re-setup TTS for new content
+					// Reset TTS setup for the new content (which is inside modalScrollContent)
+					setupTTS();
 
-					// Scroll modal to top for new content
-					const modal = document.getElementById("article-modal");
+					// Scroll modal overlay/container to top (important if modal was long)
 					if (modal) modal.scrollTop = 0;
-				}, animationDuration / 2); // Update content roughly halfway through the slide-out
 
-				// After animation completes, re-enable buttons
-				setTimeout(() => {
-					isAnimating = false;
-					updateNavigationButtons();
-				}, animationDuration);
+					// --- 4. Re-enable buttons AFTER the IN-animation completes ---
+					setTimeout(() => {
+						isAnimating = false; // Allow clicks/swipes again
+						updateNavigationButtons(); // Re-enable buttons based on the new index
+
+						// Optional cleanup of inline styles on modal-content
+						// modalContent.style.transform = '';
+						// modalContent.style.opacity = '';
+					}, animationDuration); // Wait for the slide-IN animation
+				}, animationDuration); // Wait for the slide-OUT animation to finish before swapping content
 			}
+
 			function showNextArticle() {
+				if (!pageNextBtn || pageNextBtn.disabled) return; // Extra check
 				navigateModal(1); // 1 for next
 			}
 
 			function showPreviousArticle() {
+				if (!pagePrevBtn || pagePrevBtn.disabled) return; // Extra check
 				navigateModal(-1); // -1 for previous
 			}
 
@@ -1079,64 +1164,71 @@
 				let touchstartY = 0;
 				let touchendY = 0;
 
-				// Simple way to remove old listeners if re-called
-				modalBody.ontouchstart = null;
-				modalBody.ontouchend = null;
+				// --- Remove potential old listeners first ---
+				const removeListeners = () => {
+					modalBody.removeEventListener("touchstart", handleTouchStart);
+					modalBody.removeEventListener("touchend", handleTouchEnd);
+				};
 
-				modalBody.addEventListener(
-					"touchstart",
-					function (event) {
-						if (isAnimating) return; // Ignore swipes during animation
-						// Only track single touch
-						if (event.touches.length === 1) {
-							touchstartX = event.touches[0].screenX;
-							touchstartY = event.touches[0].screenY;
-						}
-					},
-					{ passive: true }
-				); // Passive for performance
+				const handleTouchStart = (event) => {
+					if (isAnimating) return; // Ignore swipes during animation
+					// Only track single touch
+					if (event.touches.length === 1) {
+						touchstartX = event.touches[0].screenX;
+						touchstartY = event.touches[0].screenY;
+					}
+				};
 
-				modalBody.addEventListener(
-					"touchend",
-					function (event) {
-						if (isAnimating || event.touches.length > 0) return; // Ignore if still touching or animating
+				const handleTouchEnd = (event) => {
+					// Ignore if still touching or animating, or if touch start points are zero (no valid start)
+					if (isAnimating || event.touches.length > 0 || touchstartX === 0) return;
 
-						touchendX = event.changedTouches[0].screenX;
-						touchendY = event.changedTouches[0].screenY;
-						handleSwipe();
-					},
-					{ passive: true }
-				);
+					touchendX = event.changedTouches[0].screenX;
+					touchendY = event.changedTouches[0].screenY;
+					handleSwipe();
+				};
 
 				function handleSwipe() {
 					const swipeThreshold = 50; // Min horizontal distance
-					const verticalThreshold = 75; // Max vertical distance allowed
+					const verticalThreshold = 75; // Max vertical distance allowed to qualify as horizontal swipe
 
 					const dx = touchendX - touchstartX;
 					const dy = touchendY - touchstartY;
 
-					// Check if horizontal swipe is dominant
+					// Check if horizontal swipe is dominant and meets threshold
 					if (Math.abs(dx) > swipeThreshold && Math.abs(dy) < verticalThreshold) {
 						if (dx < 0) {
-							// Swipe Left
+							// Swipe Left -> Next Article
+							console.log("Swipe Left Detected");
 							showNextArticle();
 						} else {
-							// Swipe Right
+							// Swipe Right -> Previous Article
+							console.log("Swipe Right Detected");
 							showPreviousArticle();
 						}
+					} else {
+						// console.log(`Swipe ignored: dx=${dx}, dy=${dy}`);
 					}
-					// Reset coordinates after handling
+
+					// Reset coordinates after handling or ignoring swipe
 					touchstartX = 0;
 					touchstartY = 0;
 					touchendX = 0;
 					touchendY = 0;
 				}
+
+				// Remove old listeners before adding new ones
+				removeListeners();
+
+				// Add new listeners with passive option for performance
+				modalBody.addEventListener("touchstart", handleTouchStart, { passive: true });
+				modalBody.addEventListener("touchend", handleTouchEnd, { passive: true });
 			}
 
 			function closeModal() {
 				const modal = document.getElementById("article-modal");
 				if (modal) modal.style.display = "none";
-				document.body.style.overflow = "auto";
+				document.body.style.overflow = "auto"; // Restore background scroll
 
 				// Stop TTS
 				if (window.speechSynthesis) {
@@ -1156,7 +1248,11 @@
 				pageNextBtn = null;
 
 				currentModalIndex = -1; // Reset index when modal is closed
-				isAnimating = false; // Reset animation flag
+				isAnimating = false; // Reset animation flag just in case
+
+				// Optional: Clean up swipe listeners if modal is closed permanently?
+				// const modalBody = document.getElementById("modal-body");
+				// if (modalBody) { /* remove swipe listeners here */ }
 			}
 
 			function setupTTS() {
@@ -1166,7 +1262,7 @@
 				const modalContent = document.getElementById("modal-scroll-content");
 
 				if (!ttsPlay || !ttsStop || !ttsStatus || !modalContent) {
-					console.warn("TTS elements not found");
+					// console.warn("TTS elements not found"); // Reduce console noise
 					return;
 				}
 
@@ -1179,148 +1275,171 @@
 				ttsStatus.textContent = "";
 				ttsPlay.onclick = null; // Clear previous handlers
 				ttsStop.onclick = null; // Clear previous handlers
-				ttsPlay.disabled = false; // Re-enable button if it was disabled
+				ttsPlay.disabled = !("speechSynthesis" in window); // Disable if TTS not supported at all
 
 				// --- Modified checkBanglaTTS - Checks the global list ---
 				const checkBanglaTTS = () => {
-					// Force an update check right before using, especially helpful on Android
-					if ("speechSynthesis" in window) {
+					// Force an update check right before using
+					if ("speechSynthesis" in window && typeof window.speechSynthesis.getVoices === "function") {
 						updateVoiceList();
 					}
 
-					console.log(`Checking for Bangla voice. Available voices: ${availableVoices.length}`);
+					if (!availableVoices || availableVoices.length === 0) {
+						// console.log("Checking for Bangla voice. Available voices: 0");
+						ttsStatus.textContent = "Voices loading...";
+						// Attempt to trigger load again if list is empty
+						if ("speechSynthesis" in window && typeof window.speechSynthesis.getVoices === "function") {
+							// window.speechSynthesis.getVoices(); // Might help trigger 'onvoiceschanged'
+						}
+						return null;
+					}
+
+					// console.log(`Checking for Bangla voice. Available voices: ${availableVoices.length}`);
 					const banglaVoices = availableVoices.filter((voice) => voice.lang.startsWith("bn")); // Check 'bn' or 'bn-BD' etc.
 
 					if (banglaVoices.length > 0) {
-						console.log("Bangla TTS voice found:", banglaVoices[0]);
+						// console.log("Bangla TTS voice found:", banglaVoices[0].name);
 						return banglaVoices; // Return the array of found voices
 					} else {
-						console.error("TTS Error: No Bangla text-to-speech voice available in the current list.");
-						if (availableVoices.length === 0 && "speechSynthesis" in window && window.speechSynthesis.pending) {
-							ttsStatus.textContent = "Voices loading, please wait...";
-							console.warn("Voice list empty, synthesis pending. Might need another click.");
-						} else if (availableVoices.length === 0) {
-							ttsStatus.textContent = "No voices loaded, try again.";
-							console.warn("Voice list empty. Triggering load again.");
-							// Try triggering load again
-							if ("speechSynthesis" in window) window.speechSynthesis.getVoices();
-						} else {
-							ttsStatus.textContent = "Bangla voice not found.";
-						}
+						console.warn("TTS Warning: No Bangla voice found in the current list.");
+						ttsStatus.textContent = "Bangla voice not found.";
 						return null; // Indicate failure
 					}
 				};
 
 				// --- Modified playHandler - Uses the modified check ---
 				const playHandler = () => {
-					if (isAnimating) return;
+					if (isAnimating) return; // Should not happen if buttons are disabled, but safety first
 
 					if (!window.speechSynthesis) {
 						ttsStatus.textContent = "TTS not supported";
 						return;
 					}
 
+					// If already speaking, maybe act as pause/resume? (Current: Stops)
+					if (window.speechSynthesis.speaking) {
+						window.speechSynthesis.cancel(); // Stop current speech first
+						// We reset buttons in the onend handler, so no need here
+						return; // Or potentially proceed to speak the new text?
+					}
+					if (window.speechSynthesis.pending) {
+						console.log("TTS: Speech request pending, cancelling previous.");
+						window.speechSynthesis.cancel(); // Cancel pending requests
+					}
+
 					// *** Key Change: Check for voices *using the updated function* ***
 					const banglaVoices = checkBanglaTTS();
 					if (!banglaVoices || banglaVoices.length === 0) {
 						// checkBanglaTTS now updates the status message itself
-						console.log("Play cancelled: No suitable Bangla voice found at this time.");
+						console.log("Play cancelled: No suitable Bangla voice found or voices not loaded yet.");
 						return; // Stop if no Bangla TTS is available
 					}
 
-					// If speaking, stop previous
-					if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-						console.log("TTS: Cancelling previous utterance.");
-						window.speechSynthesis.cancel();
+					// Extract text to speak (robustly handle missing elements)
+					const title = document.getElementById("modal-title")?.textContent || "";
+					let textToSpeak = title ? title.trim() + ". " : ""; // Start with title if available
+					const bodyElements = modalContent.querySelectorAll(".modal-text, .modal-image-caption, blockquote");
+					if (bodyElements) {
+						bodyElements.forEach((el) => {
+							const text = el.textContent?.trim();
+							if (text) {
+								// Add sentence-ending punctuation if missing, for better flow
+								textToSpeak += text + (/[.!?]$/.test(text) ? " " : ". ");
+							}
+						});
 					}
 
-					// Extract text (no changes needed here)
-					const title = document.getElementById("modal-title")?.textContent || "";
-					let textToSpeak = title + ". ";
-					const bodyElements = modalContent.querySelectorAll(".modal-text, .modal-image-caption");
-					bodyElements.forEach((el) => {
-						const text = el.textContent?.trim();
-						if (text) {
-							textToSpeak += text + ". ";
-						}
-					});
-
-					if (!textToSpeak.trim() || textToSpeak.length < title.length + 5) {
+					if (!textToSpeak.trim() || textToSpeak.length < (title?.length || 0) + 3) {
+						// Check if meaningful text exists
 						ttsStatus.textContent = "No text content found";
 						console.log("TTS: No text content found to speak.");
 						return;
 					}
 
-					console.log("TTS: Preparing utterance...");
+					// console.log("TTS: Preparing utterance...");
 					ttsUtterance = new SpeechSynthesisUtterance(textToSpeak);
-					ttsUtterance.lang = "bn-BD"; // Specify Bangla (Bangladesh)
+					ttsUtterance.lang = "bn-BD"; // Explicitly set Bangla (Bangladesh)
 					ttsUtterance.voice = banglaVoices[0]; // Use the first available Bangla voice
-					ttsUtterance.rate = 1.0;
+					ttsUtterance.rate = 1.0; // Adjust rate as needed
+					ttsUtterance.pitch = 1.0; // Adjust pitch as needed
 
 					ttsUtterance.onstart = () => {
-						console.log("TTS: Playback started.");
+						// console.log("TTS: Playback started.");
 						ttsPlay.style.display = "none";
 						ttsStop.style.display = "inline-block";
 						ttsStatus.textContent = "Reading...";
 					};
 
 					ttsUtterance.onend = () => {
-						console.log("TTS: Playback ended.");
+						// console.log("TTS: Playback finished or cancelled.");
 						ttsPlay.style.display = "inline-block";
 						ttsStop.style.display = "none";
-						ttsStatus.textContent = "";
+						ttsStatus.textContent = ""; // Clear status on natural end
 						ttsUtterance = null;
 					};
 
 					ttsUtterance.onerror = (event) => {
 						console.error("TTS Error:", event.error, event);
-						// Provide more specific error if possible
 						let errorMsg = "TTS Error";
 						if (event.error) {
 							errorMsg += `: ${event.error}`;
-							// Specific known errors
-							if (event.error === "synthesis-failed" || event.error === "audio-busy" || event.error === "network") {
-								errorMsg += ". Please try again.";
-							} else if (event.error === "language-unavailable" || event.error === "voice-unavailable") {
-								errorMsg = "Bangla voice unavailable.";
-							}
+							if (event.error === "network") errorMsg += ". Check connection.";
+							else if (event.error === "synthesis-failed") errorMsg += ". Could not synthesize.";
+							else if (event.error === "audio-busy") errorMsg += ". Try again shortly.";
+							else if (event.error === "language-unavailable" || event.error === "voice-unavailable") errorMsg = "Bangla voice error.";
 						}
 						ttsStatus.textContent = errorMsg;
-						ttsPlay.style.display = "inline-block";
+						ttsPlay.style.display = "inline-block"; // Ensure play is visible after error
 						ttsStop.style.display = "none";
 						ttsUtterance = null;
 					};
 
-					// Make sure the voice is actually set before speaking
+					// Ensure the voice object is valid before speaking
 					if (!ttsUtterance.voice) {
 						console.error("TTS Error: Selected voice object is invalid/null before speaking.");
 						ttsStatus.textContent = "Voice setup error.";
-						return;
+						// Attempt to find voice again maybe?
+						const refreshedVoices = checkBanglaTTS();
+						if (refreshedVoices && refreshedVoices.length > 0) {
+							ttsUtterance.voice = refreshedVoices[0];
+							console.log("TTS: Re-assigned voice successfully.");
+						} else {
+							return; // Still no voice, cannot proceed
+						}
 					}
 
-					console.log(`TTS: Attempting to speak with voice: ${ttsUtterance.voice.name} (${ttsUtterance.voice.lang})`);
-					// Use a small timeout before speak, sometimes helps Android webview
+					// console.log(`TTS: Attempting to speak with voice: ${ttsUtterance.voice.name} (${ttsUtterance.voice.lang})`);
+					// Use a small timeout before speak, sometimes helps Android webview / race conditions
 					setTimeout(() => {
-						window.speechSynthesis.speak(ttsUtterance);
+						try {
+							window.speechSynthesis.speak(ttsUtterance);
+						} catch (e) {
+							console.error("Error calling speechSynthesis.speak:", e);
+							ttsStatus.textContent = "Error starting TTS.";
+							ttsPlay.style.display = "inline-block"; // Reset buttons on immediate error
+							ttsStop.style.display = "none";
+							ttsUtterance = null;
+						}
 					}, 50); // Small delay
 				};
 
 				const stopHandler = () => {
 					if (window.speechSynthesis) {
-						console.log("TTS: Stop requested.");
-						window.speechSynthesis.cancel(); // This should trigger onend event naturally
+						// console.log("TTS: Stop requested by user.");
+						window.speechSynthesis.cancel(); // This should trigger onend event
 					}
-					// Force state reset immediately
+					// Force reset button states immediately for responsiveness
 					ttsPlay.style.display = "inline-block";
 					ttsStop.style.display = "none";
 					ttsStatus.textContent = "Stopped";
-					ttsUtterance = null; // Clear utterance reference
+					ttsUtterance = null;
 				};
 
 				// Attach handlers
 				ttsPlay.onclick = playHandler;
 				ttsStop.onclick = stopHandler;
 			}
+
 			// --- Global Event Listeners ---
 			window.onclick = function (event) {
 				// Close modal on overlay click
@@ -1331,50 +1450,90 @@
 			};
 
 			document.addEventListener("keydown", function (event) {
-				// Keyboard navigation
+				// Keyboard navigation only when modal is open
 				const modal = document.getElementById("article-modal");
-				if (modal && modal.style.display === "block" && !isAnimating) {
-					if (event.key === "ArrowLeft") {
-						event.preventDefault(); // Prevent browser back navigation
+				if (modal && modal.style.display === "block") {
+					if (event.key === "ArrowLeft" && !isAnimating) {
+						event.preventDefault(); // Prevent browser back navigation/scroll
 						showPreviousArticle();
-					} else if (event.key === "ArrowRight") {
+					} else if (event.key === "ArrowRight" && !isAnimating) {
 						event.preventDefault(); // Prevent default scroll/action
 						showNextArticle();
 					} else if (event.key === "Escape") {
+						event.preventDefault(); // Prevent potential default escape actions
 						closeModal();
 					}
 				}
 			});
 
 			function copyNewsText() {
-				// Extract text more selectively
-				const title = document.getElementById("modal-title")?.textContent || "";
-				let textToSpeak = title + ". ";
-				const modalContent = document.getElementById("modal-scroll-content"); // Select modal content
-				const bodyElements = modalContent.querySelectorAll(".modal-text, .modal-image-caption"); // Include captions
-				bodyElements.forEach((el) => {
-					const text = el.textContent?.trim();
-					if (text) {
-						textToSpeak += text + ". ";
-					}
-				});
+				const button = document.getElementById("copyNewsText");
+				if (!button || button.disabled) return; // Check if button exists/is enabled
 
-				// Copy text to clipboard
-				navigator.clipboard
-					.writeText(textToSpeak)
-					.then(() => {
-						const button = document.getElementById("copyNewsText");
-						const originalCaption = button.textContent;
-						button.textContent = "Copied!";
+				// Extract text more selectively and cleanly
+				const title = document.getElementById("modal-title")?.textContent?.trim() || "";
+				const modalContent = document.getElementById("modal-scroll-content");
+				let contentToCopy = title ? title + "\n\n" : ""; // Start with title and space
 
-						// Revert the caption after 2 seconds
-						setTimeout(() => {
-							button.textContent = originalCaption;
-						}, 2000);
-					})
-					.catch((err) => {
-						console.error("Failed to copy text: ", err);
+				if (modalContent) {
+					// Query for relevant text elements inside the content area
+					const elements = modalContent.querySelectorAll(".modal-text, .modal-image-caption, blockquote");
+					elements.forEach((el) => {
+						const text = el.textContent?.trim();
+						if (text) {
+							contentToCopy += text + "\n\n"; // Add double newline for paragraph separation
+						}
 					});
+				}
+
+				// Add source link at the end
+				const articleData = getArticleDataByIndex(currentModalIndex);
+				if (articleData && articleData.originalLink && articleData.originalLink !== "#") {
+					contentToCopy += `Source: ${articleData.originalLink}`;
+				}
+
+				// Use Clipboard API
+				if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+					navigator.clipboard
+						.writeText(contentToCopy.trim()) // Trim trailing newlines
+						.then(() => {
+							const originalText = button.textContent;
+							button.textContent = "Copied!";
+							button.disabled = true;
+							setTimeout(() => {
+								button.textContent = originalText;
+								button.disabled = false;
+							}, 2000); // Revert after 2 seconds
+						})
+						.catch((err) => {
+							console.error("Failed to copy text using Clipboard API: ", err);
+							alert("Failed to copy text. Your browser might not support this feature or permissions denied.");
+						});
+				} else {
+					// Fallback for older browsers (less reliable)
+					try {
+						const textArea = document.createElement("textarea");
+						textArea.value = contentToCopy.trim();
+						textArea.style.position = "fixed"; // Prevent scrolling
+						textArea.style.opacity = "0";
+						document.body.appendChild(textArea);
+						textArea.focus();
+						textArea.select();
+						document.execCommand("copy");
+						document.body.removeChild(textArea);
+
+						const originalText = button.textContent;
+						button.textContent = "Copied!";
+						button.disabled = true;
+						setTimeout(() => {
+							button.textContent = originalText;
+							button.disabled = false;
+						}, 2000);
+					} catch (err) {
+						console.error("Fallback Copy Error:", err);
+						alert("Failed to copy text using fallback method.");
+					}
+				}
 			}
 
 			window.addEventListener("scroll", checkScroll, { passive: true }); // Use passive listener for scroll
