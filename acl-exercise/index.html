@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ACL Recovery Guide</title>
+		<link rel="stylesheet" href="style.css" />
+		<!-- Optional: Font Awesome for Icons -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+	</head>
+	<body>
+		<div class="app-container">
+			<nav id="sidebar">
+				<h1>ACL Rehab Stages</h1>
+				<!-- Navigation will be populated by JavaScript -->
+			</nav>
+
+			<main id="main-content">
+				<!-- Add this button -->
+				<button id="sidebar-toggle" aria-label="Toggle Sidebar">
+					<i class="fas fa-bars"></i>
+				</button>
+
+				<h2 id="exercise-title">Select an Exercise</h2>
+
+				<div class="video-container">
+					<!-- YouTube player will be inserted here -->
+					<div id="youtube-player"></div>
+				</div>
+
+				<div id="instructions-area">
+					<p>Instructions will appear here when you select an exercise.</p>
+					<!-- Instructions will be populated by JavaScript -->
+				</div>
+				<div id="controls-area">
+					<button id="replay-button" disabled><i class="fas fa-redo"></i> Replay Segment</button>
+					<button id="next-exercise-button" disabled><i class="fas fa-forward"></i> Next Exercise</button>
+				</div>
+			</main>
+		</div>
+
+		<!-- YouTube IFrame Player API -->
+		<script src="https://www.youtube.com/iframe_api"></script>
+		<!-- Custom JavaScript -->
+		<script src="script.js"></script>
+	</body>
+</html>
