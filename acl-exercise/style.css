@@ -1,0 +1,294 @@
+:root {
+	--primary-bg: #f4f7f6;
+	--sidebar-bg: #ffffff;
+	--text-dark: #333;
+	--text-light: #555;
+	--accent-color: #007bff; /* Blue accent */
+	--hover-bg: #e9ecef;
+	--border-color: #dee2e6;
+	--shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	line-height: 1.6;
+	background-color: var(--primary-bg);
+	color: var(--text-dark);
+	display: flex;
+	min-height: 100vh;
+}
+
+.app-container {
+	display: flex;
+	width: 100%;
+}
+
+/* Style for the Toggle Button */
+#sidebar-toggle {
+	position: absolute; /* Position relative to main-content */
+	top: 15px;
+	left: 15px;
+	z-index: 100; /* Ensure it's above other content */
+	background-color: var(--accent-color);
+	color: white;
+	border: none;
+	border-radius: 50%; /* Make it circular */
+	width: 40px;
+	height: 40px;
+	font-size: 1.1em;
+	cursor: pointer;
+	display: flex; /* Center icon */
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+	transition: background-color 0.2s ease, transform 0.3s ease;
+}
+
+#sidebar-toggle:hover {
+	background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Styles for when the sidebar is collapsed */
+body.sidebar-collapsed #sidebar {
+	width: 0;
+	min-width: 0;
+	padding-left: 0;
+	padding-right: 0;
+	overflow: hidden;
+	/* Optionally use transform for smoother effect on some browsers */
+	/* transform: translateX(-100%); */
+	/* border-right: none; */ /* Hide border when collapsed */
+}
+
+/* Add transition to the sidebar for smooth animation */
+#sidebar {
+	/* Existing styles */
+	transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease;
+	/* If using transform: transition: transform 0.3s ease; */
+}
+
+/* Ensure toggle button stays visible on mobile when sidebar might be above */
+@media (max-width: 768px) {
+	#sidebar-toggle {
+		position: fixed; /* Fix to viewport on mobile */
+		top: 10px;
+		left: 10px;
+	}
+	/* Adjust main content top padding if needed due to fixed toggle */
+	#main-content {
+		padding-top: 60px; /* Add padding to prevent overlap */
+	}
+}
+
+#sidebar {
+	width: 300px;
+	min-width: 250px;
+	background-color: var(--sidebar-bg);
+	padding: 20px;
+	height: 100vh;
+	overflow-y: auto;
+	border-right: 1px solid var(--border-color);
+	box-shadow: 2px 0 5px var(--shadow-color);
+	position: sticky;
+	top: 0;
+}
+
+#sidebar h1 {
+	font-size: 1.4em;
+	margin-bottom: 20px;
+	color: var(--accent-color);
+	border-bottom: 1px solid var(--border-color);
+	padding-bottom: 10px;
+}
+
+#sidebar ul {
+	list-style: none;
+	padding-left: 0;
+	margin-bottom: 15px;
+}
+
+#sidebar .stage > ul {
+	padding-left: 10px; /* Indent categories */
+}
+
+#sidebar .category > ul {
+	padding-left: 15px; /* Indent exercises */
+}
+
+#sidebar .stage > span {
+	font-weight: bold;
+	font-size: 1.1em;
+	display: block;
+	margin-bottom: 10px;
+	cursor: pointer;
+}
+
+#sidebar .category > span {
+	font-weight: bold;
+	display: block;
+	margin-left: 10px;
+	margin-bottom: 5px;
+	cursor: pointer;
+}
+
+#sidebar .exercise-item {
+	padding: 8px 10px 8px 25px; /* More padding left */
+	cursor: pointer;
+	border-radius: 4px;
+	margin-bottom: 3px;
+	font-size: 0.95em;
+	color: var(--text-light);
+	transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#sidebar .exercise-item:hover {
+	background-color: var(--hover-bg);
+	color: var(--text-dark);
+}
+
+#sidebar .exercise-item.active {
+	background-color: var(--accent-color);
+	color: white;
+	font-weight: bold;
+}
+
+#main-content {
+	flex-grow: 1;
+	padding: 30px;
+	overflow-y: auto; /* Allows content scrolling if needed */
+}
+
+#exercise-title {
+	margin-bottom: 20px;
+	color: var(--accent-color);
+	font-size: 1.8em;
+}
+
+.video-container {
+	position: relative;
+	padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+	height: 0;
+	overflow: hidden;
+	max-width: 100%;
+	background: #000;
+	margin-bottom: 25px;
+	border-radius: 8px;
+	box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+.video-container iframe {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+
+#instructions-area li {
+	/* display: grid;  Use Grid layout */
+	grid-template-columns: 20px 1fr; /* Fixed width for icon, rest for text */
+	gap: 10px; /* Space between icon and text content */
+	align-items: start; /* Align items to the top */
+	margin-bottom: 12px; /* Slightly more space between lines */
+	color: var(--text-light);
+	line-height: 1.5; /* Improve readability within the line */
+}
+
+#instructions-area li i {
+	color: var(--accent-color);
+	text-align: center;
+	margin-top: 1px; /* Fine-tune vertical alignment if needed */
+	/* Remove fixed width and margin-right as grid handles it */
+}
+
+/* Optional: Ensure strong tag is distinct but allows text flow */
+#instructions-area li strong {
+	color: var(--text-dark);
+	margin-right: 0.4em; /* Add a small space after the colon */
+}
+
+/* Keep existing rules for h3, ul etc. */
+#instructions-area {
+	background-color: var(--sidebar-bg);
+	padding: 20px;
+	border-radius: 8px;
+	border: 1px solid var(--border-color);
+	margin-bottom: 20px;
+	box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+#instructions-area h3 {
+	margin-bottom: 15px;
+	color: var(--accent-color);
+	font-size: 1.2em;
+	border-bottom: 1px solid #eee;
+	padding-bottom: 5px;
+}
+
+#instructions-area ul {
+	list-style: none;
+	padding-left: 0;
+}
+#instructions-area strong {
+	color: var(--text-dark);
+}
+
+#controls-area button {
+	padding: 10px 15px;
+	background-color: var(--accent-color);
+	margin-right: 10px; /* Add some space between buttons */
+	color: white;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	font-size: 1em;
+	transition: background-color 0.2s ease;
+}
+
+#controls-area button:last-child {
+	margin-right: 0; /* Remove margin from the last button */
+}
+
+#controls-area button:hover:not(:disabled) {
+	background-color: #0056b3; /* Darker blue */
+}
+
+#controls-area button:disabled {
+	background-color: #cccccc;
+	cursor: not-allowed;
+}
+#controls-area button i {
+	margin-right: 5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.app-container {
+		flex-direction: column;
+	}
+
+	#sidebar {
+		width: 100%;
+		height: auto; /* Allow height to adjust */
+		max-height: 40vh; /* Limit height */
+		position: static; /* Remove sticky positioning */
+		border-right: none;
+		border-bottom: 1px solid var(--border-color);
+		box-shadow: 0 2px 5px var(--shadow-color);
+	}
+
+	#main-content {
+		padding: 20px;
+	}
+
+	#exercise-title {
+		font-size: 1.5em;
+	}
+}
