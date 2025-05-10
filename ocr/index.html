@@ -4,8 +4,10 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 		<title>ATM Slip OCR</title>
+		<!-- Tesseract and XLSX -->
 		<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+		<!-- Cropper.js -->
 		<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
@@ -32,14 +34,17 @@
 				margin-top: 0;
 				margin-bottom: 1.5rem;
 			}
+
 			.input-options {
 				display: flex;
 				flex-direction: column;
 				gap: 0.75rem;
 				margin-bottom: 1.5rem;
 			}
+
 			button,
 			input[type="button"] {
+				/* General button style */
 				display: block;
 				width: 100%;
 				margin: 0.5rem auto;
@@ -55,10 +60,11 @@
 			}
 			button#extractBtn {
 				background-color: #28a745;
-			}
+			} /* Green for extract */
 			button#extractBtn:hover:not(:disabled) {
 				background-color: #1e7e34;
 			}
+
 			button:hover:not(:disabled),
 			input[type="button"]:hover:not(:disabled) {
 				background: #0056b3;
@@ -68,6 +74,8 @@
 				background: #cccccc;
 				cursor: not-allowed;
 			}
+
+			/* input[type="file"] is hidden, label acts as button */
 			label.file-input-button {
 				display: block;
 				padding: 0.85rem 1.5rem;
@@ -85,6 +93,7 @@
 			label.file-input-button:hover {
 				background-color: #5a6268;
 			}
+
 			img#preview,
 			img#cropPreviewImage {
 				max-width: 100%;
@@ -96,6 +105,7 @@
 				border-radius: 8px;
 				background-color: #f9f9f9;
 			}
+			/* Cropper Modal Styles */
 			.crop-modal {
 				display: none;
 				position: fixed;
@@ -108,7 +118,7 @@
 				background-color: rgba(0, 0, 0, 0.6);
 				align-items: center;
 				justify-content: center;
-				flex-direction: column;
+				flex-direction: column; /* For centering content */
 			}
 			.crop-modal-content {
 				background-color: #fefefe;
@@ -124,14 +134,15 @@
 			}
 			#cropImageContainer {
 				width: 100%;
-				height: 60vh;
-				max-height: 400px;
+				height: 60vh; /* Max height for the cropper area */
+				max-height: 400px; /* Absolute max height */
 				margin-bottom: 15px;
-				overflow: hidden;
+				overflow: hidden; /* Ensure image doesn't overflow container */
 			}
 			#cropImageContainer img {
+				/* Cropper.js will manage the image display inside this */
 				display: block;
-				max-width: 100%;
+				max-width: 100%; /* Cropper will handle this */
 			}
 			.crop-actions {
 				margin-top: 15px;
@@ -144,31 +155,6 @@
 				min-width: 100px;
 				margin: 0 5px;
 				display: inline-block;
-			}
-
-			#enhancementControls {
-				margin-top: 1rem;
-				padding: 1rem;
-				border: 1px solid #ddd;
-				border-radius: 6px;
-				background-color: #f9f9f9;
-			}
-			#enhancementControls h3 {
-				margin-top: 0;
-				text-align: center;
-				color: #333;
-			}
-			#enhancementControls label {
-				display: block;
-				margin: 0.75rem 0 0.25rem 0;
-				font-size: 0.9em;
-			}
-			#enhancementControls input[type="range"] {
-				width: 100%;
-			}
-			#enhancementControls .slider-value {
-				font-weight: bold;
-				margin-left: 10px;
 			}
 
 			.result-table {
@@ -298,9 +284,11 @@
 	<body>
 		<div class="container">
 			<h2>ATM Slip Data Extractor</h2>
+
 			<div class="input-options">
 				<label for="fileInput" class="file-input-button">Select File</label>
 				<input type="file" id="fileInput" accept="image/*" class="hidden" />
+
 				<button type="button" id="takePhotoBtn">Take Photo</button>
 				<input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" />
 			</div>
@@ -318,29 +306,21 @@
 				</div>
 			</div>
 
-			<div id="enhancementControls" class="hidden">
-				<h3>Adjust Image for OCR</h3>
-				<label for="brightnessSlider">Brightness: <span id="brightnessValue">0</span></label>
-				<input type="range" id="brightnessSlider" min="-100" max="100" value="0" />
-				<label for="contrastSlider">Contrast: <span id="contrastValue">0</span></label>
-				<input type="range" id="contrastSlider" min="-100" max="100" value="0" />
-				<label for="thresholdSlider">Binarize Threshold: <span id="thresholdValue">0</span> (0 to disable)</label>
-				<input type="range" id="thresholdSlider" min="0" max="255" value="0" />
-			</div>
-
-			<img id="preview" class="hidden" alt="Enhanced Image preview" />
+			<img id="preview" class="hidden" alt="Final Image preview" />
 			<button id="extractBtn" class="hidden">Extract Text</button>
+			<!-- Initially hidden -->
 
 			<div id="progressIndicator" class="hidden">
 				<div class="spinner"></div>
 				<p id="progressMessage">Initializing...</p>
+				<!-- This was missing from constants init before -->
 				<div id="progressBarContainer"><div id="progressBar"></div></div>
 			</div>
+
 			<div class="result-table" id="result" class="hidden"></div>
 			<div id="summaryTableContainer" class="hidden"></div>
 			<pre id="rawText" class="hidden"></pre>
-			<button id="downloadBtnMain" class="hidden">Download Excel</button>
-			<!-- Changed ID slightly to avoid conflict if global fn name is same -->
+			<button onclick="downloadExcel()" id="downloadBtn" class="hidden">Download Excel</button>
 		</div>
 
 		<script>
@@ -351,63 +331,57 @@
 				const takePhotoBtn = document.getElementById("takePhotoBtn");
 				const cameraInput = document.getElementById("cameraInput");
 				const preview = document.getElementById("preview");
-				const extractBtn = document.getElementById("extractBtn");
+				const extractBtn = document.getElementById("extractBtn"); // Now correctly defined
 				const resultDiv = document.getElementById("result");
 				const rawTextPre = document.getElementById("rawText");
-				const downloadBtnMain = document.getElementById("downloadBtnMain"); // Matched new ID
+				const downloadBtn = document.getElementById("downloadBtn");
 				const progressIndicator = document.getElementById("progressIndicator");
-				const progressMessage = document.getElementById("progressMessage");
-				const progressBar = document.getElementById("progressBar");
+				const progressMessage = document.getElementById("progressMessage"); // Correctly defined
+				const progressBar = document.getElementById("progressBar"); // Correctly defined
 				const summaryTableContainer = document.getElementById("summaryTableContainer");
 				const cropModal = document.getElementById("cropModal");
 				const cropPreviewImage = document.getElementById("cropPreviewImage");
 				const cropButton = document.getElementById("cropButton");
 				const cancelCropButton = document.getElementById("cancelCropButton");
-				const enhancementControlsDiv = document.getElementById("enhancementControls");
-				const brightnessSlider = document.getElementById("brightnessSlider");
-				const contrastSlider = document.getElementById("contrastSlider");
-				const thresholdSlider = document.getElementById("thresholdSlider");
-				const brightnessValueSpan = document.getElementById("brightnessValue");
-				const contrastValueSpan = document.getElementById("contrastValue");
-				const thresholdValueSpan = document.getElementById("thresholdValue");
 
 				let cropperInstance = null;
-				let originalCroppedImageSrc = null;
-				let imageBeingEnhanced = new Image();
+				let currentImageForOcr = null;
 				let extractedData = {};
 				let typeValidity = [true, true, true, true];
-				const PREPROCESS_MAX_WIDTH_FINAL = 1500;
+				const PREPROCESS_MAX_WIDTH = 1500;
+				const CONTRAST_ADJUSTMENT = 20;
 
 				fileInput.addEventListener("change", handleFileSelect);
 				takePhotoBtn.addEventListener("click", () => cameraInput.click());
 				cameraInput.addEventListener("change", handleFileSelect);
-				extractBtn.addEventListener("click", extractTextFromPreviewedImage);
-				downloadBtnMain.addEventListener("click", downloadExcel); // Using event listener for download button
 
-				brightnessSlider.addEventListener("input", () => {
-					brightnessValueSpan.textContent = brightnessSlider.value;
-					applyImageEnhancements();
-				});
-				contrastSlider.addEventListener("input", () => {
-					contrastValueSpan.textContent = contrastSlider.value;
-					applyImageEnhancements();
-				});
-				thresholdSlider.addEventListener("input", () => {
-					thresholdValueSpan.textContent = thresholdSlider.value;
-					applyImageEnhancements();
-				});
+				extractBtn.addEventListener("click", extractTextFromPreviewedImage); // Switched to addEventListener
+				// Make downloadExcel globally accessible or use addEventListener
+				window.downloadExcel = downloadExcel;
 
 				function handleFileSelect(event) {
 					const file = event.target.files[0];
 					if (file) {
-						clearAll();
+						clearResultsAndSummary();
+						preview.classList.add("hidden");
+						extractBtn.classList.add("hidden"); // Hide extract button until crop is done
+
 						const reader = new FileReader();
 						reader.onload = (e) => {
 							cropPreviewImage.src = e.target.result;
 							cropModal.style.display = "flex";
-							if (cropperInstance) cropperInstance.destroy();
-							cropperInstance = new Cropper(cropPreviewImage, { aspectRatio: NaN, viewMode: 1, background: false, autoCropArea: 0.85, responsive: true, checkCrossOrigin: false });
-							if (DEBUG_MODE) debugAlert("Cropper initialized. Adjust and click 'Crop & Use'.");
+							if (cropperInstance) {
+								cropperInstance.destroy();
+							}
+							cropperInstance = new Cropper(cropPreviewImage, {
+								aspectRatio: NaN,
+								viewMode: 1,
+								background: false,
+								autoCropArea: 0.85,
+								responsive: true,
+								checkCrossOrigin: false, // Important if src is data URL
+							});
+							if (DEBUG_MODE) alert("Cropper initialized. Adjust crop and click 'Crop & Use'.");
 						};
 						reader.readAsDataURL(file);
 					}
@@ -418,120 +392,87 @@
 					cropModal.style.display = "none";
 					if (cropperInstance) cropperInstance.destroy();
 					cropperInstance = null;
-					clearAll();
+					currentImageForOcr = null;
+					preview.classList.add("hidden");
+					extractBtn.classList.add("hidden"); // Keep extract button hidden
 				});
 
 				cropButton.addEventListener("click", () => {
 					if (cropperInstance) {
-						originalCroppedImageSrc = cropperInstance.getCroppedCanvas().toDataURL("image/png");
+						const croppedCanvas = cropperInstance.getCroppedCanvas({
+							// fillColor: '#fff' // Optional: set background for transparent parts if any
+						});
 						cropperInstance.destroy();
 						cropperInstance = null;
 						cropModal.style.display = "none";
 
-						imageBeingEnhanced.onload = () => {
-							applyImageEnhancements();
-							enhancementControlsDiv.classList.remove("hidden");
-							preview.classList.remove("hidden");
-							extractBtn.classList.remove("hidden");
-						};
-						imageBeingEnhanced.src = originalCroppedImageSrc;
-						if (DEBUG_MODE) debugAlert("Image cropped. Adjust enhancement sliders if needed, then Extract.");
+						currentImageForOcr = croppedCanvas.toDataURL("image/png");
+						preview.src = currentImageForOcr;
+						preview.classList.remove("hidden");
+						extractBtn.classList.remove("hidden"); // Show extract button
+						if (DEBUG_MODE) alert("Image cropped. Click 'Extract Text'.");
 					}
 				});
 
-				function clearAll() {
+				function clearResultsAndSummary() {
 					resultDiv.innerHTML = "";
 					resultDiv.classList.add("hidden");
 					summaryTableContainer.innerHTML = "";
 					summaryTableContainer.classList.add("hidden");
 					rawTextPre.textContent = "";
 					rawTextPre.classList.add("hidden");
-					downloadBtnMain.classList.add("hidden");
+					downloadBtn.classList.add("hidden");
 					progressIndicator.classList.add("hidden");
-					enhancementControlsDiv.classList.add("hidden");
-					preview.classList.add("hidden");
-					preview.src = "#";
-					extractBtn.classList.add("hidden");
-
-					originalCroppedImageSrc = null;
-					brightnessSlider.value = 0;
-					brightnessValueSpan.textContent = "0";
-					contrastSlider.value = 0;
-					contrastValueSpan.textContent = "0";
-					thresholdSlider.value = 0;
-					thresholdValueSpan.textContent = "0";
+					extractedData = {};
+					typeValidity = [true, true, true, true];
+					currentImageForOcr = null;
+					extractBtn.classList.add("hidden"); // Hide extract button
+					preview.classList.add("hidden"); // Hide preview as well
 				}
 
-				function applyImageEnhancements() {
-					if (!originalCroppedImageSrc || !imageBeingEnhanced.src || !imageBeingEnhanced.complete || imageBeingEnhanced.naturalWidth === 0) {
-						// If originalCroppedImageSrc is set, but imageBeingEnhanced isn't fully loaded yet,
-						// try loading it again just in case. This can happen if sliders are moved too fast.
-						if (originalCroppedImageSrc && (!imageBeingEnhanced.src || imageBeingEnhanced.src !== originalCroppedImageSrc)) {
-							imageBeingEnhanced.onload = applyImageEnhancements; // Call self once loaded
-							imageBeingEnhanced.src = originalCroppedImageSrc;
-						}
-						return;
-					}
-
-					const canvas = document.createElement("canvas");
-					canvas.width = imageBeingEnhanced.naturalWidth;
-					canvas.height = imageBeingEnhanced.naturalHeight;
-					const ctx = canvas.getContext("2d");
-					ctx.drawImage(imageBeingEnhanced, 0, 0);
-
-					const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-					const data = imageData.data;
-					const brightness = parseInt(brightnessSlider.value);
-					const contrast = parseInt(contrastSlider.value);
-					const threshold = parseInt(thresholdSlider.value);
-					const contrastFactor = contrast / 100 + 1;
-
-					for (let i = 0; i < data.length; i += 4) {
-						let r = data[i],
-							g = data[i + 1],
-							b = data[i + 2];
-						let gray = 0.299 * r + 0.587 * g + 0.114 * b;
-						gray += brightness;
-						gray = contrastFactor * (gray - 128) + 128;
-						gray = Math.max(0, Math.min(255, gray));
-						if (threshold > 0) {
-							gray = gray < threshold ? 0 : 255;
-						}
-						data[i] = data[i + 1] = data[i + 2] = gray;
-					}
-					ctx.putImageData(imageData, 0, 0);
-					preview.src = canvas.toDataURL("image/png");
-				}
-
-				async function finalImagePreprocessBeforeOcr(imageDataUrl, maxWidth) {
+				async function preprocessImage(imageDataUrl, maxWidth, contrastValue) {
 					return new Promise((resolve, reject) => {
 						const img = new Image();
 						img.onload = () => {
 							let width = img.width;
 							let height = img.height;
+							let resizedInfo = `Original: ${width}x${height}`;
+
 							if (width > maxWidth) {
+								const oldWidth = width;
+								const oldHeight = height;
 								height = Math.round((height * maxWidth) / width);
 								width = maxWidth;
-								const canvas = document.createElement("canvas");
-								canvas.width = width;
-								canvas.height = height;
-								const ctx = canvas.getContext("2d");
-								ctx.drawImage(img, 0, 0, width, height);
-								if (DEBUG_MODE) debugAlert(`Final OCR image resized to ${width}x${height}`);
-								resolve(canvas.toDataURL("image/png"));
-								return;
+								resizedInfo += ` -> Resized: ${width}x${height}`;
 							}
-							if (DEBUG_MODE) debugAlert(`Final OCR image dimensions: ${width}x${height} (no resize)`);
-							resolve(imageDataUrl);
+
+							const canvas = document.createElement("canvas");
+							canvas.width = width;
+							canvas.height = height;
+							const ctx = canvas.getContext("2d");
+							ctx.drawImage(img, 0, 0, width, height);
+							const imgData = ctx.getImageData(0, 0, width, height);
+							const data = imgData.data;
+							const factor = (259 * (contrastValue + 255)) / (255 * (259 - contrastValue));
+
+							for (let i = 0; i < data.length; i += 4) {
+								let gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+								gray = factor * (gray - 128) + 128;
+								gray = Math.max(0, Math.min(255, gray));
+								data[i] = data[i + 1] = data[i + 2] = gray;
+							}
+							ctx.putImageData(imgData, 0, 0);
+							if (DEBUG_MODE) alert(`Preprocessing done. ${resizedInfo}. Applied grayscale & contrast.`);
+							resolve(canvas.toDataURL("image/png"));
 						};
-						img.onerror = (err) => reject(new Error("Image load failed for final OCR preprocess."));
+						img.onerror = (err) => reject(new Error("Image load failed for preprocessing."));
 						img.src = imageDataUrl;
 					});
 				}
 
 				async function extractTextFromPreviewedImage() {
-					if (!preview.src || preview.src.endsWith("#") || preview.src === "") {
-						alert("Please select, crop, and enhance an image first.");
+					if (!currentImageForOcr) {
+						alert("Please select/take and crop an image first.");
 						return;
 					}
 
@@ -542,24 +483,19 @@
 					summaryTableContainer.classList.add("hidden");
 					rawTextPre.textContent = "";
 					rawTextPre.classList.add("hidden");
-					downloadBtnMain.classList.add("hidden");
+					downloadBtn.classList.add("hidden");
 
 					progressIndicator.classList.remove("hidden");
-					progressMessage.textContent = "Finalizing image for OCR...";
+					progressMessage.textContent = "Preprocessing final image...";
 					progressBar.style.width = "0%";
 
 					try {
-						const imageForTesseract = await finalImagePreprocessBeforeOcr(preview.src, PREPROCESS_MAX_WIDTH_FINAL);
-
-						if (DEBUG_MODE) {
-							const tempImg = new Image(); // For debug alert only
-							tempImg.onload = () => debugAlert(`Image going to Tesseract: ${tempImg.width}x${tempImg.height}`);
-							tempImg.onerror = () => debugAlert(`Failed to load image for Tesseract debug info.`);
-							tempImg.src = imageForTesseract;
-						}
+						const preprocessedImageSrc = await preprocessImage(currentImageForOcr, PREPROCESS_MAX_WIDTH, CONTRAST_ADJUSTMENT);
+						preview.src = preprocessedImageSrc; // Show final preprocessed image
+						if (DEBUG_MODE) alert("Final preprocessed image shown. OCR starting.");
 
 						progressMessage.textContent = "Initializing Tesseract...";
-						const result = await Tesseract.recognize(imageForTesseract, "eng", {
+						const result = await Tesseract.recognize(preprocessedImageSrc, "eng", {
 							logger: (m) => {
 								if (m.status) {
 									let s = m.status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
@@ -575,29 +511,24 @@
 						});
 
 						const text = result.data.text;
-						if (DEBUG_MODE) debugAlert("OCR Raw Output (first 200 chars):\n" + text.substring(0, 200) + (text.length > 200 ? "..." : ""));
-
+						if (DEBUG_MODE) alert("OCR Raw Output:\n" + text.substring(0, 200) + (text.length > 200 ? "..." : ""));
 						extractedData = parseData(text);
 						performGlobalValidation(extractedData);
 						rawTextPre.textContent = text;
 						rawTextPre.classList.remove("hidden");
 						showEditableTable(extractedData);
 						resultDiv.classList.remove("hidden");
-						downloadBtnMain.classList.remove("hidden");
+						downloadBtn.classList.remove("hidden");
 						updateSummaryAndTotal();
 					} catch (error) {
-						console.error("Error during OCR or final preprocessing:", error);
-						if (DEBUG_MODE) debugAlert(`Error during OCR: ${error.message || "Unknown error"}`);
+						console.error("Error:", error);
+						if (DEBUG_MODE) alert(`Error during OCR: ${error.message || "Unknown error"}`);
 						resultDiv.innerHTML = `<p style="color: red; text-align: center;">Error: ${error.message || "Unknown error"}.</p>`;
 						resultDiv.classList.remove("hidden");
 					} finally {
-						extractBtn.disabled = !preview.src || preview.src.endsWith("#") || preview.src === "";
+						extractBtn.disabled = !currentImageForOcr; // Re-enable if image is still there
 						progressIndicator.classList.add("hidden");
 					}
-				}
-
-				function debugAlert(message) {
-					if (DEBUG_MODE) alert(message);
 				}
 
 				function checkTypeColumnValidity(typeIndex, currentData) {
@@ -635,11 +566,11 @@
 							v1h = t1h * 100,
 							tc = v1k + v5h + v1h;
 						const st = document.createElement("table");
-						st.innerHTML = `<thead><tr><th>Denomination</th><th>Remaining Notes</th><th>Value (Tk.)</th></tr></thead><tbody>
+						st.innerHTML = `<thead><tr><th>Denomination</th><th>Remaining Notes</th><th>Value</th></tr></thead><tbody>
                         <tr><td>1000s</td><td>${t1k.toLocaleString("en-IN")}</td><td>${v1k.toLocaleString("en-IN")}</td></tr>
                         <tr><td>500s</td><td>${t5h.toLocaleString("en-IN")}</td><td>${v5h.toLocaleString("en-IN")}</td></tr>
                         <tr><td>100s</td><td>${t1h.toLocaleString("en-IN")}</td><td>${v1h.toLocaleString("en-IN")}</td></tr>
-                        <tr><th colspan="2" style="text-align:right;padding-right:10px;">Total Cash Remaining:</th><td class="total-amount-value">Tk.${tc.toLocaleString("en-IN")}</td></tr>
+                        <tr><th colspan="2" style="text-align:right;padding-right:10px;">Total Cash Remaining:</th><td class="total-amount-value">${tc.toLocaleString("en-IN")}</td></tr>
                     </tbody>`;
 						summaryTableContainer.appendChild(st);
 						summaryTableContainer.classList.remove("hidden");
@@ -746,7 +677,7 @@
 						fd.push([l, r12.cells[1].querySelector("input").value, r12.cells[2].querySelector("input").value, r34.cells[1].querySelector("input").value, r34.cells[2].querySelector("input").value]);
 					}
 					if (typeValidity.every((v) => v) && extractedData.REMAINING) {
-						fd.push([], ["Denomination Summary"], ["Denomination", "Remaining Notes", "Value (Tk.)"]);
+						fd.push([], ["Denomination Summary"], ["Denomination", "Remaining Notes", "Value "]);
 						const r1 = parseInt(extractedData.REMAINING[0] || 0),
 							r2 = parseInt(extractedData.REMAINING[1] || 0),
 							r3 = parseInt(extractedData.REMAINING[2] || 0),
