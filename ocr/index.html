@@ -331,25 +331,26 @@
 				const takePhotoBtn = document.getElementById("takePhotoBtn");
 				const cameraInput = document.getElementById("cameraInput");
 				const preview = document.getElementById("preview");
-				const extractBtn = document.getElementById("extractBtn"); // Now correctly defined
+				const extractBtn = document.getElementById("extractBtn");
 				const resultDiv = document.getElementById("result");
 				const rawTextPre = document.getElementById("rawText");
 				const downloadBtn = document.getElementById("downloadBtn");
 				const progressIndicator = document.getElementById("progressIndicator");
-				const progressMessage = document.getElementById("progressMessage"); // Correctly defined
-				const progressBar = document.getElementById("progressBar"); // Correctly defined
+				const progressMessage = document.getElementById("progressMessage");
+				const progressBar = document.getElementById("progressBar");
 				const summaryTableContainer = document.getElementById("summaryTableContainer");
 				const cropModal = document.getElementById("cropModal");
 				const cropPreviewImage = document.getElementById("cropPreviewImage");
 				const cropButton = document.getElementById("cropButton");
 				const cancelCropButton = document.getElementById("cancelCropButton");
+				const rowOrder = ["CASSETTE", "REJECTED", "REMAINING", "DISPENSED", "TOTAL"]; // Define the vertical order
 
 				let cropperInstance = null;
 				let currentImageForOcr = null;
 				let extractedData = {};
 				let typeValidity = [true, true, true, true];
 				const PREPROCESS_MAX_WIDTH = 1500;
-				const CONTRAST_ADJUSTMENT = 20;
+				const CONTRAST_ADJUSTMENT = 50;
 
 				fileInput.addEventListener("change", handleFileSelect);
 				takePhotoBtn.addEventListener("click", () => cameraInput.click());
@@ -358,6 +359,63 @@
 				extractBtn.addEventListener("click", extractTextFromPreviewedImage); // Switched to addEventListener
 				// Make downloadExcel globally accessible or use addEventListener
 				window.downloadExcel = downloadExcel;
+
+				function handleVerticalNav(event) {
+					// // --- DEBUGGING ALERT ---
+					// // Construct the message to display
+					// const debugMessage =
+					// 	`Key Event Detected:\n` + // \n creates a new line in alerts
+					// 	`--------------------\n` +
+					// 	`Key: ${event.key}\n` +
+					// 	`Code: ${event.code}\n` +
+					// 	`KeyCode: ${event.keyCode}\n` + // Often useful, though sometimes deprecated
+					// 	`Target Element: ${event.target.tagName}\n` +
+					// 	`Target Data: label=${event.target.dataset.label}, index=${event.target.dataset.index}`;
+
+					// // Show the alert box
+					// alert(debugMessage);
+					// // --- END DEBUGGING ALERT ---
+
+					// Only act on inputs with the vertical-nav class
+					if (!event.target.classList.contains("vertical-nav")) {
+						return;
+					}
+
+					const isEnterOrDown = event.key === "Enter" || event.key === "ArrowDown";
+					const isUp = event.key === "ArrowUp";
+
+					if (isEnterOrDown || isUp) {
+						event.preventDefault(); // Prevent default (form submit, page scroll)
+
+						const currentInput = event.target;
+						const currentLabel = currentInput.dataset.label;
+						const currentColumnIndex = parseInt(currentInput.dataset.index); // Use index to find column inputs
+						const currentRowIndex = rowOrder.indexOf(currentLabel);
+
+						let nextRowIndex = -1;
+						if (isEnterOrDown) {
+							nextRowIndex = currentRowIndex + 1;
+						} else if (isUp) {
+							nextRowIndex = currentRowIndex - 1;
+						}
+
+						// Check if the next index is valid within the rowOrder array
+						if (nextRowIndex >= 0 && nextRowIndex < rowOrder.length) {
+							const nextLabel = rowOrder[nextRowIndex];
+							// Find the corresponding input in the same column (using data-index) but next/prev row (using data-label)
+							const nextInput = resultDiv.querySelector(`input.vertical-nav[data-label="${nextLabel}"][data-index="${currentColumnIndex}"]`);
+
+							if (nextInput) {
+								nextInput.focus();
+								nextInput.select(); // Select text for easy replacement
+							}
+						}
+						// Optional: Add behavior for reaching the top/bottom (e.g., loop, stop)
+					}
+				}
+
+				// --- ADD NEW Keydown Listener for Vertical Navigation ---
+				resultDiv.addEventListener("keydown", handleVerticalNav);
 
 				function handleFileSelect(event) {
 					const file = event.target.files[0];
@@ -430,7 +488,57 @@
 					preview.classList.add("hidden"); // Hide preview as well
 				}
 
-				async function preprocessImage(imageDataUrl, maxWidth, contrastValue) {
+				async function preprocessImage(imageDataUrl, maxWidth) {
+					// Removed contrastValue
+					return new Promise((resolve, reject) => {
+						const img = new Image();
+						img.onload = () => {
+							let width = img.width;
+							let height = img.height;
+							let resizedInfo = `Original: ${width}x${height}`;
+
+							if (width > maxWidth) {
+								// const oldWidth = width; // Not strictly needed anymore but good for context
+								// const oldHeight = height; // Not strictly needed anymore
+								height = Math.round((height * maxWidth) / width);
+								width = maxWidth;
+								resizedInfo += ` -> Resized: ${width}x${height}`;
+							}
+
+							const canvas = document.createElement("canvas");
+							canvas.width = width;
+							canvas.height = height;
+							const ctx = canvas.getContext("2d");
+
+							// This line draws the original image (img) scaled to the new canvas dimensions.
+							// The colors are preserved.
+							ctx.drawImage(img, 0, 0, width, height);
+
+							// REMOVE THE GRAYSCALE AND CONTRAST ADJUSTMENT CODE:
+							// const imgData = ctx.getImageData(0, 0, width, height);
+							// const data = imgData.data;
+							// const factor = (259 * (contrastValue + 255)) / (255 * (259 - contrastValue));
+							//
+							// for (let i = 0; i < data.length; i += 4) {
+							//     let gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+							//     gray = factor * (gray - 128) + 128;
+							//     gray = Math.max(0, Math.min(255, gray));
+							//     data[i] = data[i + 1] = data[i + 2] = gray;
+							// }
+							// ctx.putImageData(imgData, 0, 0);
+
+							// Assuming DEBUG_MODE is defined elsewhere
+							const DEBUG_MODE = true; // or false, or get it from global scope
+							if (DEBUG_MODE) alert(`Preprocessing done. ${resizedInfo}. Image resized.`); // Updated message
+
+							resolve(canvas.toDataURL("image/png"));
+						};
+						img.onerror = (err) => reject(new Error("Image load failed for preprocessing."));
+						img.src = imageDataUrl;
+					});
+				}
+
+				async function OLD_preprocessImage(imageDataUrl, maxWidth, contrastValue) {
 					return new Promise((resolve, reject) => {
 						const img = new Image();
 						img.onload = () => {
@@ -490,7 +598,7 @@
 					progressBar.style.width = "0%";
 
 					try {
-						const preprocessedImageSrc = await preprocessImage(currentImageForOcr, PREPROCESS_MAX_WIDTH, CONTRAST_ADJUSTMENT);
+						const preprocessedImageSrc = await OLD_preprocessImage(currentImageForOcr, PREPROCESS_MAX_WIDTH, CONTRAST_ADJUSTMENT);
 						preview.src = preprocessedImageSrc; // Show final preprocessed image
 						if (DEBUG_MODE) alert("Final preprocessed image shown. OCR starting.");
 
@@ -552,29 +660,92 @@
 
 				function updateSummaryAndTotal() {
 					const allValid = typeValidity.every((isValid) => isValid);
-					summaryTableContainer.innerHTML = "";
-					if (allValid && Object.keys(extractedData).length > 0 && extractedData.REMAINING) {
-						const r1 = parseInt(extractedData.REMAINING[0] || 0),
-							r2 = parseInt(extractedData.REMAINING[1] || 0),
-							r3 = parseInt(extractedData.REMAINING[2] || 0),
-							r4 = parseInt(extractedData.REMAINING[3] || 0);
-						const t1k = r1 + r2,
-							t5h = r3,
-							t1h = r4;
-						const v1k = t1k * 1000,
-							v5h = t5h * 500,
-							v1h = t1h * 100,
-							tc = v1k + v5h + v1h;
-						const st = document.createElement("table");
-						st.innerHTML = `<thead><tr><th>Denomination</th><th>Remaining Notes</th><th>Value</th></tr></thead><tbody>
-                        <tr><td>1000s</td><td>${t1k.toLocaleString("en-IN")}</td><td>${v1k.toLocaleString("en-IN")}</td></tr>
-                        <tr><td>500s</td><td>${t5h.toLocaleString("en-IN")}</td><td>${v5h.toLocaleString("en-IN")}</td></tr>
-                        <tr><td>100s</td><td>${t1h.toLocaleString("en-IN")}</td><td>${v1h.toLocaleString("en-IN")}</td></tr>
-                        <tr><th colspan="2" style="text-align:right;padding-right:10px;">Total Cash Remaining:</th><td class="total-amount-value">${tc.toLocaleString("en-IN")}</td></tr>
-                    </tbody>`;
-						summaryTableContainer.appendChild(st);
+					summaryTableContainer.innerHTML = ""; // Clear previous summary
+
+					// Check if ALL required data types (Rejected, Cassette, Remaining) exist and data is valid
+					if (allValid && Object.keys(extractedData).length > 0 && extractedData.REJECTED && extractedData.CASSETTE && extractedData.REMAINING) {
+						// --- 1. Calculate Rejected Notes Count per Denomination ---
+						const rej1 = parseInt(extractedData.REJECTED[0] || 0);
+						const rej2 = parseInt(extractedData.REJECTED[1] || 0);
+						const rej3 = parseInt(extractedData.REJECTED[2] || 0);
+						const rej4 = parseInt(extractedData.REJECTED[3] || 0);
+
+						const rejected1kNotes = rej1 + rej2; // Type 1 + Type 2 = 1000s
+						const rejected500Notes = rej3; // Type 3 = 500s
+						const rejected100Notes = rej4; // Type 4 = 100s
+
+						// --- 2. Calculate Total Cash Value in Cassettes ---
+						const c1 = parseInt(extractedData.CASSETTE[0] || 0);
+						const c2 = parseInt(extractedData.CASSETTE[1] || 0);
+						const c3 = parseInt(extractedData.CASSETTE[2] || 0);
+						const c4 = parseInt(extractedData.CASSETTE[3] || 0);
+
+						const cassette1kNotes = c1 + c2;
+						const cassette500Notes = c3;
+						const cassette100Notes = c4;
+
+						const valueCassette1k = cassette1kNotes * 1000;
+						const valueCassette500 = cassette500Notes * 500;
+						const valueCassette100 = cassette100Notes * 100;
+
+						const totalCassetteValue = valueCassette1k + valueCassette500 + valueCassette100;
+
+						// --- 3. Calculate Total Remaining Cash Value ("Total Before Cash") ---
+						const rem1 = parseInt(extractedData.REMAINING[0] || 0);
+						const rem2 = parseInt(extractedData.REMAINING[1] || 0);
+						const rem3 = parseInt(extractedData.REMAINING[2] || 0);
+						const rem4 = parseInt(extractedData.REMAINING[3] || 0);
+
+						const remaining1kNotes = rem1 + rem2;
+						const remaining500Notes = rem3;
+						const remaining100Notes = rem4;
+
+						const valueRemaining1k = remaining1kNotes * 1000;
+						const valueRemaining500 = remaining500Notes * 500;
+						const valueRemaining100 = remaining100Notes * 100;
+
+						const totalRemainingValue = valueRemaining1k + valueRemaining500 + valueRemaining100;
+
+						// --- Create Summary Table HTML ---
+						const summaryTableElement = document.createElement("table");
+						// Using simple 2-column layout now
+						summaryTableElement.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Denomination</th>
+                    <th>Rejected Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1000s</td>
+                    <td>${rejected1kNotes.toLocaleString("en-IN")}</td>
+                </tr>
+                <tr>
+                    <td>500s</td>
+                    <td>${rejected500Notes.toLocaleString("en-IN")}</td>
+                </tr>
+                <tr>
+                    <td>100s</td>
+                    <td>${rejected100Notes.toLocaleString("en-IN")}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="border:0; height: 10px; background-color: #fff;"></td> <!-- Spacer -->
+                </tr>
+                <tr>
+                    <th style="text-align:right;font-size: 1em;">Total Cash in Cassettes:</th>
+                    <td style="text-align:right;background-color: #d4edda;font-size: 1.2em;">${totalCassetteValue.toLocaleString("en-IN")}</td>
+                </tr>
+                <tr>
+                    <th style="text-align:right;">Total Before Cash:</th>
+                    <td style="font-weight:bold; text-align:right;background-color: #39f;font-size: 1.2em;">${totalRemainingValue.toLocaleString("en-IN")}</td>
+                </tr>
+            </tbody>`;
+
+						summaryTableContainer.appendChild(summaryTableElement);
 						summaryTableContainer.classList.remove("hidden");
 					} else {
+						// Hide summary if data is invalid or incomplete
 						summaryTableContainer.classList.add("hidden");
 					}
 				}
@@ -612,10 +783,23 @@
 				function generateInputHtml(v, l, di, icov) {
 					let ic = "";
 					const ie = v === "";
-					if (!icov) ic = "col-invalid";
-					else if (ie && ["CASSETTE", "REJECTED", "DISPENSED", "REMAINING", "TOTAL"].includes(l)) ic = "field-problem";
-					return `<input type="text" class="${ic}" value="${v}" data-label="${l}" data-index="${di}">`;
+					// Determine column name based on index
+					let colName = "";
+					if (di === 0) colName = "type1";
+					else if (di === 1) colName = "type2";
+					else if (di === 2) colName = "type3";
+					else if (di === 3) colName = "type4";
+
+					if (!icov) {
+						ic = "col-invalid"; // If the whole column sum is invalid
+					} else if (ie && ["REMAINING", "TOTAL"].includes(l)) {
+						// Mark required fields if empty, even if column sum is valid (optional styling)
+						ic = "field-problem";
+					}
+					// Add data-column attribute
+					return `<input type="text" inputmode="numeric" pattern="[0-9]*" class="vertical-nav ${ic}" value="${v}" data-label="${l}" data-index="${di}" data-column="${colName}">`;
 				}
+
 				function createRow(l, v1, v2, di1, di2) {
 					const r = document.createElement("tr");
 					r.innerHTML = `<td>${l}</td><td>${generateInputHtml(v1, l, di1, typeValidity[di1])}</td><td>${generateInputHtml(v2, l, di2, typeValidity[di2])}</td>`;
@@ -637,27 +821,77 @@
 				}
 
 				resultDiv.addEventListener("input", function (e) {
-					if (e.target.tagName === "INPUT" && e.target.type === "text") {
-						const l = e.target.dataset.label,
-							di = parseInt(e.target.dataset.index),
-							nv = e.target.value;
-						if (extractedData[l]) {
-							extractedData[l][di] = nv;
-							performGlobalValidation(extractedData);
-							showEditableTable(extractedData);
+					// Make sure it's one of our text inputs
+					if (e.target.tagName === "INPUT" && e.target.type === "text" && e.target.classList.contains("vertical-nav")) {
+						const inputElement = e.target;
+						const label = inputElement.dataset.label;
+						const dataIndex = parseInt(inputElement.dataset.index);
+						const newValue = inputElement.value;
+
+						// 1. Update the data model
+						if (extractedData[label]) {
+							extractedData[label][dataIndex] = newValue;
+
+							// 2. Perform validation (this updates the global `typeValidity` array)
+							performGlobalValidation(extractedData); // Checks all columns
+
+							// 3. Update the CSS classes for the *entire affected column* based on validation
+							updateColumnStyles(dataIndex);
+
+							// 4. Update the summary table
 							updateSummaryAndTotal();
-							const nt = resultDiv.querySelector("table");
-							if (nt) {
-								const ins = Array.from(nt.querySelectorAll(`input[data-label="${l}"][data-index="${di}"]`));
-								if (ins.length > 0) {
-									const cp = e.target.selectionStart;
-									ins[0].focus();
-									ins[0].setSelectionRange(cp, cp);
-								}
-							}
+
+							// --- REMOVED ---
+							// showEditableTable(extractedData); // DO NOT RE-RENDER THE WHOLE TABLE HERE!
+							// --- REMOVED FOCUS RESTORATION CODE ---
 						}
 					}
 				});
+
+				// --- ADD NEW Helper function to update styles after input/validation ---
+				function updateColumnStyles(columnIndex) {
+					const columnIsValid = typeValidity[columnIndex];
+					const inputsInColumn = resultDiv.querySelectorAll(`input.vertical-nav[data-index="${columnIndex}"]`);
+
+					inputsInColumn.forEach((input) => {
+						const label = input.dataset.label;
+						const isEmpty = input.value === "";
+
+						// Remove previous validation classes
+						input.classList.remove("col-invalid", "field-problem");
+
+						// Apply new classes
+						if (!columnIsValid) {
+							input.classList.add("col-invalid");
+						} else if (isEmpty && ["REMAINING", "TOTAL"].includes(label)) {
+							// Optional: Highlight required fields if column is valid but field is empty
+							input.classList.add("field-problem");
+						}
+					});
+				}
+
+				// resultDiv.addEventListener("input", function (e) {
+				// 	if (e.target.tagName === "INPUT" && e.target.type === "text") {
+				// 		const l = e.target.dataset.label,
+				// 			di = parseInt(e.target.dataset.index),
+				// 			nv = e.target.value;
+				// 		if (extractedData[l]) {
+				// 			extractedData[l][di] = nv;
+				// 			performGlobalValidation(extractedData);
+				// 			showEditableTable(extractedData);
+				// 			updateSummaryAndTotal();
+				// 			const nt = resultDiv.querySelector("table");
+				// 			if (nt) {
+				// 				const ins = Array.from(nt.querySelectorAll(`input[data-label="${l}"][data-index="${di}"]`));
+				// 				if (ins.length > 0) {
+				// 					const cp = e.target.selectionStart;
+				// 					ins[0].focus();
+				// 					ins[0].setSelectionRange(cp, cp);
+				// 				}
+				// 			}
+				// 		}
+				// 	}
+				// });
 
 				function downloadExcel() {
 					const te = resultDiv.querySelector("table");
