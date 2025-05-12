@@ -193,17 +193,40 @@
 			input[type="text"].field-problem {
 				background-color: #fff2f2 !important;
 			}
-			pre#rawText {
-				white-space: pre-wrap;
-				word-wrap: break-word;
+			/* Add or modify in the <style> block */
+			textarea#rawText {
+				width: 100%;
+				box-sizing: border-box; /* Ensures padding is included in width */
+				font-family: monospace; /* Good for code-like text */
+				white-space: pre-wrap; /* Respects whitespace and wraps */
+				word-wrap: break-word; /* Breaks long words */
 				padding: 1rem;
 				background: #f5f5f5;
 				border: 1px solid #ccc;
 				border-radius: 6px;
-				margin-top: 1.5rem;
+				margin-top: 0.5rem; /* Adjust spacing */
+				margin-bottom: 0.5rem; /* Add space before retry button */
 				font-size: 0.85em;
-				max-height: 200px;
-				overflow-y: auto;
+				max-height: 200px; /* Limit height */
+				overflow-y: auto; /* Add scrollbar if needed */
+				resize: vertical; /* Allow user to resize vertically */
+			}
+
+			label#rawTextLabel {
+				display: block; /* Make label take full width */
+				margin-top: 1.5rem; /* Space above label */
+				font-weight: 500;
+				color: #555;
+			}
+
+			/* Optional: Style for the retry button if needed */
+			button#retryParseBtn {
+				/* You can add specific styles or rely on general button style */
+				background-color: #ffc107; /* Example: Amber color */
+				color: #333;
+			}
+			button#retryParseBtn:hover:not(:disabled) {
+				background-color: #e0a800;
 			}
 			#progressIndicator {
 				text-align: center;
@@ -319,7 +342,32 @@
 
 			<div class="result-table" id="result" class="hidden"></div>
 			<div id="summaryTableContainer" class="hidden"></div>
-			<pre id="rawText" class="hidden"></pre>
+			<!-- MODIFIED: Replace pre with textarea -->
+			<label for="rawText" class="hidden" id="rawTextLabel">Editable Raw OCR Text:</label>
+			<textarea
+				id="rawText"
+				class="hidden"
+				rows="10"
+				style="
+					width: 100%;
+					box-sizing: border-box;
+					font-family: monospace;
+					white-space: pre-wrap;
+					word-wrap: break-word;
+					padding: 1rem;
+					background: #f5f5f5;
+					border: 1px solid #ccc;
+					border-radius: 6px;
+					margin-top: 0.5rem;
+					font-size: 0.85em;
+					max-height: 200px;
+					overflow-y: auto;
+				"
+			></textarea>
+
+			<!-- ADDED: Retry Parse Button -->
+			<button id="retryParseBtn" class="hidden">Retry Parsing from Text</button>
+
 			<button onclick="downloadExcel()" id="downloadBtn" class="hidden">Download Excel</button>
 		</div>
 
@@ -343,6 +391,9 @@
 				const cropPreviewImage = document.getElementById("cropPreviewImage");
 				const cropButton = document.getElementById("cropButton");
 				const cancelCropButton = document.getElementById("cancelCropButton");
+				const rawTextArea = document.getElementById("rawText");
+				const rawTextLabel = document.getElementById("rawTextLabel"); // Get the label
+				const retryParseBtn = document.getElementById("retryParseBtn"); // Get the retry button
 				const rowOrder = ["CASSETTE", "REJECTED", "REMAINING", "DISPENSED", "TOTAL"]; // Define the vertical order
 
 				let cropperInstance = null;
@@ -359,6 +410,48 @@
 				extractBtn.addEventListener("click", extractTextFromPreviewedImage); // Switched to addEventListener
 				// Make downloadExcel globally accessible or use addEventListener
 				window.downloadExcel = downloadExcel;
+
+				// --- ADD Event Listener for the new Retry Button ---
+				retryParseBtn.addEventListener("click", handleRetryParse);
+
+				// --- NEW: Function to handle parsing and display updates ---
+				function processTextAndDisplay(textToProcess) {
+					try {
+						if (DEBUG_MODE) console.log("Processing text:\n", textToProcess);
+						extractedData = parseData(textToProcess); // Parse the text
+						performGlobalValidation(extractedData); // Validate the parsed data
+						showEditableTable(extractedData); // Display the editable table
+						resultDiv.classList.remove("hidden");
+						updateSummaryAndTotal(); // Update the summary table
+						downloadBtn.classList.remove("hidden"); // Ensure download button is visible
+
+						// Make textarea and retry button visible if they aren't already
+						rawTextLabel.classList.remove("hidden");
+						rawTextArea.classList.remove("hidden");
+						retryParseBtn.classList.remove("hidden");
+					} catch (error) {
+						console.error("Error during text processing:", error);
+						if (DEBUG_MODE) alert(`Error processing text: ${error.message || "Unknown error"}`);
+						resultDiv.innerHTML = `<p style="color: red; text-align: center;">Error processing text: ${error.message || "Unknown error"}. Please check the raw text.</p>`;
+						resultDiv.classList.remove("hidden");
+						// Hide summary and download button on error
+						summaryTableContainer.classList.add("hidden");
+						downloadBtn.classList.add("hidden");
+					}
+				}
+
+				// --- NEW: Handler for the Retry Parse Button ---
+				function handleRetryParse() {
+					const currentRawText = rawTextArea.value; // Get text from textarea
+					if (currentRawText.trim() === "") {
+						alert("Raw text is empty. Cannot retry parsing.");
+						return;
+					}
+					if (DEBUG_MODE) alert("Retrying parse with edited text.");
+					retryParseBtn.disabled = true; // Briefly disable button
+					processTextAndDisplay(currentRawText); // Process the text
+					retryParseBtn.disabled = false; // Re-enable button
+				}
 
 				function handleVerticalNav(event) {
 					// // --- DEBUGGING ALERT ---
@@ -477,8 +570,10 @@
 					resultDiv.classList.add("hidden");
 					summaryTableContainer.innerHTML = "";
 					summaryTableContainer.classList.add("hidden");
-					rawTextPre.textContent = "";
-					rawTextPre.classList.add("hidden");
+					rawTextArea.value = ""; // Clear the textarea
+					rawTextArea.classList.add("hidden"); // Hide the textarea
+					rawTextLabel.classList.add("hidden"); // Hide the label
+					retryParseBtn.classList.add("hidden"); // Hide the retry button
 					downloadBtn.classList.add("hidden");
 					progressIndicator.classList.add("hidden");
 					extractedData = {};
@@ -585,12 +680,15 @@
 					}
 
 					extractBtn.disabled = true;
+					// Clear previous results BUT keep the preview image
 					resultDiv.innerHTML = "";
 					resultDiv.classList.add("hidden");
 					summaryTableContainer.innerHTML = "";
 					summaryTableContainer.classList.add("hidden");
-					rawTextPre.textContent = "";
-					rawTextPre.classList.add("hidden");
+					rawTextArea.value = "";
+					rawTextArea.classList.add("hidden");
+					rawTextLabel.classList.add("hidden");
+					retryParseBtn.classList.add("hidden");
 					downloadBtn.classList.add("hidden");
 
 					progressIndicator.classList.remove("hidden");
@@ -599,12 +697,14 @@
 
 					try {
 						const preprocessedImageSrc = await OLD_preprocessImage(currentImageForOcr, PREPROCESS_MAX_WIDTH, CONTRAST_ADJUSTMENT);
-						preview.src = preprocessedImageSrc; // Show final preprocessed image
+						// preview.src = preprocessedImageSrc; // Don't necessarily update preview again, keep cropped one? Or update? Your choice. Let's keep the preprocessed one.
+						preview.src = preprocessedImageSrc;
 						if (DEBUG_MODE) alert("Final preprocessed image shown. OCR starting.");
 
 						progressMessage.textContent = "Initializing Tesseract...";
 						const result = await Tesseract.recognize(preprocessedImageSrc, "eng", {
 							logger: (m) => {
+								// ... (logger logic remains the same) ...
 								if (m.status) {
 									let s = m.status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 									progressMessage.textContent = `${s}...`;
@@ -618,23 +718,28 @@
 							},
 						});
 
-						const text = result.data.text;
-						if (DEBUG_MODE) alert("OCR Raw Output:\n" + text.substring(0, 200) + (text.length > 200 ? "..." : ""));
-						extractedData = parseData(text);
-						performGlobalValidation(extractedData);
-						rawTextPre.textContent = text;
-						rawTextPre.classList.remove("hidden");
-						showEditableTable(extractedData);
-						resultDiv.classList.remove("hidden");
-						downloadBtn.classList.remove("hidden");
-						updateSummaryAndTotal();
+						const ocrText = result.data.text; // Get the raw text from OCR
+						if (DEBUG_MODE) alert("OCR Raw Output:\n" + ocrText.substring(0, 200) + (ocrText.length > 200 ? "..." : ""));
+
+						// Populate the textarea with the OCR text
+						rawTextArea.value = ocrText;
+						rawTextLabel.classList.remove("hidden"); // Show label
+						rawTextArea.classList.remove("hidden"); // Show textarea
+						rawTextArea.readOnly = false; // Make it editable
+
+						// Process the initial OCR text using the common function
+						processTextAndDisplay(ocrText);
+
+						// Show the retry button now that we have text
+						retryParseBtn.classList.remove("hidden");
 					} catch (error) {
 						console.error("Error:", error);
 						if (DEBUG_MODE) alert(`Error during OCR: ${error.message || "Unknown error"}`);
-						resultDiv.innerHTML = `<p style="color: red; text-align: center;">Error: ${error.message || "Unknown error"}.</p>`;
+						resultDiv.innerHTML = `<p style="color: red; text-align: center;">Error during OCR: ${error.message || "Unknown error"}.</p>`;
 						resultDiv.classList.remove("hidden");
 					} finally {
-						extractBtn.disabled = !currentImageForOcr; // Re-enable if image is still there
+						// Re-enable extract button ONLY if there's still an image selected.
+						extractBtn.disabled = !currentImageForOcr;
 						progressIndicator.classList.add("hidden");
 					}
 				}
