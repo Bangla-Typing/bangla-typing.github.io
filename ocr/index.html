@@ -333,15 +333,6 @@
 			<button id="extractBtn" class="hidden">Extract Text</button>
 			<!-- Initially hidden -->
 
-			<div id="progressIndicator" class="hidden">
-				<div class="spinner"></div>
-				<p id="progressMessage">Initializing...</p>
-				<!-- This was missing from constants init before -->
-				<div id="progressBarContainer"><div id="progressBar"></div></div>
-			</div>
-
-			<div class="result-table" id="result" class="hidden"></div>
-			<div id="summaryTableContainer" class="hidden"></div>
 			<!-- MODIFIED: Replace pre with textarea -->
 			<label for="rawText" class="hidden" id="rawTextLabel">Editable Raw OCR Text:</label>
 			<textarea
@@ -367,6 +358,16 @@
 
 			<!-- ADDED: Retry Parse Button -->
 			<button id="retryParseBtn" class="hidden">Retry Parsing from Text</button>
+
+			<div id="progressIndicator" class="hidden">
+				<div class="spinner"></div>
+				<p id="progressMessage">Initializing...</p>
+				<!-- This was missing from constants init before -->
+				<div id="progressBarContainer"><div id="progressBar"></div></div>
+			</div>
+
+			<div class="result-table" id="result" class="hidden"></div>
+			<div id="summaryTableContainer" class="hidden"></div>
 
 			<button onclick="downloadExcel()" id="downloadBtn" class="hidden">Download Excel</button>
 		</div>
@@ -843,7 +844,7 @@
                 </tr>
                 <tr>
                     <th style="text-align:right;">Total Before Cash:</th>
-                    <td style="font-weight:bold; text-align:right;background-color: #39f;font-size: 1.2em;">${totalRemainingValue.toLocaleString("en-IN")}</td>
+                    <td style="font-weight:bold; text-align:right;background-color: #94e2f7;font-size: 1.2em;">${totalRemainingValue.toLocaleString("en-IN")}</td>
                 </tr>
             </tbody>`;
 
