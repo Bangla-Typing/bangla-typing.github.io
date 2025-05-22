@@ -334,10 +334,9 @@
 			<!-- Initially hidden -->
 
 			<!-- MODIFIED: Replace pre with textarea -->
-			<label for="rawText" class="hidden" id="rawTextLabel">Editable Raw OCR Text:</label>
+			<label for="rawText" id="rawTextLabel">Editable Raw OCR Text:</label>
 			<textarea
 				id="rawText"
-				class="hidden"
 				rows="10"
 				style="
 					width: 100%;
@@ -357,7 +356,7 @@
 			></textarea>
 
 			<!-- ADDED: Retry Parse Button -->
-			<button id="retryParseBtn" class="hidden">Retry Parsing from Text</button>
+			<button id="retryParseBtn">Retry Parsing from Text</button>
 
 			<div id="progressIndicator" class="hidden">
 				<div class="spinner"></div>
@@ -366,7 +365,7 @@
 				<div id="progressBarContainer"><div id="progressBar"></div></div>
 			</div>
 
-			<div class="result-table" id="result" class="hidden"></div>
+			<div class="result-table" id="result"></div>
 			<div id="summaryTableContainer" class="hidden"></div>
 
 			<button onclick="downloadExcel()" id="downloadBtn" class="hidden">Download Excel</button>
