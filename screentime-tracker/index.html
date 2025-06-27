@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Screen Usage Analyzer</title>
+		<link rel="manifest" href="manifest.json" />
+		<meta name="theme-color" content="#3f51b5" />
+		<link rel="apple-touch-icon" href="icons/icon-192x192.png" />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+		<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css" />
+		<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+		<style>
+			:root {
+				--primary-color: #3f51b5;
+				--accent-color: #ff4081;
+				--text-color: #212121;
+				--subtle-text-color: #757575;
+				--background-color: #f0f2f5;
+			}
+			body {
+				background-color: var(--background-color);
+				font-family: "Roboto", sans-serif;
+			}
+			.mdl-layout__content {
+				display: flex;
+				justify-content: center;
+			}
+			.page-content {
+				padding: 16px;
+				max-width: 900px;
+				width: 100%;
+			}
+			.mdl-card {
+				width: 100%;
+				margin-bottom: 16px;
+				min-width: 0;
+			}
+
+			/* --- NEW: Sticky Header for Date and Navigation --- */
+			#sticky-header {
+				position: sticky;
+				top: 0; /* Sticks to the top of the scrolling viewport */
+				background-color: #ffffff;
+				z-index: 100;
+				padding: 8px 16px;
+				margin-bottom: 16px;
+				border-radius: 8px;
+				box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+			#sticky-header h4 {
+				margin: 0;
+				color: var(--text-color);
+				font-size: 1.1em;
+				text-align: center;
+				flex-grow: 1; /* Allows the date to take up space */
+			}
+			#sticky-header .mdl-button {
+				min-width: 48px; /* Make buttons more compact */
+				height: 48px;
+			}
+
+			/* --- NEW: Horizontally Scrollable Chart on small screens --- */
+			.chart-scroll-wrapper {
+				width: 95%;
+			}
+			@media (max-width: 768px) {
+				.chart-scroll-wrapper {
+					overflow-x: auto;
+					padding-bottom: 10px; /* Space for scrollbar */
+				}
+				.chart-container {
+					min-width: 800px; /* Force chart to be wide */
+				}
+			}
+
+			/* Dashboard Stats Grid */
+			#summary-grid {
+				display: grid;
+				grid-template-columns: repeat(2, 1fr);
+				gap: 16px;
+				margin-bottom: 16px;
+			}
+			.stat-card {
+				background: #ffffff;
+				border-radius: 8px;
+				padding: 16px;
+				text-align: center;
+				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+			}
+			.stat-card .material-icons {
+				font-size: 2.5em;
+				color: var(--primary-color);
+				margin-bottom: 8px;
+			}
+			.stat-card .stat-value {
+				font-size: 1.8em;
+				font-weight: 500;
+				color: var(--text-color);
+				line-height: 1.2;
+			}
+			.stat-card .stat-label {
+				font-size: 0.9em;
+				color: var(--subtle-text-color);
+				margin-top: 4px;
+			}
+
+			/* NEW: File Selection Panel Style */
+			#file-selection-panel {
+				margin-top: 24px;
+				text-align: center;
+			}
+
+			/* Dialog styles */
+			#details-dialog {
+				width: 90%;
+				max-width: 400px;
+			}
+			.mdl-dialog__title {
+				border-bottom: 1px solid #e0e0e0;
+				padding-bottom: 16px;
+			}
+			#details-dialog-content {
+				max-height: 45vh;
+				overflow-y: auto;
+				padding-right: 10px;
+			}
+			#details-dialog-content table {
+				width: 100%;
+				border-collapse: collapse;
+			}
+			#details-dialog-content td {
+				padding: 12px 6px;
+				vertical-align: middle;
+			}
+			#details-dialog-content tr:nth-child(even) {
+				background-color: #f5f5f5;
+			}
+			#details-dialog-content td:nth-child(2) {
+				padding: 0 12px;
+				color: #bdbdbd;
+			}
+			.duration-cell {
+				font-weight: 500;
+				color: var(--primary-color);
+				text-align: right;
+				white-space: nowrap;
+			}
+			.duration-cell .material-icons {
+				font-size: 1.1em;
+				vertical-align: text-bottom;
+				margin-right: 4px;
+				opacity: 0.7;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+			<header class="mdl-layout__header">
+				<div class="mdl-layout__header-row">
+					<span class="mdl-layout-title">Screen Usage Analyzer</span>
+				</div>
+			</header>
+
+			<main class="mdl-layout__content">
+				<div class="page-content">
+					<!-- MODIFIED: Replaced status-container with a clear file selection panel -->
+					<div id="file-selection-panel" class="mdl-card mdl-shadow--2dp">
+						<div class="mdl-card__title">
+							<h2 class="mdl-card__title-text">Start Analysis</h2>
+						</div>
+						<div class="mdl-card__supporting-text">To begin, please select your screen usage log file.</div>
+						<div class="mdl-card__actions mdl-card--border" style="padding: 16px">
+							<!-- The label acts as the button for the hidden file input -->
+							<label for="logFileInput" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect">
+								<i class="material-icons" style="margin-right: 8px">upload_file</i> Select Log File
+							</label>
+							<input type="file" id="logFileInput" accept=".txt" style="display: none" />
+						</div>
+					</div>
+
+					<div id="analysis-content" style="display: none">
+						<!-- NEW: Sticky Header -->
+						<div id="sticky-header">
+							<button id="prevBtn" class="mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect">
+								<i class="material-icons">chevron_left</i>
+							</button>
+							<h4 id="sticky-date-display"></h4>
+							<button id="nextBtn" class="mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect">
+								<i class="material-icons">chevron_right</i>
+							</button>
+						</div>
+
+						<!-- Dashboard Grid -->
+						<div id="summary-grid">
+							<div class="stat-card">
+								<i class="material-icons">phone_android</i>
+								<div class="stat-value" id="total-on-time"></div>
+								<div class="stat-label">Total Screen On</div>
+							</div>
+							<div class="stat-card">
+								<i class="material-icons">touch_app</i>
+								<div class="stat-value" id="unlock-count"></div>
+								<div class="stat-label">Unlocks</div>
+							</div>
+							<div class="stat-card">
+								<i class="material-icons">bedtime</i>
+								<div class="stat-value" id="sleep-start-time"></div>
+								<div class="stat-label">Sleep Start</div>
+							</div>
+							<div class="stat-card">
+								<i class="material-icons">wb_sunny</i>
+								<div class="stat-value" id="sleep-duration"></div>
+								<div class="stat-label">Sleep Duration</div>
+							</div>
+						</div>
+
+						<div class="mdl-card mdl-shadow--2dp">
+							<div class="mdl-card__title">
+								<h2 class="mdl-card__title-text">Hourly Usage</h2>
+							</div>
+							<!-- NEW: Wrapper for horizontal scrolling -->
+							<div class="mdl-card__supporting-text chart-scroll-wrapper">
+								<div class="chart-container">
+									<canvas id="hourlyChart"></canvas>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+
+		<dialog class="mdl-dialog" id="details-dialog">
+			<h4 class="mdl-dialog__title" style="font-size: 2rem" id="details-dialog-title"></h4>
+			<div class="mdl-dialog__content" style="font-size: 1.2rem" id="details-dialog-content"></div>
+			<div class="mdl-dialog__actions">
+				<button type="button" class="mdl-button close">Close</button>
+			</div>
+		</dialog>
+
+		<script>
+			Chart.register(ChartDataLabels);
+
+			let groupedByDate = {},
+				sleepPeriodsByDate = {},
+				allDates = [],
+				currentIndex = 0;
+
+			// DOM References
+			const logFileInput = document.getElementById("logFileInput");
+			const analysisContent = document.getElementById("analysis-content");
+			// MODIFIED: New reference for the file selection panel
+			const fileSelectionPanel = document.getElementById("file-selection-panel");
+			const dialog = document.getElementById("details-dialog");
+
+			// Sticky Header References
+			const stickyHeader = document.getElementById("sticky-header");
+			const stickyDateDisplay = document.getElementById("sticky-date-display");
+			const prevBtn = document.getElementById("prevBtn");
+			const nextBtn = document.getElementById("nextBtn");
+
+			// Summary Grid References
+			const totalOnTimeEl = document.getElementById("total-on-time");
+			const unlockCountEl = document.getElementById("unlock-count");
+			const sleepStartTimeEl = document.getElementById("sleep-start-time");
+			const sleepDurationEl = document.getElementById("sleep-duration");
+
+			// Event Listeners
+			// REMOVED: window.addEventListener("load", loadLocalLogFile);
+			logFileInput.addEventListener("change", (e) => {
+				const file = e.target.files[0];
+				if (file) {
+					const reader = new FileReader();
+					reader.onload = (evt) => processLogData(evt.target.result);
+					reader.readAsText(file);
+				}
+			});
+			prevBtn.addEventListener("click", () => navigate(-1));
+			nextBtn.addEventListener("click", () => navigate(1));
+			dialog.querySelector(".close").addEventListener("click", () => dialog.close());
+
+			// REMOVED: The loadLocalLogFile function is no longer needed.
+
+			function processLogData(content) {
+				const allEvents = parseLogFile(content);
+				groupedByDate = groupEventsByDate(allEvents);
+				sleepPeriodsByDate = findLongestSleepPeriods(allEvents);
+				allDates = Object.keys(groupedByDate).sort();
+
+				if (allDates.length > 0) {
+					const today = new Date().toISOString().split("T")[0];
+					currentIndex = allDates.includes(today) ? allDates.indexOf(today) : allDates.length - 1;
+					// MODIFIED: Hide selection panel and show analysis content
+					fileSelectionPanel.style.display = "none";
+					analysisContent.style.display = "block";
+					if (!dialog.showModal) dialogPolyfill.registerDialog(dialog);
+					updateView();
+				} else {
+					// MODIFIED: Alert user of invalid file and reset input
+					alert("No valid ON/OFF events found in the selected file. Please select a valid log file.");
+					logFileInput.value = ""; // Reset file input to allow re-selection of the same file
+				}
+			}
+
+			function navigate(direction) {
+				const newIndex = currentIndex + direction;
+				if (newIndex >= 0 && newIndex < allDates.length) {
+					currentIndex = newIndex;
+					updateView();
+				}
+			}
+
+			function parseLogFile(content) {
+				return content
+					.trim()
+					.split("\n")
+					.map((line) => {
+						try {
+							const { event, date, time } = JSON.parse(line);
+							const datetime = new Date(`${date}T${time}`);
+							if (!isNaN(datetime)) return { type: event.trim(), datetime };
+						} catch (e) {}
+						return null;
+					})
+					.filter(Boolean);
+			}
+			function groupEventsByDate(events) {
+				const grouped = {};
+				let lastOnEvent = null;
+				for (const event of events) {
+					if (event.type === "ON") {
+						lastOnEvent = event;
+					} else if (event.type === "OFF" && lastOnEvent) {
+						const dateKey = lastOnEvent.datetime.toISOString().split("T")[0];
+						if (!grouped[dateKey]) grouped[dateKey] = [];
+						grouped[dateKey].push({ start: lastOnEvent.datetime, end: event.datetime, duration: (event.datetime - lastOnEvent.datetime) / 1000 });
+						lastOnEvent = null;
+					}
+				}
+				return grouped;
+			}
+			function findLongestSleepPeriods(events) {
+				const sleepPeriods = {};
+				for (let i = 0; i < events.length - 1; i++) {
+					if (events[i].type === "OFF" && events[i + 1].type === "ON") {
+						const offTime = events[i].datetime;
+						const onTime = events[i + 1].datetime;
+						const gapInSeconds = (onTime - offTime) / 1000;
+						if (gapInSeconds > 3600 * 3) {
+							const wakeUpDate = onTime.toISOString().split("T")[0];
+							const potentialSleep = { start: offTime, end: onTime, duration: gapInSeconds };
+							if (!sleepPeriods[wakeUpDate] || gapInSeconds > sleepPeriods[wakeUpDate].duration) sleepPeriods[wakeUpDate] = potentialSleep;
+						}
+					}
+				}
+				return sleepPeriods;
+			}
+
+			function updateView() {
+				const date = allDates[currentIndex];
+				const durations = groupedByDate[date] || [];
+				const totalTimeInSeconds = durations.reduce((acc, d) => acc + d.duration, 0);
+				const hourly = Array(24).fill(0);
+				durations.forEach((d) => {
+					hourly[d.start.getHours()] += d.duration;
+				});
+				const sleep = sleepPeriodsByDate[date];
+
+				// Populate sticky header and summary grid
+				stickyDateDisplay.textContent = new Date(date + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+				totalOnTimeEl.textContent = formatDuration(totalTimeInSeconds, true);
+				unlockCountEl.textContent = durations.length;
+				if (sleep) {
+					sleepStartTimeEl.textContent = sleep.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+					sleepDurationEl.textContent = formatDuration(sleep.duration, true);
+				} else {
+					sleepStartTimeEl.textContent = "N/A";
+					sleepDurationEl.textContent = "N/A";
+				}
+
+				renderHourlyChart(
+					hourly.map((s) => s / 60),
+					date
+				);
+				prevBtn.disabled = currentIndex === 0;
+				nextBtn.disabled = currentIndex === allDates.length - 1;
+			}
+
+			function renderHourlyChart(data, date) {
+				const baseColor = "var(--primary-color)";
+				const highlightColor = "var(--accent-color)";
+				const ctx = document.getElementById("hourlyChart").getContext("2d");
+				if (window.myChart) window.myChart.destroy();
+				window.myChart = new Chart(ctx, {
+					type: "bar",
+					data: {
+						labels: [...Array(24).keys()],
+						datasets: [{ data, backgroundColor: baseColor, borderRadius: 4 }],
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: false, // Important for scrollable containers
+						scales: {
+							y: { beginAtZero: true, title: { display: true, text: "Minutes" } },
+							x: { grid: { display: false } },
+						},
+						onClick: (event, elements, chart) => {
+							const items = chart.getElementsAtEventForMode(event, "nearest", { intersect: false }, true);
+							if (items.length > 0) {
+								const clickedIndex = items[0].index;
+								const backgroundColors = chart.data.datasets[0].backgroundColor;
+								const originalColor = Array.isArray(backgroundColors) ? backgroundColors[clickedIndex] : backgroundColors;
+
+								chart.data.datasets[0].backgroundColor[clickedIndex] = highlightColor;
+								chart.update("none");
+								setTimeout(() => {
+									chart.data.datasets[0].backgroundColor[clickedIndex] = originalColor;
+									chart.update("none");
+								}, 300);
+								showDetailsForHour(date, clickedIndex);
+							}
+						},
+						plugins: {
+							legend: { display: false },
+							tooltip: { enabled: false },
+							datalabels: {
+								anchor: "end",
+								align: "top",
+								color: "var(--subtle-text-color)",
+								font: { size: 10 },
+								formatter: (value) => formatDuration(value * 60),
+								display: (context) => context.dataset.data[context.dataIndex] > 1,
+							},
+						},
+					},
+				});
+			}
+
+			function showDetailsForHour(date, hour) {
+				const durations = (groupedByDate[date] || []).filter((d) => d.start.getHours() === hour);
+				const totalDuration = durations.reduce((acc, d) => acc + d.duration, 0);
+				const dialogTitle = document.getElementById("details-dialog-title");
+				const dialogContent = document.getElementById("details-dialog-content");
+				dialogTitle.textContent = `${hour}:00 - ${hour}:59 (${formatDuration(totalDuration)})`;
+				let contentHtml = "<table>";
+				if (durations.length > 0) {
+					durations.forEach((d) => {
+						const startTime = d.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+						const endTime = d.end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+						contentHtml += `<tr><td>${startTime}</td><td>→</td><td>${endTime}</td><td class="duration-cell"><i class="material-icons">timer</i>${formatDuration(d.duration)}</td></tr>`;
+					});
+				} else {
+					contentHtml += "<tr><td>No activity in this hour.</td></tr>";
+				}
+				contentHtml += "</table>";
+				dialogContent.innerHTML = contentHtml;
+				dialog.showModal();
+			}
+
+			function formatDuration(totalSeconds, longFormat = false) {
+				totalSeconds = Math.round(Math.max(0, totalSeconds));
+				const hours = Math.floor(totalSeconds / 3600);
+				const minutes = Math.floor((totalSeconds % 3600) / 60);
+				const seconds = totalSeconds % 60;
+				let parts = [];
+				if (hours > 0) parts.push(`${hours}h`);
+				if (minutes > 0) parts.push(`${minutes}m`);
+				if (longFormat && hours === 0 && minutes > 0) parts.push(`${seconds}s`);
+				if (!longFormat && seconds > 0 && hours === 0) parts.push(`${seconds}s`);
+				return parts.length > 0 ? parts.join(" ") : "0s";
+			}
+		</script>
+	</body>
+</html>
