@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>BanglaQR Scanner</title>
+
+		<!-- HTML5-QRCode Library -->
+		<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+		<style>
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+			}
+
+			body {
+				background-color: #121212;
+				color: #e0e0e0;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				min-height: 100vh;
+				padding: 20px 15px;
+			}
+
+			.container {
+				width: 100%;
+				max-width: 520px;
+				display: flex;
+				flex-direction: column;
+				gap: 16px;
+			}
+
+			h1 {
+				font-size: 1.4rem;
+				text-align: center;
+				color: #ffffff;
+				margin-bottom: 2px;
+			}
+
+			.btn-group {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 10px;
+			}
+
+			button {
+				background-color: #2563eb;
+				color: white;
+				border: none;
+				padding: 12px 16px;
+				font-size: 0.9rem;
+				font-weight: 600;
+				border-radius: 8px;
+				cursor: pointer;
+				transition: background-color 0.2s ease;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 8px;
+			}
+
+			button:active {
+				transform: scale(0.98);
+			}
+
+			button.secondary {
+				background-color: #374151;
+			}
+
+			button.danger {
+				background-color: #dc2626;
+			}
+
+			#reader-container {
+				background-color: #1e1e1e;
+				border-radius: 12px;
+				overflow: hidden;
+				border: 1px solid #333;
+				min-height: 220px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				position: relative;
+			}
+
+			#reader {
+				width: 100%;
+				border: none !important;
+			}
+
+			#reader video {
+				object-fit: cover !important;
+				border-radius: 8px;
+			}
+
+			.placeholder-text {
+				color: #6b7280;
+				text-align: center;
+				padding: 20px;
+				font-size: 0.88rem;
+			}
+
+			/* Result Card */
+			.result-card {
+				background-color: #1e1e1e;
+				border: 1px solid #333;
+				border-radius: 12px;
+				padding: 16px;
+				display: flex;
+				flex-direction: column;
+				gap: 12px;
+			}
+
+			.result-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+
+			.result-title {
+				font-size: 0.8rem;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				color: #9ca3af;
+			}
+
+			.qr-badge {
+				background-color: #059669;
+				color: white;
+				font-size: 0.7rem;
+				padding: 2px 8px;
+				border-radius: 4px;
+				font-weight: bold;
+			}
+
+			/* Detail Table UI */
+			.details-list {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+			}
+
+			.detail-group {
+				background: #18181b;
+				border: 1px solid #27272a;
+				border-radius: 8px;
+				padding: 10px;
+			}
+
+			.detail-group-title {
+				font-size: 0.75rem;
+				text-transform: uppercase;
+				color: #38bdf8;
+				font-weight: 700;
+				margin-bottom: 6px;
+				letter-spacing: 0.03em;
+			}
+
+			.detail-row {
+				display: flex;
+				justify-content: space-between;
+				font-size: 0.85rem;
+				padding: 4px 0;
+				border-bottom: 1px solid #27272a;
+			}
+
+			.detail-row:last-child {
+				border-bottom: none;
+			}
+
+			.tag-meta {
+				color: #9ca3af;
+				display: flex;
+				gap: 6px;
+			}
+
+			.tag-id {
+				color: #f59e0b;
+				font-family: monospace;
+				font-weight: bold;
+			}
+
+			.tag-value {
+				color: #f3f4f6;
+				font-weight: 500;
+				text-align: right;
+				word-break: break-all;
+				max-width: 60%;
+			}
+
+			.sub-tree {
+				margin-top: 6px;
+				padding-left: 10px;
+				border-left: 2px solid #3b82f6;
+			}
+
+			.status-valid {
+				color: #10b981;
+				font-weight: bold;
+			}
+
+			.status-invalid {
+				color: #ef4444;
+				font-weight: bold;
+			}
+
+			#raw-json {
+				display: none;
+				background: #09090b;
+				color: #a1a1aa;
+				padding: 10px;
+				border-radius: 6px;
+				font-family: monospace;
+				font-size: 0.75rem;
+				white-space: pre-wrap;
+				word-break: break-all;
+				max-height: 250px;
+				overflow-y: auto;
+			}
+
+			#file-input {
+				display: none;
+			}
+
+			/* Highlighted Row Container */
+			.detail-row-wrapper.highlighted {
+				background: rgba(245, 158, 11, 0.08);
+				border: 1px solid rgba(245, 158, 11, 0.4);
+				border-radius: 6px;
+				padding: 6px 8px;
+				margin: 4px 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>BanglaQR Inspector</h1>
+
+			<div class="btn-group">
+				<button id="start-cam-btn" onclick="startCamera()">📷 Camera</button>
+				<button class="secondary" onclick="pasteFromClipboard()">📋 Paste Image</button>
+			</div>
+
+			<div id="reader-container">
+				<div id="reader"></div>
+				<div id="placeholder" class="placeholder-text">Scan or paste a BanglaQR code to display all available fields.</div>
+			</div>
+
+			<button id="stop-cam-btn" class="danger" onclick="stopCamera()" style="display: none">Stop Camera</button>
+
+			<div class="result-card">
+				<div class="result-header">
+					<span class="result-title">Inspected Data</span>
+					<span id="qr-badge" class="qr-badge" style="display: none">BanglaQR</span>
+				</div>
+
+				<div id="parsed-output">Nothing scanned yet...</div>
+				<pre id="raw-json"></pre>
+
+				<div class="btn-group" id="action-btns" style="display: none">
+					<button class="secondary" onclick="toggleView()">Toggle Raw JSON</button>
+					<button class="secondary" onclick="copyResult()">Copy Raw String</button>
+				</div>
+			</div>
+		</div>
+
+		<input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)" />
+
+		<script>
+			let html5QrCode = null;
+			let isScanning = false;
+			let rawScannedText = "";
+			let fullParsedObject = null;
+			let showingJson = false;
+
+			// Central configuration: Set any tag/sub-tag to true to highlight it
+			const HIGHLIGHT_CONFIG = {
+				// Top-Level Tags (e.g., Merchant Name, Amount)
+				rootTags: ["54", "59"],
+
+				// Sub-tags under Merchant Info (Tags 26-51)
+				merchantSubTags: ["03"], // 01 = Mobile/PAN, 03 = Merchant ID
+
+				// Sub-tags under Additional Data (Tag 62)
+				additionalDataSubTags: ["02", "03", "07"], // 02 = Mobile, 03 = Store Label, 07 = Terminal Label
+			};
+
+			// ================= FULL EMVCO / BANGLAQR TAG DICTIONARY =================
+			const ROOT_TAG_MAP = {
+				"00": "Payload Format Indicator",
+				"01": "Point of Initiation Method",
+				52: "Merchant Category Code (MCC)",
+				53: "Transaction Currency Code",
+				54: "Transaction Amount",
+				55: "Tip or Value Indicator",
+				56: "Value of Convenience Fee (Fixed)",
+				57: "Value of Convenience Fee (Percentage)",
+				58: "Country Code",
+				59: "Merchant Name",
+				60: "Merchant City",
+				61: "Postal Code",
+				62: "Additional Data Field Template",
+				63: "CRC-16 Checksum",
+				64: "Merchant Information (Language Template)",
+			};
+
+			const MERCHANT_SUBTAG_MAP = {
+				"00": "Globally Unique Identifier (Domain / Acquirer)",
+				"01": "Merchant Account / PAN / Mobile Number",
+				"02": "Card PAN / Secondary ID",
+				"03": "Merchant ID",
+				"04": "Criteria / Scheme Identifier",
+			};
+
+			const ADD_DATA_SUBTAG_MAP = {
+				"01": "Bill Number",
+				"02": "Mobile Number",
+				"03": "Store Label",
+				"04": "Loyalty Number",
+				"05": "Reference Label",
+				"06": "Customer Label",
+				"07": "Terminal Label",
+				"08": "Purpose of Transaction",
+				"09": "Additional Consumer Data Request",
+			};
+
+			const MCC_DESCRIPTIONS = {
+				5411: "Grocery Stores / Supermarkets",
+				5812: "Restaurants / Eating Places",
+				5814: "Fast Food Restaurants",
+				5912: "Drug Stores & Pharmacies",
+				5311: "Department Stores",
+				5541: "Service Stations / Fuel",
+				5999: "Miscellaneous General Retail",
+			};
+
+			const CURRENCY_CODES = {
+				"050": "BDT (Bangladeshi Taka)",
+				840: "USD (US Dollar)",
+				978: "EUR (Euro)",
+			};
+
+			// ================= CRC-16 (CCITT-FALSE) =================
+			function crc16(str) {
+				let crc = 0xffff;
+				for (let i = 0; i < str.length; i++) {
+					let c = str.charCodeAt(i);
+					crc ^= c << 8;
+					for (let j = 0; j < 8; j++) {
+						if ((crc & 0x8000) !== 0) {
+							crc = ((crc << 1) ^ 0x1021) & 0xffff;
+						} else {
+							crc = (crc << 1) & 0xffff;
+						}
+					}
+				}
+				return crc.toString(16).toUpperCase().padStart(4, "0");
+			}
+
+			// ================= RECURSIVE TLV PARSER =================
+			function parseTLV(qrString, isSubTag = false, parentTag = "") {
+				const fields = [];
+				let cursor = 0;
+
+				while (cursor < qrString.length) {
+					const tag = qrString.substring(cursor, cursor + 2);
+					const length = parseInt(qrString.substring(cursor + 2, cursor + 4), 10);
+
+					if (isNaN(length) || length < 0 || cursor + 4 + length > qrString.length) {
+						break;
+					}
+
+					const value = qrString.substring(cursor + 4, cursor + 4 + length);
+					cursor += 4 + length;
+
+					const tagNum = parseInt(tag, 10);
+					let label = "Unknown / Custom Field";
+					let subTags = null;
+
+					if (!isSubTag) {
+						if (ROOT_TAG_MAP[tag]) {
+							label = ROOT_TAG_MAP[tag];
+						} else if (tagNum >= 26 && tagNum <= 51) {
+							label = `Merchant Account Info (Tag ${tag})`;
+							subTags = parseTLV(value, true, "MERCHANT");
+						} else if (tagNum >= 2 && tagNum <= 25) {
+							label = `Visa/Mastercard/Amex Reserved (Tag ${tag})`;
+						} else if (tagNum >= 65 && tagNum <= 79) {
+							label = `RFU for EMVCo (Tag ${tag})`;
+						} else if (tagNum >= 80 && tagNum <= 99) {
+							label = `Unreserved Templates (Tag ${tag})`;
+						}
+						if (tag === "62") {
+							subTags = parseTLV(value, true, "ADDITIONAL_DATA");
+						}
+					} else {
+						if (parentTag === "MERCHANT") {
+							label = MERCHANT_SUBTAG_MAP[tag] || `Merchant Sub-tag ${tag}`;
+						} else if (parentTag === "ADDITIONAL_DATA") {
+							label = ADD_DATA_SUBTAG_MAP[tag] || `Additional Data Sub-tag ${tag}`;
+						}
+					}
+
+					// Value Formatter/Enricher
+					let decodedValue = value;
+					if (tag === "01") decodedValue = value === "12" ? "Dynamic (Amount hardcoded)" : "Static (User enters amount)";
+					if (tag === "52") decodedValue = MCC_DESCRIPTIONS[value] ? `${value} - ${MCC_DESCRIPTIONS[value]}` : value;
+					if (tag === "53") decodedValue = CURRENCY_CODES[value] || value;
+
+					// Check highlight rule using central config
+					const isImportant = shouldHighlight(tag, isSubTag, parentTag);
+
+					fields.push({
+						tag,
+						length,
+						label,
+						value: decodedValue,
+						rawValue: value,
+						subTags,
+						isImportant, // <-- Passes boolean flag to UI renderer
+					});
+				}
+				return fields;
+			}
+
+			function shouldHighlight(tag, isSubTag, parentTag) {
+				if (!isSubTag) {
+					return HIGHLIGHT_CONFIG.rootTags.includes(tag);
+				}
+
+				if (parentTag === "MERCHANT") {
+					return HIGHLIGHT_CONFIG.merchantSubTags.includes(tag);
+				}
+
+				if (parentTag === "ADDITIONAL_DATA") {
+					return HIGHLIGHT_CONFIG.additionalDataSubTags.includes(tag);
+				}
+
+				return false;
+			}
+
+			// ================= UI TREE RENDERER =================
+			// ================= UI TREE RENDERER =================
+			function renderFieldsHTML(fields) {
+				return fields
+					.map((f) => {
+						let subHtml = "";
+						if (f.subTags && f.subTags.length > 0) {
+							subHtml = `<div class="sub-tree">${renderFieldsHTML(f.subTags)}</div>`;
+						}
+
+						// Apply highlight class only (no badge)
+						const highlightClass = f.isImportant ? "highlighted" : "";
+
+						return `
+            <div class="detail-row-wrapper ${highlightClass}">
+                <div class="detail-row">
+                    <div class="tag-meta">
+                        <span class="tag-id">[${f.tag}]</span>
+                        <span>${f.label}</span>
+                    </div>
+                    <div class="tag-value">${subHtml ? "" : f.value}</div>
+                </div>
+                ${subHtml}
+            </div>
+        `;
+					})
+					.join("");
+			}
+
+			function inspectBanglaQR(qrString) {
+				if (!qrString || qrString.length < 20 || !qrString.startsWith("000201")) {
+					return null;
+				}
+
+				// Check CRC
+				const crcIndex = qrString.indexOf("6304");
+				let isValidCrc = false;
+				let calculatedCrc = "";
+				let providedCrc = "";
+
+				if (crcIndex !== -1 && crcIndex === qrString.length - 8) {
+					const dataToValidate = qrString.substring(0, crcIndex + 4);
+					providedCrc = qrString.substring(crcIndex + 4);
+					calculatedCrc = crc16(dataToValidate);
+					isValidCrc = providedCrc.toUpperCase() === calculatedCrc;
+				}
+
+				const parsedTree = parseTLV(qrString);
+
+				return {
+					isValidCrc,
+					providedCrc,
+					calculatedCrc,
+					tree: parsedTree,
+				};
+			}
+
+			// ================= SCANNER CONTROLLERS =================
+			function getScanner() {
+				if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+				return html5QrCode;
+			}
+
+			async function startCamera() {
+				if (isScanning) return;
+				const scanner = getScanner();
+				document.getElementById("placeholder").style.display = "none";
+				document.getElementById("start-cam-btn").style.display = "none";
+				document.getElementById("stop-cam-btn").style.display = "block";
+
+				try {
+					await scanner.start(
+						{ facingMode: "environment" },
+						{ fps: 10, qrbox: { width: 250, height: 250 } },
+						(decodedText) => {
+							handleScanSuccess(decodedText);
+							stopCamera();
+						},
+						() => {}
+					);
+					isScanning = true;
+				} catch (err) {
+					alert("Camera access failed: " + err);
+					resetUI();
+				}
+			}
+
+			async function stopCamera() {
+				if (html5QrCode && isScanning) {
+					await html5QrCode.stop();
+					isScanning = false;
+				}
+				resetUI();
+			}
+
+			function resetUI() {
+				document.getElementById("start-cam-btn").style.display = "flex";
+				document.getElementById("stop-cam-btn").style.display = "none";
+				document.getElementById("placeholder").style.display = "block";
+			}
+
+			async function pasteFromClipboard() {
+				try {
+					const clipboardItems = await navigator.clipboard.read();
+					for (const item of clipboardItems) {
+						const imageType = item.types.find((type) => type.startsWith("image/"));
+						if (imageType) {
+							const blob = await item.getType(imageType);
+							const file = new File([blob], "pasted-qr.png", { type: imageType });
+							scanFile(file);
+							return;
+						}
+					}
+					alert("No image in clipboard.");
+				} catch (err) {
+					document.getElementById("file-input").click();
+				}
+			}
+
+			// ================= ENHANCED FILE SCANNER WITH PRE-PROCESSING =================
+			async function scanFile(file) {
+				if (isScanning) await stopCamera();
+
+				try {
+					// 1. Pre-process image (resize to optimal dimensions & boost contrast)
+					const processedBlob = await preprocessImageForQR(file);
+					const processedFile = new File([processedBlob], "processed-qr.png", { type: "image/png" });
+
+					// 2. Scan the optimized image
+					const scanner = getScanner();
+					const decodedText = await scanner.scanFile(processedFile, true);
+					handleScanSuccess(decodedText);
+				} catch (err) {
+					// 3. Fallback: If pre-processed scan fails, try raw original file
+					try {
+						const scanner = getScanner();
+						const decodedText = await scanner.scanFile(file, true);
+						handleScanSuccess(decodedText);
+					} catch (fallbackErr) {
+						alert("Could not detect a valid QR code in that image. Try taking a closer, clearer photo.");
+					}
+				}
+			}
+
+			// Canvas utility to resize high-res photos and enhance contrast
+			function preprocessImageForQR(file) {
+				return new Promise((resolve, reject) => {
+					const reader = new FileReader();
+					reader.onload = (event) => {
+						const img = new Image();
+						img.onload = () => {
+							const canvas = document.createElement("canvas");
+							const ctx = canvas.getContext("2d");
+
+							// Scale down large images to max 1000px (ideal for QR detection)
+							const MAX_SIZE = 1000;
+							let width = img.width;
+							let height = img.height;
+
+							if (width > MAX_SIZE || height > MAX_SIZE) {
+								if (width > height) {
+									height = Math.round((height * MAX_SIZE) / width);
+									width = MAX_SIZE;
+								} else {
+									width = Math.round((width * MAX_SIZE) / height);
+									height = MAX_SIZE;
+								}
+							}
+
+							canvas.width = width;
+							canvas.height = height;
+
+							// Draw image on canvas
+							ctx.drawImage(img, 0, 0, width, height);
+
+							// Contrast & Brightness Enhancement
+							const imageData = ctx.getImageData(0, 0, width, height);
+							const data = imageData.data;
+							const contrast = 1.3; // Boost contrast by 30%
+							const factor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255));
+
+							for (let i = 0; i < data.length; i += 4) {
+								// Convert to grayscale & apply contrast boost
+								let avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+								let value = factor * (avg - 128) + 128;
+
+								// Clamp pixel values
+								value = Math.max(0, Math.min(255, value));
+
+								data[i] = value; // Red
+								data[i + 1] = value; // Green
+								data[i + 2] = value; // Blue
+							}
+
+							ctx.putImageData(imageData, 0, 0);
+
+							// Convert canvas to Blob
+							canvas.toBlob((blob) => resolve(blob), "image/png");
+						};
+						img.onerror = reject;
+						img.src = event.target.result;
+					};
+					reader.onerror = reject;
+					reader.readAsDataURL(file);
+				});
+			}
+
+			// ================= RENDER DECODED RESULT =================
+			function handleScanSuccess(text) {
+				rawScannedText = text;
+				const parsedOutput = document.getElementById("parsed-output");
+				const rawJsonEl = document.getElementById("raw-json");
+				const qrBadge = document.getElementById("qr-badge");
+				const actionBtns = document.getElementById("action-btns");
+
+				const inspection = inspectBanglaQR(text);
+				fullParsedObject = inspection;
+
+				if (inspection) {
+					qrBadge.style.display = "inline-block";
+					actionBtns.style.display = "grid";
+
+					rawJsonEl.innerText = JSON.stringify(inspection, null, 2);
+
+					parsedOutput.innerHTML = `
+                        <div class="details-list">
+                            <div class="detail-group">
+                                <div class="detail-group-title">Integrity & Validation</div>
+                                <div class="detail-row">
+                                    <span class="tag-meta">CRC Checksum Status</span>
+                                    <span class="${inspection.isValidCrc ? "status-valid" : "status-invalid"}">
+                                        ${inspection.isValidCrc ? "PASS ✓" : "FAIL (Corrupted) ✗"}
+                                    </span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="tag-meta">Provided / Calculated</span>
+                                    <span class="tag-value">${inspection.providedCrc} / ${inspection.calculatedCrc}</span>
+                                </div>
+                            </div>
+
+                            <div class="detail-group">
+                                <div class="detail-group-title">Payload TLV Tree (All Fields)</div>
+                                ${renderFieldsHTML(inspection.tree)}
+                            </div>
+                        </div>
+                    `;
+				} else {
+					qrBadge.style.display = "none";
+					actionBtns.style.display = "none";
+					parsedOutput.innerText = "Scanned QR is not a valid EMVCo / BanglaQR format:\n\n" + text;
+				}
+			}
+
+			function toggleView() {
+				const parsedOutput = document.getElementById("parsed-output");
+				const rawJsonEl = document.getElementById("raw-json");
+
+				showingJson = !showingJson;
+				if (showingJson) {
+					parsedOutput.style.display = "none";
+					rawJsonEl.style.display = "block";
+				} else {
+					parsedOutput.style.display = "block";
+					rawJsonEl.style.display = "none";
+				}
+			}
+
+			function copyResult() {
+				if (rawScannedText) {
+					navigator.clipboard.writeText(rawScannedText);
+					alert("Raw QR String copied to clipboard!");
+				}
+			}
+		</script>
+	</body>
+</html>
