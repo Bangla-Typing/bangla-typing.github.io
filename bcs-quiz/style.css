@@ -472,3 +472,15 @@ mjx-container {
 		font-size: 14px;
 	}
 }
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	color: var(--text-main);
+	user-select: none;
+	transition: opacity 0.2s;
+}
+
+.brand:hover {
+	opacity: 0.85;
+}
