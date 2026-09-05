@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>BCS Quiz Arena</title>
+		<link rel="stylesheet" href="style.css" />
+		<script src="questions.js"></script>
+		<script>
+			window.MathJax = {
+				tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"]] },
+				svg: { fontCache: "global" },
+			};
+		</script>
+		<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+	</head>
+	<body>
+		<div class="bg-orb orb1"></div>
+		<div class="bg-orb orb2"></div>
+		<main class="app">
+			<header class="topbar">
+				<div class="brand">
+					<span class="brand-icon">⚡</span>
+					<div>
+						<h1>BCS Quiz</h1>
+						<small>for Trisha</small>
+					</div>
+				</div>
+				<div class="header-actions">
+					<button id="themeBtn" class="icon-btn" title="Toggle theme">🌙</button>
+					<button id="soundBtn" class="icon-btn" title="Toggle sound">🔊</button>
+				</div>
+			</header>
+
+			<section id="setup" class="panel setup">
+				<div class="hero">
+					<div class="hero-badge">LEVEL UP</div>
+					<h2>Test Your Knowledge</h2>
+					<p>Select a topic, filter by specific BCS Exam, or jump right into the arena.</p>
+				</div>
+
+				<!-- Controls grid updated with BCS Exam Selector -->
+				<div class="controls">
+					<label
+						>BCS Exam
+						<select id="examSelect">
+							<option value="__ALL__">All BCS Exams</option>
+						</select>
+					</label>
+
+					<label
+						>Topic
+						<select id="topicSelect">
+							<option value="__ALL__">All Topics</option>
+						</select>
+					</label>
+
+					<label class="full-width"
+						>Questions
+						<select id="countSelect">
+							<option value="20">20 Questions</option>
+							<option value="10">10 Questions</option>
+							<option value="5">5 Questions</option>
+							<option value="__ALL__">All Questions in Selection</option>
+						</select>
+					</label>
+				</div>
+
+				<button id="startBtn" class="primary">Start Game <span>→</span></button>
+				<div class="stats"><span id="bankCount">0 questions available</span></div>
+			</section>
+
+			<section id="quiz" class="panel hidden">
+				<div class="quiz-head">
+					<div>
+						<span class="eyebrow" id="topicLabel">GENERAL</span>
+						<div class="progress-text">Question <b id="qNo">1</b> of <b id="qTotal">20</b></div>
+					</div>
+					<div class="score-pill">Score <b id="score">0</b></div>
+				</div>
+				<div class="progress"><div id="progressBar"></div></div>
+
+				<!-- Source Info Badge -->
+				<div id="sourceMeta" class="source-meta hidden">
+					<span class="meta-item exam-name" id="metaExam">10th BCS</span>
+					<span class="meta-item exam-date" id="metaDate">📅 1989-01-01</span>
+					<span class="meta-item exam-marks" id="metaMarks">🎯 +1 / -0.5</span>
+				</div>
+
+				<div class="question-card">
+					<div id="question" class="question"></div>
+					<div id="options" class="options"></div>
+					<div id="feedback" class="feedback hidden"></div>
+				</div>
+
+				<div class="quiz-foot">
+					<button id="prevBtn" class="ghost" disabled>← Prev</button>
+					<button id="hintBtn" class="ghost">💡 Hint</button>
+					<button id="nextBtn" class="primary next" disabled>Next →</button>
+				</div>
+				<div id="hint" class="hint hidden"></div>
+			</section>
+
+			<section id="result" class="panel result hidden">
+				<div class="result-icon" id="resultIcon">🏆</div>
+				<div class="eyebrow">CHALLENGE COMPLETE</div>
+				<h2 id="resultTitle">Excellent!</h2>
+				<div class="big-score">
+					<span id="finalScore">0</span><small>/ <span id="finalTotal">20</span></small>
+				</div>
+				<p id="resultMessage"></p>
+				<div class="result-actions">
+					<button id="againBtn" class="primary">Play Again ↻</button>
+					<button id="homeBtn" class="ghost">Change Topic</button>
+				</div>
+			</section>
+		</main>
+		<script src="app.js"></script>
+	</body>
+</html>
