@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-		<title>BCS Quiz Arena</title>
+		<title>Quiz for Trisha</title>
 		<link rel="stylesheet" href="style.css" />
 		<script src="questions.js"></script>
 		<script>
@@ -19,11 +19,11 @@
 		<div class="bg-orb orb2"></div>
 		<main class="app">
 			<header class="topbar">
-				<div class="brand">
+				<div class="brand" id="brandBtn" style="cursor: pointer">
 					<span class="brand-icon">⚡</span>
 					<div>
-						<h1>BCS Quiz</h1>
-						<small>for Trisha</small>
+						<h1>Quiz for Trisha</h1>
+						<small>Because you clearly don't have enough stress already</small>
 					</div>
 				</div>
 				<div class="header-actions">
@@ -36,7 +36,7 @@
 				<div class="hero">
 					<div class="hero-badge">LEVEL UP</div>
 					<h2>Test Your Knowledge</h2>
-					<p>Select a topic, filter by specific BCS Exam, or jump right into the arena.</p>
+					<p>Select a topic, filter by specific BCS Exam, or jump right into the quiz.</p>
 				</div>
 
 				<!-- Controls grid updated with BCS Exam Selector -->
@@ -58,9 +58,9 @@
 					<label class="full-width"
 						>Questions
 						<select id="countSelect">
+							<option value="50">50 Questions</option>
+							<option value="30">30 Questions</option>
 							<option value="20">20 Questions</option>
-							<option value="10">10 Questions</option>
-							<option value="5">5 Questions</option>
 							<option value="__ALL__">All Questions in Selection</option>
 						</select>
 					</label>
@@ -95,10 +95,10 @@
 
 				<div class="quiz-foot">
 					<button id="prevBtn" class="ghost" disabled>← Prev</button>
-					<button id="hintBtn" class="ghost">💡 Hint</button>
+					<!-- <button id="hintBtn" class="ghost">💡 Hint</button> -->
 					<button id="nextBtn" class="primary next" disabled>Next →</button>
 				</div>
-				<div id="hint" class="hint hidden"></div>
+				<!-- <div id="hint" class="hint hidden"></div> -->
 			</section>
 
 			<section id="result" class="panel result hidden">
