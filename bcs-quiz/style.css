@@ -81,6 +81,11 @@ body {
 	align-items: center;
 	gap: 10px;
 	color: var(--text-main);
+	user-select: none;
+	transition: opacity 0.2s;
+}
+.brand:hover {
+	opacity: 0.85;
 }
 .brand h1 {
 	margin: 0;
@@ -438,37 +443,95 @@ body {
 	gap: 12px;
 }
 
+/* MathJax Equation Overflow Fixes */
 mjx-container {
-	max-width: 100%;
-	overflow-x: auto;
+	max-width: 100% !important;
+	overflow-x: auto !important;
+	overflow-y: hidden !important;
+	display: inline-block !important;
+	vertical-align: middle;
 }
 
+mjx-container[jax="SVG"][display="true"] {
+	display: block !important;
+	margin: 1em 0;
+	max-width: 100% !important;
+	overflow-x: auto !important;
+}
+
+/* Responsive Mobile Layout Adjustments */
 @media (max-width: 500px) {
-	.app {
-		width: calc(100% - 16px);
-		padding-top: 8px;
+	body {
+		overflow: hidden;
 	}
+
+	.app {
+		width: 100%;
+		padding: 8px 8px 12px 8px;
+		height: 100dvh;
+		display: flex;
+		flex-direction: column;
+	}
+
 	.panel {
 		padding: 16px;
 		border-radius: 16px;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		overflow: hidden;
 	}
+
+	#quiz {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	.quiz-head {
+		flex-shrink: 0;
+	}
+
+	.source-meta {
+		flex-shrink: 0;
+		margin-bottom: 12px;
+	}
+
+	/* Scrollable Middle Section */
+	.question-card {
+		flex: 1;
+		overflow-y: auto;
+		min-height: 0;
+		padding-right: 4px;
+		margin-bottom: 8px;
+	}
+
+	/* Pinned Navigation Footer */
+	.quiz-foot {
+		flex-shrink: 0;
+		margin-top: auto;
+		padding-top: 10px;
+		border-top: 1px solid var(--border-color);
+	}
+
 	.controls {
 		grid-template-columns: 1fr;
 	}
+
 	.question {
-		font-size: 18px;
-		line-height: 1.6;
+		font-size: 17px;
+		line-height: 1.5;
 	}
+
 	.option {
-		padding: 12px;
-		font-size: 15px;
+		padding: 10px 12px;
+		font-size: 14px;
 	}
-	.quiz-foot .ghost {
-		padding: 10px 14px;
-		font-size: 13px;
-	}
-	.primary {
-		padding: 12px 16px;
+
+	.quiz-foot .ghost,
+	.quiz-foot .primary {
+		padding: 10px 16px;
 		font-size: 14px;
 	}
 }
