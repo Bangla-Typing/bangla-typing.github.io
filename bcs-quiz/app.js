@@ -187,6 +187,10 @@ function render() {
 	const q = quiz[index];
 	const prevAnswer = userAnswers[index];
 
+	// Scroll question card to top on new question render
+	const qCard = document.querySelector(".question-card");
+	if (qCard) qCard.scrollTop = 0;
+
 	// Manage Button States
 	$("#prevBtn").disabled = index === 0;
 	$("#nextBtn").disabled = !prevAnswer;
