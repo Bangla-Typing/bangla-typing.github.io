@@ -191,7 +191,7 @@ function render() {
 	$("#prevBtn").disabled = index === 0;
 	$("#nextBtn").disabled = !prevAnswer;
 	$("#feedback").classList.add("hidden");
-	$("#hint").classList.add("hidden");
+	// $("#hint").classList.add("hidden");
 
 	$("#qNo").textContent = index + 1;
 	$("#progressBar").style.width = `${((index + 1) / quiz.length) * 100}%`;
@@ -323,19 +323,7 @@ $("#startBtn").onclick = start;
 $("#nextBtn").onclick = next;
 $("#prevBtn").onclick = prev;
 
-$("#hintBtn").onclick = () => {
-	play("nav");
-	const hintText = quiz[index].hint || "Analyze the prompt carefully and eliminate unlikely choices.";
-	$("#hint").innerHTML = formatText(hintText);
-	$("#hint").classList.toggle("hidden");
-	if (window.MathJax) MathJax.typesetPromise([$("#hint")]);
-};
-
 $("#againBtn").onclick = start;
-$("#homeBtn").onclick = () => {
-	$("#result").classList.add("hidden");
-	$("#setup").classList.remove("hidden");
-};
 
 $("#soundBtn").onclick = () => {
 	soundOn = !soundOn;
@@ -355,6 +343,22 @@ themeBtn.onclick = () => {
 	currentTheme = currentTheme === "dark" ? "light" : "dark";
 	applyTheme(currentTheme);
 };
+
+function goHome() {
+	const isQuizActive = !$("#quiz").classList.contains("hidden");
+
+	if (isQuizActive) {
+		const confirmed = confirm("Are you sure you want to end the current quiz? Your progress will be lost.");
+		if (!confirmed) return;
+	}
+
+	$("#quiz").classList.add("hidden");
+	$("#result").classList.add("hidden");
+	$("#setup").classList.remove("hidden");
+}
+
+$("#homeBtn").onclick = goHome;
+$("#brandBtn").onclick = goHome;
 
 // Initialize Theme on Load
 applyTheme(currentTheme);
