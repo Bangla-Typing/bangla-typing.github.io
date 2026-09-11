@@ -588,7 +588,7 @@
 				const baseApiUrl = "https://www.prothomalo.com/api/v1/collections/featured"; //"https://www.prothomalo.com/api/v1/collections/latest";
 				const limit = 300;
 				const mySiteUrl = "https://testsite.showrove1.workers.dev";
-				const requestURL = `${mySiteUrl}?url=?${encodeURIComponent(`${baseApiUrl}?limit=${limit}`)}`;
+				const requestURL = `${mySiteUrl}?url=${encodeURIComponent(`${baseApiUrl}?limit=${limit}`)}`;
 
 				if (loadingIndicator) loadingIndicator.style.display = "block";
 				loadingMoreIndicator.style.display = "none";
