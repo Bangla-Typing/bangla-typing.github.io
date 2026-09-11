@@ -585,9 +585,10 @@
 				const noMoreIndicator = document.getElementById("no-more-articles");
 
 				// More robust API endpoint handling
-				const baseApiUrl = "https://www.prothomalo.com/api/v1/collections/latest";
+				const baseApiUrl = "https://www.prothomalo.com/api/v1/collections/featured"; //"https://www.prothomalo.com/api/v1/collections/latest";
 				const limit = 300;
-				const requestURL = `https://corsproxy.io/?url=${encodeURIComponent(`${baseApiUrl}?limit=${limit}`)}`;
+				const mySiteUrl = "https://testsite.showrove1.workers.dev";
+				const requestURL = `${mySiteUrl}?url=?${encodeURIComponent(`${baseApiUrl}?limit=${limit}`)}`;
 
 				if (loadingIndicator) loadingIndicator.style.display = "block";
 				loadingMoreIndicator.style.display = "none";
