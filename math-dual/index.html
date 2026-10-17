@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-		<title>Math Battle</title>
+		<title>অঙ্কের দ্বন্দ্ব</title>
 		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800&display=swap" rel="stylesheet" />
 		<style>
 			:root {
@@ -373,6 +373,44 @@
 			.top span button {
 				padding: 6px 12px;
 			}
+			#game:not([hidden]) {
+				display: flex;
+				flex-direction: column;
+				min-height: calc(100vh - 32px);
+				min-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+			}
+			#game .slate {
+				flex: 0.8;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				margin: 8px 0;
+			}
+			@media (max-height: 740px) {
+				.pl span {
+					font-size: 1.6rem;
+				}
+				.track {
+					margin: 8px 0 4px;
+				}
+				#pad {
+					gap: 6px;
+				}
+				#pad button {
+					font-size: 1.6rem;
+					padding: 9px 0;
+				}
+				#qtxt {
+					font-size: clamp(2rem, 9vw, 2.8rem);
+				}
+				#ans {
+					font-size: clamp(1.8rem, 8vw, 2.4rem);
+				}
+				#fb {
+					height: 2.4em;
+					font-size: 0.92rem;
+				}
+			}
 			@media (prefers-reduced-motion: reduce) {
 				* {
 					animation: none !important;
@@ -385,25 +423,24 @@
 		<main>
 			<section id="login" hidden>
 				<h1>Math Battle</h1>
-				<p class="sub">যে আগে ঠিক উত্তর দেবে সে বেশি পয়েন্ট পাবে</p>
+				<p class="sub">দ্রুত হিসাবের প্রতিযোগীতা</p>
 				<div class="card">
-					<button class="big pri" onclick="auth.signInAnonymously().catch(e=>toast(e.message))">Guest হিসেবে খেলুন</button>
+					<button class="big pri" onclick="auth.signInAnonymously().catch(e=>toast(e.message))">অতিথি হিসেবে খেলুন</button>
 					<button class="big sec" onclick="gLogin()">Google দিয়ে সাইন ইন</button>
 				</div>
 			</section>
 
 			<section id="home" hidden>
 				<h1>Math Battle</h1>
-				<p class="sub">দ্রুত হিসাবের প্রতিযোগীতা</p>
+				<p class="sub">দুজনের দ্রুত হিসাবের লড়াই</p>
 				<div class="card">
 					<label for="nm">আপনার নাম</label><input id="nm" maxlength="16" placeholder="নাম লিখুন" />
 					<label>অপারেশন</label>
-
 					<div class="seg" id="modes">
-						<button data-v="+" class="on">+ যোগ</button><button data-v="-">− বিয়োগ</button><button data-v="×">× গুণ</button><button data-v="÷">÷ ভাগ</button><button data-v="mix">সবগুলো</button>
+						<button data-v="+" class="on">+ যোগ</button><button data-v="-">− বিয়োগ</button><button data-v="×">× গুণ</button><button data-v="÷">÷ ভাগ</button><button data-v="mix">সব</button>
 					</div>
-					<label>লেভেল</label>
-					<div class="seg" id="diffs"><button data-v="easy" class="on">সহজ</button><button data-v="medium">মাঝারি</button><button data-v="hard">কঠিন</button></div>
+					<label>কঠিনতা</label>
+					<div class="seg" id="diffs"><button data-v="easy" class="on">সহজ ×১</button><button data-v="medium">মাঝারি ×১.৫</button><button data-v="hard">কঠিন ×২</button></div>
 					<button class="big pri" onclick="rnd()">র‍্যান্ডম প্রতিপক্ষ খুঁজুন</button>
 					<button class="big sec" onclick="create()">রুম তৈরি করুন</button>
 				</div>
@@ -445,6 +482,7 @@
 				<div class="res" id="res"></div>
 				<p id="fin" class="sub"></p>
 				<button class="big pri" id="rm" onclick="rematchReq()">🔁 রিম্যাচ</button>
+				<p></p>
 				<button class="big" onclick="exit()">নতুন খেলা</button>
 				<button class="big" onclick="showLB()">🏆 লিডারবোর্ড</button>
 			</section>
@@ -461,7 +499,7 @@
 		<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 		<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 		<script>
-			// ======  Firebase  ======
+			// ====== এখানে আপনার Firebase কনফিগ বসান ======
 			const CFG = {
 				apiKey: "AIzaSyDsQeD1b0djnMP7U8Yewy6oHD_oePokjAU",
 				authDomain: "math-calculation-dual.firebaseapp.com",
@@ -482,7 +520,8 @@
 				bn = (n) => (dg ? String(n) : String(n).replace(/\d/g, (d) => BD[d]));
 			const toAscii = (s) => s.replace(/[০-৯]/g, (d) => BD.indexOf(d));
 			const N = 10,
-				T = 15000;
+				MUL = { easy: 1, medium: 1.5, hard: 2 },
+				TM = { easy: 15000, medium: 25000, hard: 35000 };
 			let me = null,
 				name = "",
 				mode = "+",
@@ -795,7 +834,10 @@
 						ref.child("st").update({ status: "playing", q: 0, qStart: now() + 3000 });
 					}
 				} else if (ST.status == "playing") {
-					if ($("game").hidden) show("game");
+					if ($("game").hidden) {
+						show("game");
+						scrollTo(0, 0);
+					}
 					if (ended) {
 						ended = false;
 						saved = false;
@@ -854,9 +896,10 @@
 			setInterval(() => {
 				if (!ST || ST.status != "playing" || !PL) return;
 				const t = now() - ST.qStart,
+					T = TM[ST.diff],
 					rem = T - t,
 					q = ST.qs[ST.q];
-				$("bar").style.width = Math.max(0, Math.min(100, (rem / T) * 100)).toFixed(1) + "%";
+				$("bar").style.width = Math.max(0, Math.min(100, (rem / TM[ST.diff]) * 100)).toFixed(1) + "%";
 				put("sec", bn(t < 0 ? Math.ceil(-t / 1000) : Math.max(0, Math.ceil(rem / 1000))));
 				put("qtxt", t < 0 ? "প্রস্তুত হোন…" : bn(q.t) + " = ?");
 				put("qn", "প্রশ্ন " + bn(ST.q + 1) + "/" + bn(N));
@@ -935,17 +978,19 @@
 			function submit() {
 				if (!input || wrote) return;
 				const q = ST.qs[ST.q],
+					T = TM[ST.diff],
 					rem = T - (now() - ST.qStart);
 				if (parseInt(input) == q.a) {
-					const pts = 50 + Math.round((150 * Math.max(0, rem)) / T),
+					const pts = Math.round((50 + (150 * Math.max(0, rem)) / T) * MUL[ST.diff]),
 						pn = pen;
 					finish(pts);
 					sfx.ok();
 					setFb("ঠিক! +" + bn(pts) + (pn ? " (−" + bn(pn) + ")" : "") + " · প্রতিপক্ষের অপেক্ষা…", "var(--me)");
 				} else {
-					pen += 50;
+					const pl = 50 * MUL[ST.diff];
+					pen += pl;
 					sfx.no();
-					setFb("ভুল! −" + bn(50), "var(--op)");
+					setFb("ভুল! −" + bn(pl), "var(--op)");
 					const sl = $("slate");
 					sl.classList.remove("shake");
 					void sl.offsetWidth;
