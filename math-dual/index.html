@@ -380,7 +380,7 @@
 				min-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 			}
 			#game .slate {
-				flex: 0.8;
+				flex: 0.7;
 				display: flex;
 				flex-direction: column;
 				justify-content: center;
@@ -901,7 +901,7 @@
 					q = ST.qs[ST.q];
 				$("bar").style.width = Math.max(0, Math.min(100, (rem / TM[ST.diff]) * 100)).toFixed(1) + "%";
 				put("sec", bn(t < 0 ? Math.ceil(-t / 1000) : Math.max(0, Math.ceil(rem / 1000))));
-				put("qtxt", t < 0 ? "প্রস্তুত হোন…" : bn(q.t) + " = ?");
+				put("qtxt", t < 0 ? "Ready…" : bn(q.t) + " = ?");
 				put("qn", "প্রশ্ন " + bn(ST.q + 1) + "/" + bn(N));
 				const sc = Math.ceil(rem / 1000);
 				if (t >= 0 && rem > 0 && sc <= 3 && sc !== lastTick && !wrote) {
