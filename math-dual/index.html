@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="bn">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+		<title>Math Battle</title>
+		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800&display=swap" rel="stylesheet" />
+		<style>
+			:root {
+				--bg: #171a36;
+				--pn: #242850;
+				--pn2: #2f3466;
+				--tx: #f3f0ff;
+				--mu: #a7a9d6;
+				--me: #5ee6b0;
+				--op: #ff7b6b;
+				--sun: #ffd25e;
+			}
+			* {
+				box-sizing: border-box;
+				-webkit-tap-highlight-color: transparent;
+			}
+			[hidden] {
+				display: none !important;
+			}
+			html,
+			body {
+				margin: 0;
+				min-height: 100%;
+			}
+			body {
+				font-family: "Hind Siliguri", system-ui, sans-serif;
+				background: radial-gradient(900px 500px at 50% -10%, #2b2f70, var(--bg));
+				color: var(--tx);
+				padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+			}
+			main {
+				max-width: 460px;
+				margin: 0 auto;
+				padding: 16px;
+			}
+			h1 {
+				font-size: 2.3rem;
+				margin: 0.6em 0 0.1em;
+				text-align: center;
+				color: var(--sun);
+				letter-spacing: 0.5px;
+			}
+			.sub {
+				color: var(--mu);
+				text-align: center;
+				margin: 0 0 18px;
+			}
+			.card {
+				background: var(--pn);
+				border-radius: 22px;
+				padding: 16px;
+				margin-bottom: 14px;
+				box-shadow: 0 8px 24px #0004;
+			}
+			label {
+				display: block;
+				color: var(--mu);
+				font-size: 0.9rem;
+				margin: 8px 0 6px;
+			}
+			input {
+				width: 100%;
+				font: inherit;
+				font-size: 1.1rem;
+				padding: 12px 14px;
+				border-radius: 14px;
+				border: 2px solid var(--pn2);
+				background: var(--bg);
+				color: var(--tx);
+			}
+			input:focus {
+				outline: none;
+				border-color: var(--sun);
+			}
+			button {
+				font: inherit;
+				font-weight: 600;
+				color: var(--tx);
+				background: var(--pn2);
+				border: 0;
+				border-radius: 14px;
+				padding: 12px 14px;
+				cursor: pointer;
+				transition: transform 0.1s, filter 0.15s;
+			}
+			button:active {
+				transform: scale(0.95);
+			}
+			button:hover {
+				filter: brightness(1.15);
+			}
+			button:focus-visible,
+			input:focus-visible {
+				outline: 3px solid var(--sun);
+			}
+			.big {
+				width: 100%;
+				font-size: 1.15rem;
+				padding: 14px;
+				margin-top: 10px;
+			}
+			.pri {
+				background: var(--me);
+				color: #0c2a1f;
+			}
+			.sec {
+				background: var(--sun);
+				color: #3a2c00;
+			}
+			.seg {
+				display: flex;
+				gap: 6px;
+				flex-wrap: wrap;
+			}
+			.seg button {
+				flex: 1;
+				min-width: 56px;
+				background: var(--bg);
+			}
+			.seg button.on {
+				background: var(--sun);
+				color: #3a2c00;
+			}
+			.row {
+				display: flex;
+				gap: 8px;
+			}
+			.row input {
+				flex: 1;
+			}
+			.top {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				font-size: 0.9rem;
+				color: var(--mu);
+			}
+			.top button {
+				padding: 6px 10px;
+				background: transparent;
+			}
+			.duel {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 10px;
+			}
+			.pl {
+				background: var(--pn);
+				border-radius: 18px;
+				padding: 10px 12px;
+				border-bottom: 5px solid;
+			}
+			.pl.m {
+				border-color: var(--me);
+			}
+			.pl.o {
+				border-color: var(--op);
+				text-align: right;
+			}
+			.pl b {
+				display: block;
+				font-size: 0.95rem;
+				font-weight: 600;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			.pl span {
+				font-size: 2rem;
+				font-weight: 700;
+				display: inline-block;
+			}
+			.m span {
+				color: var(--me);
+			}
+			.o span {
+				color: var(--op);
+			}
+			.pop {
+				animation: pop 0.4s;
+			}
+			@keyframes pop {
+				50% {
+					transform: scale(1.35);
+				}
+			}
+			.track {
+				height: 10px;
+				background: var(--pn);
+				border-radius: 9px;
+				margin: 14px 0 8px;
+				overflow: hidden;
+			}
+			#bar {
+				height: 100%;
+				width: 100%;
+				background: linear-gradient(90deg, var(--op), var(--sun), var(--me));
+				border-radius: 9px;
+				transition: width 0.12s linear;
+			}
+			.qn {
+				display: flex;
+				justify-content: space-between;
+				color: var(--mu);
+			}
+			#sec {
+				color: var(--sun);
+				font-weight: 700;
+				font-size: 1.2rem;
+			}
+			.slate {
+				background: #10122b;
+				border: 3px solid var(--pn2);
+				border-radius: 26px;
+				text-align: center;
+				padding: 22px 8px 14px;
+				margin: 8px 0;
+			}
+			#qtxt {
+				font-size: 2.6rem;
+				font-weight: 700;
+				min-height: 1.4em;
+				word-break: break-word;
+			}
+			#ans {
+				font-size: 2.4rem;
+				font-weight: 700;
+				color: var(--sun);
+				min-height: 1.3em;
+				border-top: 2px dashed var(--pn2);
+				margin: 8px 18px 0;
+				padding-top: 6px;
+			}
+			#fb {
+				text-align: center;
+				font-weight: 600;
+				line-height: 1.4;
+			}
+			#pad {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 8px;
+			}
+			#pad button {
+				font-size: 1.7rem;
+				padding: 12px 0;
+				background: var(--pn);
+			}
+			#pad button.go {
+				background: var(--me);
+				color: #0c2a1f;
+			}
+			#pad button.bk {
+				background: var(--pn2);
+			}
+			#pad button {
+				transition: none;
+				touch-action: manipulation;
+				user-select: none;
+				-webkit-user-select: none;
+			}
+			#pad button:hover {
+				filter: none;
+			}
+			#pad button:active {
+				transform: scale(0.94);
+				filter: brightness(1.25);
+			}
+			#pad.off {
+				opacity: 0.6;
+				pointer-events: none;
+			}
+			#fb {
+				height: 2.8em;
+				overflow: hidden;
+			}
+			#slate {
+				user-select: none;
+			}
+			.shake {
+				animation: sh 0.3s;
+			}
+			@keyframes sh {
+				25% {
+					transform: translateX(-9px);
+				}
+				75% {
+					transform: translateX(9px);
+				}
+			}
+			.code {
+				font-size: 3rem;
+				font-weight: 700;
+				color: var(--sun);
+				letter-spacing: 6px;
+				text-align: center;
+			}
+			.mid {
+				text-align: center;
+			}
+			.res {
+				font-size: 2.2rem;
+				font-weight: 700;
+				animation: pop 0.8s;
+			}
+			.lb {
+				list-style: none;
+				padding: 0;
+				margin: 0;
+			}
+			.lb li {
+				display: grid;
+				grid-template-columns: 34px 1fr auto auto;
+				gap: 8px;
+				padding: 10px 6px;
+				border-bottom: 1px solid var(--pn2);
+				align-items: center;
+			}
+			.lb li:first-child {
+				color: var(--sun);
+				font-weight: 700;
+			}
+			.lb small {
+				color: var(--mu);
+			}
+			#toast {
+				position: fixed;
+				left: 50%;
+				bottom: 24px;
+				transform: translateX(-50%);
+				background: var(--sun);
+				color: #3a2c00;
+				padding: 10px 18px;
+				border-radius: 14px;
+				font-weight: 600;
+				opacity: 0;
+				pointer-events: none;
+				transition: opacity 0.3s;
+			}
+			#toast.on {
+				opacity: 1;
+			}
+			body {
+				font-family: "Noto Sans Bengali", system-ui, sans-serif;
+			}
+			#qtxt {
+				font-size: clamp(2.4rem, 11vw, 3.4rem);
+				font-weight: 800;
+				letter-spacing: 0.05em;
+				word-spacing: 0.15em;
+			}
+			#ans {
+				font-size: clamp(2.2rem, 10vw, 3rem);
+				font-weight: 800;
+				letter-spacing: 0.08em;
+			}
+			#pad button {
+				font-size: 2rem;
+				font-weight: 800;
+				padding: 14px 0;
+			}
+			.pl span,
+			#sec,
+			.code {
+				font-weight: 800;
+			}
+			.top span button {
+				padding: 6px 12px;
+			}
+			@media (prefers-reduced-motion: reduce) {
+				* {
+					animation: none !important;
+					transition: none !important;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<section id="login" hidden>
+				<h1>Math Battle</h1>
+				<p class="sub">যে আগে ঠিক উত্তর দেবে সে বেশি পয়েন্ট পাবে</p>
+				<div class="card">
+					<button class="big pri" onclick="auth.signInAnonymously().catch(e=>toast(e.message))">Guest হিসেবে খেলুন</button>
+					<button class="big sec" onclick="gLogin()">Google দিয়ে সাইন ইন</button>
+				</div>
+			</section>
+
+			<section id="home" hidden>
+				<h1>Math Battle</h1>
+				<p class="sub">দ্রুত হিসাবের প্রতিযোগীতা</p>
+				<div class="card">
+					<label for="nm">আপনার নাম</label><input id="nm" maxlength="16" placeholder="নাম লিখুন" />
+					<label>অপারেশন</label>
+
+					<div class="seg" id="modes">
+						<button data-v="+" class="on">+ যোগ</button><button data-v="-">− বিয়োগ</button><button data-v="×">× গুণ</button><button data-v="÷">÷ ভাগ</button><button data-v="mix">সবগুলো</button>
+					</div>
+					<label>লেভেল</label>
+					<div class="seg" id="diffs"><button data-v="easy" class="on">সহজ</button><button data-v="medium">মাঝারি</button><button data-v="hard">কঠিন</button></div>
+					<button class="big pri" onclick="rnd()">র‍্যান্ডম প্রতিপক্ষ খুঁজুন</button>
+					<button class="big sec" onclick="create()">রুম তৈরি করুন</button>
+				</div>
+				<div class="card">
+					<label for="jc">বন্ধুর রুম কোড</label>
+					<div class="row"><input id="jc" inputmode="numeric" maxlength="5" placeholder="কোড" /><button onclick="joinCode()">যোগ দিন</button></div>
+				</div>
+				<div class="row"><button class="big" onclick="showLB()">🏆 লিডারবোর্ড</button><button class="big" onclick="auth.signOut()">সাইন আউট</button></div>
+			</section>
+
+			<section id="wait" hidden class="card mid">
+				<p id="wmsg" class="sub">প্রতিপক্ষের অপেক্ষায়…</p>
+				<div id="wcodebox">
+					<p class="sub">রুম কোড — বন্ধুকে এটি দিন</p>
+					<div class="code" id="code"></div>
+				</div>
+				<button class="big" onclick="exit()">বাতিল</button>
+			</section>
+
+			<section id="game" hidden>
+				<div class="top">
+					<span id="qn"></span><span><button id="dg" onclick="toggleDigits()">123</button><button id="mt" onclick="toggleMute()">🔊</button></span>
+				</div>
+				<div class="duel">
+					<div class="pl m"><b id="n1"></b><span id="s1">০</span></div>
+					<div class="pl o"><b id="n2"></b><span id="s2">০</span></div>
+				</div>
+				<div class="track"><div id="bar"></div></div>
+				<div class="qn"><span>সময়</span><span id="sec"></span></div>
+				<div class="slate" id="slate">
+					<div id="qtxt"></div>
+					<div id="ans"></div>
+				</div>
+				<div id="fb"></div>
+				<div id="pad"></div>
+			</section>
+
+			<section id="end" hidden class="card mid">
+				<div class="res" id="res"></div>
+				<p id="fin" class="sub"></p>
+				<button class="big pri" id="rm" onclick="rematchReq()">🔁 রিম্যাচ</button>
+				<button class="big" onclick="exit()">নতুন খেলা</button>
+				<button class="big" onclick="showLB()">🏆 লিডারবোর্ড</button>
+			</section>
+
+			<section id="lb" hidden>
+				<h1>সেরা খেলোয়াড়</h1>
+				<div class="card"><ul class="lb" id="lbl"></ul></div>
+				<button class="big" onclick="show(me?'home':'login')">ফিরে যান</button>
+			</section>
+		</main>
+		<div id="toast"></div>
+
+		<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+		<script>
+			// ======  Firebase  ======
+			const CFG = {
+				apiKey: "AIzaSyDsQeD1b0djnMP7U8Yewy6oHD_oePokjAU",
+				authDomain: "math-calculation-dual.firebaseapp.com",
+				projectId: "math-calculation-dual",
+				appId: "1:813391290745:web:24f92a97c58a4da5bacfa8",
+				databaseURL: "https://math-calculation-dual-default-rtdb.asia-southeast1.firebasedatabase.app",
+			};
+			// ==============================================
+			firebase.initializeApp(CFG);
+			const auth = firebase.auth(),
+				db = firebase.database();
+			const $ = (id) => document.getElementById(id);
+			let dg = false;
+			try {
+				dg = localStorage.getItem("mdDg") == "1";
+			} catch (e) {}
+			const BD = "০১২৩৪৫৬৭৮৯",
+				bn = (n) => (dg ? String(n) : String(n).replace(/\d/g, (d) => BD[d]));
+			const toAscii = (s) => s.replace(/[০-৯]/g, (d) => BD.indexOf(d));
+			const N = 10,
+				T = 15000;
+			let me = null,
+				name = "",
+				mode = "+",
+				diff = "easy",
+				room = null,
+				ref = null,
+				S = null,
+				curQ = -1,
+				off = 0,
+				input = "",
+				advKey = null,
+				doneSeen = 0,
+				saved = false,
+				started = false,
+				qkey = null,
+				muted = false,
+				endPlayed = false;
+			db.ref(".info/serverTimeOffset").on("value", (s) => (off = s.val() || 0));
+			const now = () => Date.now() + off;
+			function toast(t) {
+				const e = $("toast");
+				e.textContent = t;
+				e.classList.add("on");
+				setTimeout(() => e.classList.remove("on"), 2600);
+			}
+			function show(id) {
+				["login", "home", "wait", "game", "end", "lb"].forEach((s) => ($(s).hidden = s != id));
+			}
+
+			// ---- sound ----
+			let ac;
+			function tone(f, d = 0.12, t = "sine", v = 0.15, w = 0) {
+				if (muted) return;
+				try {
+					ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+					const o = ac.createOscillator(),
+						g = ac.createGain(),
+						s = ac.currentTime + w;
+					o.type = t;
+					o.frequency.value = f;
+					g.gain.setValueAtTime(v, s);
+					g.gain.exponentialRampToValueAtTime(0.001, s + d);
+					o.connect(g);
+					g.connect(ac.destination);
+					o.start(s);
+					o.stop(s + d);
+				} catch (e) {}
+			}
+			const sfx = {
+				key: () => tone(660, 0.04, "square", 0.04),
+				ok: () => [523, 659, 784].forEach((f, i) => tone(f, 0.16, "triangle", 0.18, i * 0.07)),
+				no: () => tone(150, 0.25, "sawtooth", 0.12),
+				tick: () => tone(900, 0.05, "sine", 0.06),
+				win: () => [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, 0.22, "triangle", 0.18, i * 0.12)),
+				lose: () => [392, 330, 262].forEach((f, i) => tone(f, 0.3, "triangle", 0.15, i * 0.2)),
+			};
+			function toggleMute() {
+				muted = !muted;
+				$("mt").textContent = muted ? "🔇" : "🔊";
+			}
+
+			// ---- auth & home ----
+			function gLogin() {
+				auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch((e) => toast("সাইন ইন হয়নি: " + e.code));
+			}
+			auth.onAuthStateChanged((u) => {
+				me = u;
+				if (!u) {
+					show("login");
+					return;
+				}
+				let sv = "";
+				try {
+					sv = localStorage.getItem("mdName") || "";
+				} catch (e) {}
+				$("nm").value = sv || u.displayName || "";
+				show("home");
+			});
+			function getName() {
+				name = $("nm").value.trim() || "খেলোয়াড়";
+				try {
+					localStorage.setItem("mdName", name);
+				} catch (e) {}
+				return name;
+			}
+			function seg(id, cb) {
+				$(id).onclick = (e) => {
+					const b = e.target.closest("button");
+					if (!b) return;
+					[...$(id).children].forEach((x) => x.classList.toggle("on", x == b));
+					cb(b.dataset.v);
+				};
+			}
+			seg("modes", (v) => (mode = v));
+			seg("diffs", (v) => (diff = v));
+
+			// ---- questions ----
+			const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+			const L = {
+				easy: {
+					a: [1, 20],
+					m: [
+						[2, 9],
+						[2, 5],
+					],
+					d: [
+						[2, 5],
+						[2, 9],
+					],
+				},
+				medium: {
+					a: [10, 99],
+					m: [
+						[2, 12],
+						[2, 12],
+					],
+					d: [
+						[2, 12],
+						[2, 12],
+					],
+				},
+				hard: {
+					a: [100, 999],
+					m: [
+						[11, 25],
+						[3, 15],
+					],
+					d: [
+						[3, 15],
+						[5, 25],
+					],
+				},
+			};
+			function mk(m, df) {
+				const l = L[df];
+				if (m == "mix") m = ["+", "-", "×", "÷"][R(0, 3)];
+				if (m == "+") {
+					const x = R(...l.a),
+						y = R(...l.a);
+					return { t: x + " + " + y, a: x + y };
+				}
+				if (m == "-") {
+					let x = R(...l.a),
+						y = R(...l.a);
+					if (y > x) [x, y] = [y, x];
+					return { t: x + " − " + y, a: x - y };
+				}
+				if (m == "×") {
+					const x = R(...l.m[0]),
+						y = R(...l.m[1]);
+					return { t: x + " × " + y, a: x * y };
+				}
+				const y = R(...l.d[0]),
+					q = R(...l.d[1]);
+				return { t: y * q + " ÷ " + y, a: q };
+			}
+
+			// ---- rooms (state in rooms/<code>/st, players in rooms/<code>/players) ----
+			let ST = null,
+				PL = null,
+				pen = 0,
+				ended = false,
+				lastTick = -1,
+				wrote = false,
+				seen = false,
+				rmGo = false,
+				padOn = true,
+				lbCache = null,
+				lbAt = 0,
+				lst = null,
+				lpl = null;
+			const put = (id, v) => {
+				const e = $(id);
+				if (e.textContent !== v) e.textContent = v;
+			};
+			const setFb = (t, c) => {
+				$("fb").style.color = c;
+				put("fb", t);
+			};
+			const setPad = (on) => {
+				if (padOn === on) return;
+				padOn = on;
+				$("pad").classList.toggle("off", !on);
+			};
+			async function create(rand, code) {
+				getName();
+				code = code || String(R(10000, 99999));
+				const qs = Array.from({ length: N }, () => mk(mode, diff));
+				await db.ref("rooms/" + code).set({ st: { host: me.uid, mode, diff, status: "waiting", q: 0, qs }, players: { [me.uid]: { name, score: 0 } } });
+				enter(code, true, rand);
+				return code;
+			}
+			async function join(code) {
+				getName();
+				const g = await db.ref("rooms/" + code + "/st/status").get();
+				if (g.val() != "waiting") return false;
+				const r = await db.ref("rooms/" + code + "/players").transaction((p) => {
+					p = p || {};
+					if (p[me.uid]) return p;
+					if (Object.keys(p).length >= 2) return;
+					p[me.uid] = { name, score: 0 };
+					return p;
+				});
+				if (!r.committed) return false;
+				enter(code, false);
+				return true;
+			}
+			async function joinCode() {
+				const c = toAscii($("jc").value.trim());
+				if (!c) return toast("কোড লিখুন");
+				if (!(await join(c))) toast("রুম পাওয়া যায়নি বা ভর্তি");
+			}
+			async function rnd() {
+				getName();
+				qkey = "queue/" + mode + "_" + diff;
+				for (let i = 0; i < 4; i++) {
+					const code = String(R(10000, 99999));
+					let taken = null;
+					await db.ref(qkey).transaction((v) => {
+						taken = v;
+						return v ? null : code;
+					});
+					if (taken) {
+						if (await join(taken)) return;
+						continue;
+					}
+					await create(true, code);
+					db.ref(qkey).onDisconnect().remove();
+					return;
+				}
+				toast("প্রতিপক্ষ পাওয়া যায়নি, আবার চেষ্টা করুন");
+			}
+			function enter(code, host, rand) {
+				room = code;
+				ref = db.ref("rooms/" + code);
+				ST = PL = null;
+				seen = false;
+				curQ = -1;
+				saved = false;
+				started = false;
+				advKey = null;
+				endPlayed = false;
+				ended = false;
+				rmGo = false;
+				pen = 0;
+				wrote = false;
+				if (host) ref.onDisconnect().remove();
+				else
+					ref
+						.child("players/" + me.uid + "/gone")
+						.onDisconnect()
+						.set(true);
+				$("wcodebox").hidden = !!rand;
+				$("wmsg").textContent = rand ? "র‍্যান্ডম প্রতিপক্ষ খোঁজা হচ্ছে…" : "প্রতিপক্ষের অপেক্ষায়…";
+				$("code").textContent = bn(code);
+				show("wait");
+				lst = (s) => {
+					ST = s.val();
+					sync();
+				};
+				lpl = (s) => {
+					PL = s.val();
+					sync();
+				};
+				ref.child("st").on("value", lst);
+				ref.child("players").on("value", lpl);
+			}
+			function detach() {
+				if (ref) {
+					if (lst) ref.child("st").off("value", lst);
+					if (lpl) ref.child("players").off("value", lpl);
+				}
+				room = ref = null;
+				ST = PL = null;
+			}
+			function exit() {
+				if (ref && ST) {
+					const host = ST.host == me.uid;
+					if (ST.status == "waiting") {
+						if (host) {
+							ref.remove();
+							if (qkey) db.ref(qkey).transaction((v) => (v == room ? null : v));
+						} else ref.child("players/" + me.uid).remove();
+					} else {
+						const o = Object.keys(PL || {}).find((i) => i != me.uid);
+						if (PL && PL[o] && PL[o].gone) ref.remove();
+						else ref.child("players/" + me.uid + "/gone").set(true);
+					}
+				}
+				detach();
+				show("home");
+			}
+
+			function sync() {
+				if (!room) return;
+				if (!ST) {
+					if (seen) {
+						toast("রুম বন্ধ হয়ে গেছে");
+						detach();
+						show("home");
+					}
+					return;
+				}
+				seen = true;
+				if (!PL) return;
+				const ids = Object.keys(PL);
+				if (ST.status == "waiting") {
+					if (ST.host == me.uid && ids.length == 2 && !started) {
+						started = true;
+						ref.child("st").update({ status: "playing", q: 0, qStart: now() + 3000 });
+					}
+				} else if (ST.status == "playing") {
+					if ($("game").hidden) show("game");
+					if (ended) {
+						ended = false;
+						saved = false;
+						endPlayed = false;
+						advKey = null;
+						rmGo = false;
+						curQ = -1;
+					}
+					if (ST.q !== curQ) {
+						curQ = ST.q;
+						input = "";
+						pen = 0;
+						doneSeen = 0;
+						wrote = false;
+						lastTick = -1;
+						put("ans", "");
+						put("fb", "");
+						setPad(true);
+					}
+					renderScores();
+				} else if (ST.status == "done") {
+					renderScores();
+					endGame();
+				}
+			}
+			function setP(i, p) {
+				const a = p.ans && p.ans["q" + ST.q] !== undefined;
+				put("n" + i, (p.name || "…") + (a && ST.status == "playing" ? " ✓" : ""));
+				const e = $("s" + i),
+					v = bn(p.score || 0);
+				if (e.textContent !== v) {
+					e.textContent = v;
+					e.classList.remove("pop");
+					void e.offsetWidth;
+					e.classList.add("pop");
+				}
+			}
+			function renderScores() {
+				if (!ST || !PL) return;
+				const o = Object.keys(PL).find((i) => i != me.uid),
+					m = PL[me.uid] || {};
+				setP(1, { ...m, score: Math.max(0, (m.score || 0) - (ST.status == "playing" ? pen : 0)) });
+				setP(2, PL[o] || {});
+			}
+
+			// ---- game loop (all timing is local; no requests) ----
+			function finish(pts) {
+				if (wrote) return;
+				wrote = true;
+				setPad(false);
+				const sc = (PL[me.uid] || {}).score || 0,
+					ns = Math.max(0, sc + pts - pen);
+				pen = 0;
+				ref.child("players/" + me.uid).update({ score: ns, ["ans/q" + curQ]: pts });
+			}
+			setInterval(() => {
+				if (!ST || ST.status != "playing" || !PL) return;
+				const t = now() - ST.qStart,
+					rem = T - t,
+					q = ST.qs[ST.q];
+				$("bar").style.width = Math.max(0, Math.min(100, (rem / T) * 100)).toFixed(1) + "%";
+				put("sec", bn(t < 0 ? Math.ceil(-t / 1000) : Math.max(0, Math.ceil(rem / 1000))));
+				put("qtxt", t < 0 ? "প্রস্তুত হোন…" : bn(q.t) + " = ?");
+				put("qn", "প্রশ্ন " + bn(ST.q + 1) + "/" + bn(N));
+				const sc = Math.ceil(rem / 1000);
+				if (t >= 0 && rem > 0 && sc <= 3 && sc !== lastTick && !wrote) {
+					lastTick = sc;
+					sfx.tick();
+				}
+				if (t >= 0 && rem <= 0 && !wrote) {
+					setFb("সময় শেষ! উত্তর: " + bn(q.a), "var(--sun)");
+					finish(0);
+				}
+				if (ST.host == me.uid) {
+					const P = Object.values(PL);
+					const all = P.length == 2 && P.every((p) => p.ans && p.ans["q" + ST.q] !== undefined),
+						gone = P.some((p) => p.gone);
+					if (all && !doneSeen) doneSeen = Date.now();
+					if ((gone || (all && Date.now() - doneSeen > 1500) || rem < -2500) && advKey !== ST.q) {
+						advKey = ST.q;
+						ref.child("st").update(gone || ST.q + 1 >= N ? { status: "done" } : { q: ST.q + 1, qStart: now() + 1200 });
+					}
+				}
+			}, 100);
+
+			// ---- input ----
+			function drawPad() {
+				$("pad").innerHTML = [1, 2, 3, 4, 5, 6, 7, 8, 9, "⌫", 0, "✓"]
+					.map((k) => '<button class="' + (k == "✓" ? "go" : k == "⌫" ? "bk" : "") + '" data-k="' + k + '">' + (typeof k == "number" ? bn(k) : k) + "</button>")
+					.join("");
+			}
+			drawPad();
+			$("dg").textContent = dg ? "১২৩" : "123";
+			function toggleDigits() {
+				dg = !dg;
+				try {
+					localStorage.setItem("mdDg", dg ? "1" : "0");
+				} catch (e) {}
+				$("dg").textContent = dg ? "১২৩" : "123";
+				drawPad();
+				put("ans", bn(input));
+				$("code").textContent = room ? bn(room) : "";
+				renderScores();
+			}
+			$("pad").addEventListener("pointerdown", (e) => {
+				const b = e.target.closest("button");
+				if (!b) return;
+				e.preventDefault();
+				press(b.dataset.k);
+			});
+			$("pad").addEventListener("click", (e) => e.preventDefault());
+			document.addEventListener("keydown", (e) => {
+				if ($("game").hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+				let k = null;
+				const m = /^(?:Digit|Numpad)([0-9])$/.exec(e.code || "");
+				if (m) k = m[1];
+				else if (/^[0-9]$/.test(e.key)) k = e.key;
+				else if (/^[০-৯]$/.test(e.key)) k = toAscii(e.key);
+				else if (e.key == "Backspace" || e.key == "Delete") k = "⌫";
+				else if (e.key == "Enter" || e.key == "NumpadEnter") k = "✓";
+				if (k === null) return;
+				e.preventDefault();
+				if (e.repeat && k != "⌫") return;
+				press(k);
+			});
+			function press(k) {
+				if (!ST || ST.status != "playing" || wrote || now() < ST.qStart) return;
+				if (k == "⌫") input = input.slice(0, -1);
+				else if (k == "✓") {
+					submit();
+					return;
+				} else if (input.length < 6) input += k;
+				else return;
+				sfx.key();
+				put("ans", bn(input));
+			}
+			function submit() {
+				if (!input || wrote) return;
+				const q = ST.qs[ST.q],
+					rem = T - (now() - ST.qStart);
+				if (parseInt(input) == q.a) {
+					const pts = 50 + Math.round((150 * Math.max(0, rem)) / T),
+						pn = pen;
+					finish(pts);
+					sfx.ok();
+					setFb("ঠিক! +" + bn(pts) + (pn ? " (−" + bn(pn) + ")" : "") + " · প্রতিপক্ষের অপেক্ষা…", "var(--me)");
+				} else {
+					pen += 50;
+					sfx.no();
+					setFb("ভুল! −" + bn(50), "var(--op)");
+					const sl = $("slate");
+					sl.classList.remove("shake");
+					void sl.offsetWidth;
+					sl.classList.add("shake");
+					input = "";
+					put("ans", "");
+					renderScores();
+				}
+			}
+
+			// ---- end, rematch, leaderboard ----
+			function endGame() {
+				if ($("end").hidden) show("end");
+				ended = true;
+				const o = Object.keys(PL).find((i) => i != me.uid),
+					m = PL[me.uid],
+					p = PL[o] || { score: 0, name: "প্রতিপক্ষ" };
+				const early = !!p.gone && ST.q + 1 < N,
+					w = early ? 1 : m.score > p.score ? 1 : m.score < p.score ? -1 : 0;
+				put("res", w > 0 ? "🎉 আপনি জিতেছেন!" : w < 0 ? "😮 আপনি হেরেছেন" : "🤝 ড্র!");
+				$("res").style.color = w > 0 ? "var(--me)" : w < 0 ? "var(--op)" : "var(--sun)";
+				put("fin", early ? "প্রতিপক্ষ খেলা ছেড়ে চলে গেছেন" : m.name + " " + bn(m.score) + " — " + bn(p.score) + " " + (p.name || ""));
+				const rb = $("rm");
+				rb.disabled = !!p.gone || !!m.rm;
+				put("rm", p.gone ? "প্রতিপক্ষ চলে গেছেন" : m.rm ? "প্রতিপক্ষের অপেক্ষায়…" : p.rm ? "🔁 রিম্যাচ (প্রতিপক্ষ রাজি!)" : "🔁 রিম্যাচ");
+				if (!endPlayed) {
+					endPlayed = true;
+					w > 0 ? sfx.win() : w < 0 ? sfx.lose() : sfx.ok();
+				}
+				if (!saved) {
+					saved = true;
+					lbAt = 0;
+					const inc = firebase.database.ServerValue.increment;
+					db.ref("leaderboard/" + me.uid).update({ name: m.name, total: inc(m.score), games: inc(1), wins: inc(w > 0 ? 1 : 0) });
+				}
+				if (ST.host == me.uid && m.rm && p.rm && !rmGo) {
+					rmGo = true;
+					const u = { "st/status": "playing", "st/q": 0, "st/qStart": now() + 3000, "st/qs": Array.from({ length: N }, () => mk(ST.mode, ST.diff)) };
+					Object.keys(PL).forEach((id) => {
+						u["players/" + id + "/score"] = 0;
+						u["players/" + id + "/ans"] = null;
+						u["players/" + id + "/rm"] = null;
+					});
+					ref.update(u);
+				}
+			}
+			function rematchReq() {
+				if (ref && PL && PL[me.uid]) ref.child("players/" + me.uid + "/rm").set(true);
+			}
+			function drawLB(a) {
+				$("lbl").innerHTML = a.length
+					? a.map((v, i) => "<li><span>" + bn(i + 1) + "</span><span>" + esc(v.name) + "</span><b>" + bn(v.total) + "</b><small>" + bn(v.wins) + " জয়</small></li>").join("")
+					: "<li>এখনও কেউ খেলেনি। প্রথম হোন!</li>";
+			}
+			async function showLB() {
+				show("lb");
+				if (lbCache && Date.now() - lbAt < 30000) return drawLB(lbCache);
+				$("lbl").innerHTML = "<li>লোড হচ্ছে…</li>";
+				try {
+					const s = await db.ref("leaderboard").orderByChild("total").limitToLast(20).get(),
+						a = [];
+					s.forEach((c) => {
+						a.push(c.val());
+					});
+					a.reverse();
+					lbCache = a;
+					lbAt = Date.now();
+					drawLB(a);
+				} catch (e) {
+					$("lbl").innerHTML = "<li>লিডারবোর্ড লোড হয়নি</li>";
+				}
+			}
+			const esc = (s) => String(s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+		</script>
+	</body>
+</html>
