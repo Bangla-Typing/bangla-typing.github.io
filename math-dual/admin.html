@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Math Duel – Admin</title>
+<style>
+:root{--bg:#0d1126;--pn:#171c3d;--pn2:#222855;--tx:#f3f0ff;--mu:#9498cc;--me:#10b981;--sun:#fbbf24}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx);padding:16px}
+main{max-width:900px;margin:0 auto}
+h1{color:var(--sun);font-size:1.5rem;margin:0 0 12px}
+h2{font-size:1rem;color:var(--mu);margin:0 0 10px;text-transform:uppercase;letter-spacing:.5px}
+.card{background:var(--pn);border-radius:16px;padding:16px;margin-bottom:14px;overflow-x:auto}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kpi div{background:var(--bg);border-radius:12px;padding:12px;text-align:center}
+.kpi b{display:block;font-size:1.8rem;color:var(--sun)}
+.kpi small{color:var(--mu)}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--pn2)}
+th{color:var(--mu);font-weight:600}
+button{font:inherit;font-weight:700;background:var(--sun);color:#1a1500;border:0;border-radius:12px;padding:12px 18px;cursor:pointer}
+#msg{color:var(--mu)}
+input,textarea,select{width:100%;font:inherit;padding:10px;border-radius:10px;border:2px solid var(--pn2);background:var(--bg);color:var(--tx);margin:6px 0}
+.r{display:flex;gap:8px;flex-wrap:wrap}.r>*{flex:1}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--me);margin-right:6px}
+</style>
+</head>
+<body>
+<main>
+<h1>Math Duel – Admin</h1>
+<div id="gate" class="card"><p id="msg">Sign in with the admin Google account.</p><button id="in">Sign in with Google</button></div>
+<div id="app" hidden>
+<div class="card kpi">
+<div><b id="k-on">–</b><small><span class="dot"></span>online now</small></div>
+<div><b id="k-pk">–</b><small>peak today</small></div>
+<div><b id="k-tot">–</b><small>total players</small></div>
+<div><b id="k-new">–</b><small>new today</small></div>
+<div><b id="k-g">–</b><small>games today</small></div>
+</div>
+<div class="card"><h2>Announcement to all players</h2>
+<textarea id="a-t" rows="2" placeholder="Message"></textarea>
+<div class="r"><select id="a-ty"><option value="banner">Banner</option><option value="popup">Popup</option></select>
+<select id="a-h"><option value="1">Visible 1 hour</option><option value="24" selected>Visible 24 hours</option><option value="168">Visible 7 days</option><option value="0">Until cleared</option></select></div>
+<div class="r"><button id="a-send">Publish</button><button id="a-clr">Clear</button></div><p id="a-st"></p></div>
+<div class="card"><h2>Message to one online player</h2>
+<select id="m-to"></select><input id="m-t" placeholder="Title (optional)" maxlength="60" /><textarea id="m-x" rows="2" placeholder="Message" maxlength="300"></textarea>
+<label style="display:block;margin:6px 0"><input type="checkbox" id="m-push" checked style="width:auto" /> Also send as a push notification (reaches closed apps)</label>
+<button id="m-send">Send</button><p id="m-st"></p></div>
+<div class="card"><h2>Shop prices (coins)</h2><table id="t-pr"></table>
+<div class="r"><input id="pr-x" type="number" step="0.1" value="1" /><button id="pr-ap">Multiply all</button><button id="pr-sv">Save prices</button></div><p id="pr-st"></p></div>
+<div class="card"><h2>Last 14 days</h2><table id="t-day"></table></div>
+<div class="card"><h2>Games by mode and level</h2><table id="t-mode"></table></div>
+<div class="card"><h2>Top players (total points)</h2><table id="t-top"></table></div>
+<div class="card"><h2>Best single game (all modes)</h2><table id="t-best"></table></div>
+<button id="out">Sign out</button>
+</div>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const CFG = {
+apiKey: "AIzaSyDsQeD1b0djnMP7U8Yewy6oHD_oePokjAU",
+authDomain: "math-calculation-dual.firebaseapp.com",
+projectId: "math-calculation-dual",
+appId: "1:813391290745:web:24f92a97c58a4da5bacfa8",
+databaseURL: "https://math-calculation-dual-default-rtdb.asia-southeast1.firebasedatabase.app",
+};
+firebase.initializeApp(CFG);
+const WORKER = "https://math-duel-push.showrove1.workers.dev";
+const auth = firebase.auth(), db = firebase.database(), $ = (i) => document.getElementById(i);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const today = () => new Date().toISOString().slice(0, 10);
+const tbl = (id, head, rows) => ($(id).innerHTML = "<tr>" + head.map((h) => "<th>" + h + "</th>").join("") + "</tr>" + (rows.length ? rows.map((r) => "<tr>" + r.map((c) => "<td>" + esc(c) + "</td>").join("") + "</tr>").join("") : '<tr><td colspan="' + head.length + '">No data yet</td></tr>'));
+$("in").onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch((e) => ($("msg").textContent = e.code));
+$("out").onclick = () => auth.signOut();
+auth.onAuthStateChanged(async (u) => {
+	$("app").hidden = true; $("gate").hidden = false;
+	if (!u) return;
+	let ok = false;
+	try { ok = (await db.ref("admins/" + u.uid).get()).val() === true; } catch (e) {}
+	if (!ok) { $("msg").innerHTML = "Not an admin. Your UID: <code>" + esc(u.uid) + "</code>"; return; }
+	$("gate").hidden = true; $("app").hidden = false;
+	let U = {}, P = [];
+	const fillTo = () => {
+		const sel = $("m-to"), cur = sel.value, ids = Object.keys(U).sort((x, y) => (P.includes(y) - P.includes(x)) || String(U[x]).localeCompare(String(U[y])));
+		sel.innerHTML = ids.length ? ids.map((id) => '<option value="' + esc(id) + '">' + (P.includes(id) ? "🟢 " : "⚪ ") + esc(U[id] || id.slice(0, 6)) + "</option>").join("") : "<option value=''>No players yet</option>";
+		if (ids.includes(cur)) sel.value = cur;
+	};
+	db.ref("presence").on("value", (s) => { P = Object.keys(s.val() || {}); $("k-on").textContent = P.length; fillTo(); });
+	db.ref("users").on("value", (s) => { U = {}; s.forEach((c) => (U[c.key] = (c.val() || {}).name)); $("k-tot").textContent = s.numChildren(); fillTo(); });
+	const TS = firebase.database.ServerValue.TIMESTAMP, say = (id, m) => ($(id).textContent = m);
+	$("a-send").onclick = () => {
+		const text = $("a-t").value.trim(), h = +$("a-h").value;
+		if (!text) return say("a-st", "Write a message first.");
+		db.ref("announce").set({ text, type: $("a-ty").value, ts: TS, exp: h ? Date.now() + h * 3600000 : 0 }).then(() => say("a-st", "Published."), (e) => say("a-st", e.code));
+	};
+	$("a-clr").onclick = () => db.ref("announce").remove().then(() => say("a-st", "Cleared."), (e) => say("a-st", e.code));
+	$("m-send").onclick = async () => {
+		const to = $("m-to").value, text = $("m-x").value.trim(), title = $("m-t").value.trim();
+		if (!to || !text) return say("m-st", "Pick a player and write a message.");
+		try {
+			await db.ref("inbox/" + to).push({ title, text, ts: TS });
+			let note = "Saved for " + (U[to] || to) + " (popup when they next open the game).";
+			if ($("m-push").checked) {
+				const r = await fetch(WORKER + "/push", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + (await auth.currentUser.getIdToken()) }, body: JSON.stringify({ to, title: title || "Math Duel", text }) }), j = await r.json();
+				note += j.ok ? " Push sent." : " Push not sent: " + j.error;
+			}
+			say("m-st", note); $("m-x").value = "";
+		} catch (e) { say("m-st", e.code || String(e)); }
+	};
+	const ITEMS = [["mint", "Name: Mint", 900], ["coral", "Name: Coral", 900], ["ocean", "Name: Ocean", 900], ["sunset", "Name: Sunset", 1500], ["lilac", "Name: Lilac", 1500], ["pulse", "Name: Pulse glow", 3000], ["fire", "Name: Fire", 4500], ["rainbow", "Name: Rainbow", 6000], ["aurora", "Theme: Aurora", 2400], ["dusk", "Theme: Dusk", 2400], ["sea", "Theme: Deep sea", 3600], ["neon", "Theme: Neon", 6000], ["gold", "Theme: Gold", 7500]];
+	db.ref("shop/prices").once("value").then((s) => {
+		const v = s.val() || {};
+		$("t-pr").innerHTML = ITEMS.map(([id, n, d]) => "<tr><td>" + n + "</td><td><input type='number' min='0' id='pr-" + id + "' value='" + (v[id] != null ? v[id] : d) + "'></td></tr>").join("");
+	});
+	$("pr-ap").onclick = () => { const x = +$("pr-x").value; if (x > 0) ITEMS.forEach(([id]) => { const e = $("pr-" + id); e.value = Math.round(e.value * x); }); };
+	$("pr-sv").onclick = () => {
+		const o = {};
+		ITEMS.forEach(([id]) => (o[id] = Math.max(0, Math.round(+$("pr-" + id).value || 0))));
+		db.ref("shop/prices").set(o).then(() => say("pr-st", "Saved. Players now see these prices."), (e) => say("pr-st", e.code));
+	};
+	db.ref("stats/daily").orderByKey().limitToLast(14).on("value", (s) => {
+		const d = s.val() || {}, t = d[today()] || {};
+		$("k-pk").textContent = t.peakOnline || 0; $("k-new").textContent = t.newPlayers || 0; $("k-g").textContent = t.games || 0;
+		tbl("t-day", ["Date (UTC)", "New players", "Games", "Peak online"], Object.keys(d).sort().reverse().map((k) => [k, d[k].newPlayers || 0, d[k].games || 0, d[k].peakOnline || 0]));
+	});
+	db.ref("stats/games").on("value", (s) => {
+		const d = s.val() || {};
+		tbl("t-mode", ["Mode", "Level", "Games"], Object.keys(d).sort((a, b) => d[b] - d[a]).map((k) => [k.split("_")[0], k.split("_")[1], d[k]]));
+	});
+	db.ref("leaderboard").orderByChild("total").limitToLast(20).on("value", (s) => {
+		const a = []; s.forEach((c) => a.push(c.val()));
+		tbl("t-top", ["#", "Name", "Points", "Games", "Wins"], a.reverse().map((v, i) => [i + 1, v.name, v.total || 0, v.games || 0, v.wins || 0]));
+	});
+	db.ref("bestAll").orderByChild("score").limitToLast(10).on("value", (s) => {
+		const a = []; s.forEach((c) => a.push(c.val()));
+		tbl("t-best", ["#", "Name", "Score", "Mode", "Level"], a.reverse().map((v, i) => [i + 1, v.name, v.score, v.op, v.diff]));
+	});
+});
+</script>
+</body>
+</html>
