@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Math Duel – Admin</title>
+<style>
+:root{--bg:#0d1126;--pn:#171c3d;--pn2:#222855;--tx:#f3f0ff;--mu:#9498cc;--me:#10b981;--sun:#fbbf24;--bad:#f43f5e}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx);padding:16px}
+main{max-width:980px;margin:0 auto}
+h1{color:var(--sun);font-size:1.5rem;margin:0 0 12px}
+h2{font-size:.95rem;color:var(--mu);margin:0 0 10px;text-transform:uppercase;letter-spacing:.5px}
+.card{background:var(--pn);border-radius:16px;padding:16px;margin-bottom:14px;overflow-x:auto}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kpi div{background:var(--bg);border-radius:12px;padding:12px;text-align:center}
+.kpi b{display:block;font-size:1.8rem;color:var(--sun)}
+.kpi small{color:var(--mu)}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--pn2);white-space:nowrap}
+th{color:var(--mu);font-weight:600}
+button{font:inherit;font-weight:700;background:var(--sun);color:#1a1500;border:0;border-radius:12px;padding:10px 16px;cursor:pointer}
+button.alt{background:var(--pn2);color:var(--tx)} button.bad{background:var(--bad);color:#fff}
+input,textarea,select{width:100%;font:inherit;padding:9px;border-radius:10px;border:2px solid var(--pn2);background:var(--bg);color:var(--tx);margin:5px 0}
+input[type=color]{padding:2px;height:40px;width:60px}
+.r{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.r>*{flex:1;min-width:110px}.r>button{flex:0 0 auto}
+label.l{display:block;color:var(--mu);font-size:.8rem;margin-top:8px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.tabs button{background:var(--pn2);color:var(--tx)}.tabs button.on{background:var(--sun);color:#1a1500}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--me);margin-right:6px}
+.st{color:var(--mu);min-height:1.2em}.warn{color:var(--bad)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>Math Duel – Admin</h1>
+<div id="gate" class="card"><p id="msg" class="st">Sign in with the admin Google account.</p><button id="in">Sign in with Google</button></div>
+<div id="app" hidden>
+<div class="tabs" id="tabs"><button data-t="ov" class="on">Overview</button><button data-t="pl">Players</button><button data-t="rk">Ranks &amp; shop</button><button data-t="lg">Logins</button><button data-t="ms">Messages</button><button id="out" class="alt" style="margin-left:auto">Sign out</button></div>
+
+<section id="t-ov">
+<div class="card kpi">
+<div><b id="k-on">–</b><small><span class="dot"></span>online now</small></div>
+<div><b id="k-pk">–</b><small>peak today</small></div>
+<div><b id="k-tot">–</b><small>total players</small></div>
+<div><b id="k-new">–</b><small>new today</small></div>
+<div><b id="k-g">–</b><small>games today</small></div>
+</div>
+<div class="card"><h2>Last 14 days (UTC)</h2><table id="t-day"></table></div>
+<div class="card"><h2>Games by mode and level</h2><table id="t-mode"></table></div>
+<div class="card"><h2>Top players (total points)</h2><table id="t-top"></table></div>
+<div class="card"><h2>Best single game (all modes)</h2><table id="t-best"></table></div>
+</section>
+
+<section id="t-pl" hidden>
+<div class="card"><h2>Player</h2>
+<input id="p-q" placeholder="Search name, email or ID" />
+<select id="p-sel"></select>
+<div id="p-info" class="st"></div></div>
+<div class="card"><h2>Coins and rank</h2>
+<div class="r"><div><label class="l">Award coins (negative removes; positive also counts toward rank)</label><input id="p-coins" type="number" value="500" /></div><button id="p-award">Apply</button></div>
+<div class="r"><div><label class="l">Set rank (sets lifetime coins to the rank's requirement)</label><select id="p-rank"></select></div><button id="p-setrank">Set rank</button></div>
+<div class="r"><div><label class="l">Custom title (replaces the rank name and glow color on card and name)</label><input id="p-ct" maxlength="16" placeholder="e.g. Moderator" /></div><div style="flex:0 0 70px"><label class="l">Color</label><input id="p-cc" type="color" value="#fbbf24" /></div><button id="p-ctsv">Save</button><button id="p-ctdel" class="alt">Remove</button></div>
+<p id="p-st1" class="st"></p></div>
+<div class="card"><h2>Username</h2>
+<div class="r"><div><input id="p-un" maxlength="16" /></div><button id="p-unsv">Rename</button></div><p id="p-st2" class="st"></p></div>
+<div class="card"><h2>Scores</h2>
+<div class="r"><div><label class="l">Total points</label><input id="p-lt" type="number" /></div><div><label class="l">Games</label><input id="p-lg" type="number" /></div><div><label class="l">Wins</label><input id="p-lw" type="number" /></div><button id="p-lsv">Save totals</button></div>
+<div class="r"><div><label class="l">Best score board</label><select id="p-bb"><option value="all">All modes</option><option value="add">Addition</option><option value="sub">Subtraction</option><option value="mul">Multiplication</option><option value="div">Division</option><option value="mix">Mixed</option></select></div><div><label class="l">Best score</label><input id="p-bs" type="number" /></div><button id="p-bsv">Save best</button></div>
+<div class="r"><button id="p-reset" class="bad">Reset this player's scores</button><button id="g-reset" class="bad">Reset ALL leaderboards</button></div>
+<p id="p-st3" class="st"></p></div>
+</section>
+
+<section id="t-rk" hidden>
+<div class="card"><h2>Ranks (requirement = lifetime coins)</h2><table id="t-rank"></table>
+<div class="r" style="margin-top:8px"><button id="rk-add" class="alt">Add rank</button><div><label class="l">Username change cost (coins)</label><input id="rk-nc" type="number" min="0" /></div><button id="rk-sv">Save ranks &amp; cost</button></div><p id="rk-st" class="st"></p></div>
+<div class="card"><h2>Shop prices (coins)</h2><table id="t-pr"></table>
+<div class="r"><input id="pr-x" type="number" step="0.1" value="1" /><button id="pr-ap" class="alt">Multiply all</button><button id="pr-sv">Save prices</button></div><p id="pr-st" class="st"></p></div>
+</section>
+
+<section id="t-lg" hidden>
+<div class="card"><h2>Last logins</h2><input id="lg-q" placeholder="Filter by name, email, IP or country" /><table id="t-log"></table>
+<p class="st">IP and location are personal data: keep this page private and tell players you record them.</p></div>
+</section>
+
+<section id="t-ms" hidden>
+<div class="card"><h2>Announcement to all players</h2>
+<textarea id="a-t" rows="2" placeholder="Message"></textarea>
+<div class="r"><select id="a-ty"><option value="banner">Banner</option><option value="popup">Popup</option></select>
+<select id="a-h"><option value="1">Visible 1 hour</option><option value="24" selected>Visible 24 hours</option><option value="168">Visible 7 days</option><option value="0">Until cleared</option></select></div>
+<div class="r"><button id="a-send">Publish</button><button id="a-clr" class="alt">Clear</button></div><p id="a-st" class="st"></p></div>
+<div class="card"><h2>Message to one player</h2>
+<select id="m-to"></select><input id="m-t" placeholder="Title (optional)" maxlength="60" /><textarea id="m-x" rows="2" placeholder="Message" maxlength="300"></textarea>
+<label style="display:block;margin:6px 0"><input type="checkbox" id="m-push" checked style="width:auto" /> Also send as a push notification (reaches closed apps)</label>
+<button id="m-send">Send</button><p id="m-st" class="st"></p></div>
+</section>
+</div>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const CFG = {
+apiKey: "AIzaSyDsQeD1b0djnMP7U8Yewy6oHD_oePokjAU",
+authDomain: "math-calculation-dual.firebaseapp.com",
+projectId: "math-calculation-dual",
+appId: "1:813391290745:web:24f92a97c58a4da5bacfa8",
+databaseURL: "https://math-calculation-dual-default-rtdb.asia-southeast1.firebasedatabase.app",
+};
+firebase.initializeApp(CFG);
+const WORKER = "https://math-duel-push.showrove1.workers.dev";
+const auth = firebase.auth(), db = firebase.database(), $ = (i) => document.getElementById(i), TS = firebase.database.ServerValue.TIMESTAMP;
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const say = (id, m) => ($(id).textContent = m), today = () => new Date().toISOString().slice(0, 10);
+const tbl = (id, head, rows) => ($(id).innerHTML = "<tr>" + head.map((h) => "<th>" + h + "</th>").join("") + "</tr>" + (rows.length ? rows.map((r) => "<tr>" + r.map((c) => "<td>" + (c && c.h != null ? c.h : esc(c)) + "</td>").join("") + "</tr>").join("") : '<tr><td colspan="' + head.length + '">No data yet</td></tr>'));
+const DEF_RANKS = [[0, "Rookie", "নতুন", "#9aa0c8"], [500, "Bronze", "ব্রোঞ্জ", "#e08a4b"], [2000, "Silver", "সিলভার", "#d6dcff"], [5000, "Gold", "গোল্ড", "#fbbf24"], [10000, "Platinum", "প্লাটিনাম", "#2dd4bf"], [20000, "Diamond", "ডায়মন্ড", "#38bdf8"], [40000, "Master", "মাস্টার", "#c084fc"], [80000, "Legend", "লেজেন্ড", "#f43f5e"]];
+const ITEMS = [["mint", "Name: Mint", 900], ["coral", "Name: Coral", 900], ["ocean", "Name: Ocean", 900], ["sunset", "Name: Sunset", 1500], ["lilac", "Name: Lilac", 1500], ["pulse", "Name: Pulse glow", 3000], ["fire", "Name: Fire", 4500], ["rainbow", "Name: Rainbow", 6000], ["aurora", "Theme: Aurora", 2400], ["dusk", "Theme: Dusk", 2400], ["sea", "Theme: Deep sea", 3600], ["neon", "Theme: Neon", 6000], ["gold", "Theme: Gold", 7500]];
+const OPSYM = { add: "+", sub: "-", mul: "×", div: "÷", mix: "mix" };
+let U = {}, P = [], LOG = {}, RANKS = DEF_RANKS, CUR = null;
+const who = (id) => ((U[id] && U[id].name) || "(no name)") + " — " + ((U[id] && U[id].em) || (LOG[id] && LOG[id].em) || "no email") + " [" + id.slice(0, 6) + "]";
+const rankIdx = (life) => RANKS.reduce((a, r, i) => ((life || 0) >= r[0] ? i : a), 0);
+
+$("in").onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch((e) => say("msg", e.code));
+$("out").onclick = () => auth.signOut();
+$("tabs").onclick = (e) => {
+	const b = e.target.closest("button[data-t]");
+	if (!b) return;
+	[...$("tabs").querySelectorAll("button[data-t]")].forEach((x) => x.classList.toggle("on", x == b));
+	["ov", "pl", "rk", "lg", "ms"].forEach((t) => ($("t-" + t).hidden = t != b.dataset.t));
+};
+
+function fillPlayers() {
+	const q = $("p-q").value.trim().toLowerCase(), cur = $("p-sel").value;
+	const ids = Object.keys(U).filter((id) => !q || (who(id) + " " + id).toLowerCase().includes(q)).sort((a, b) => (P.includes(b) - P.includes(a)) || String(U[a].name).localeCompare(String(U[b].name)));
+	const opt = (id) => '<option value="' + esc(id) + '">' + (P.includes(id) ? "🟢 " : "⚪ ") + esc(who(id)) + "</option>";
+	$("p-sel").innerHTML = ids.length ? ids.map(opt).join("") : "<option value=''>No players found</option>";
+	if (ids.includes(cur)) $("p-sel").value = cur;
+	const all = Object.keys(U).sort((a, b) => (P.includes(b) - P.includes(a)) || String(U[a].name).localeCompare(String(U[b].name))), mc = $("m-to").value;
+	$("m-to").innerHTML = all.length ? all.map(opt).join("") : "<option value=''>No players yet</option>";
+	if (all.includes(mc)) $("m-to").value = mc;
+}
+async function loadP() {
+	const id = $("p-sel").value;
+	if (!id) { CUR = null; return say("p-info", ""); }
+	const g = (p) => db.ref(p).get().then((s) => s.val());
+	const [w, l, b, c, un] = await Promise.all([g("wallet/" + id), g("leaderboard/" + id), g("bestAll/" + id), g("crank/" + id), g("users/" + id)]);
+	CUR = { id, w: w || {}, l, b, c, u: un || {} };
+	const ri = rankIdx(CUR.w.life);
+	say("p-info", "Coins " + (CUR.w.coins || 0) + " · lifetime " + (CUR.w.life || 0) + " · rank " + RANKS[ri][1] + (c ? " · title “" + c.t + "”" : "") + " · points " + (l ? l.total || 0 : "–") + " · games " + (l ? l.games || 0 : "–") + " · best " + (b ? b.score : "–"));
+	$("p-un").value = (CUR.u && CUR.u.name) || "";
+	$("p-lt").value = l ? l.total || 0 : 0; $("p-lg").value = l ? l.games || 0 : 0; $("p-lw").value = l ? l.wins || 0 : 0;
+	$("p-ct").value = c ? c.t : ""; $("p-cc").value = c ? c.c : "#fbbf24";
+	$("p-rank").value = ri;
+	await loadBest();
+}
+async function loadBest() {
+	if (!CUR) return;
+	const k = $("p-bb").value, v = (await db.ref(k == "all" ? "bestAll/" + CUR.id : "best/" + k + "/" + CUR.id).get()).val();
+	$("p-bs").value = v ? v.score : "";
+}
+$("p-q").oninput = fillPlayers; $("p-sel").onchange = loadP; $("p-bb").onchange = loadBest;
+const need = () => (CUR ? true : (say("p-st1", "Pick a player first."), false));
+const done = (el) => () => { say(el, "Saved."); loadP(); }, fail = (el) => (e) => say(el, e.code || String(e));
+function setLife(id, coins, life) {
+	const up = { ["wallet/" + id + "/coins"]: coins, ["wallet/" + id + "/life"]: life };
+	if (CUR && CUR.l) up["leaderboard/" + id + "/lf"] = life;
+	return db.ref().update(up);
+}
+$("p-award").onclick = () => {
+	if (!need()) return;
+	const n = Math.round(+$("p-coins").value);
+	if (!n) return;
+	setLife(CUR.id, Math.max(0, (CUR.w.coins || 0) + n), (CUR.w.life || 0) + Math.max(0, n)).then(done("p-st1"), fail("p-st1"));
+};
+$("p-setrank").onclick = () => { if (need()) setLife(CUR.id, CUR.w.coins || 0, RANKS[+$("p-rank").value][0]).then(done("p-st1"), fail("p-st1")); };
+$("p-ctsv").onclick = () => {
+	if (!need()) return;
+	const t = $("p-ct").value.trim();
+	if (!t) return say("p-st1", "Enter a title.");
+	db.ref("crank/" + CUR.id).set({ t, c: $("p-cc").value }).then(done("p-st1"), fail("p-st1"));
+};
+$("p-ctdel").onclick = () => { if (need()) db.ref("crank/" + CUR.id).remove().then(done("p-st1"), fail("p-st1")); };
+$("p-unsv").onclick = async () => {
+	if (!CUR) return say("p-st2", "Pick a player first.");
+	const nn = $("p-un").value.trim().replace(/\s+/g, " "), n = [...nn].length;
+	if (n < 3 || n > 16 || /[.$#\[\]\/\u0000-\u001f\u007f]/.test(nn)) return say("p-st2", "3–16 characters, no . $ # [ ] /");
+	const key = nn.normalize("NFKC").toLowerCase(), owner = (await db.ref("usernames/" + key).get()).val();
+	if (owner && owner !== CUR.id) return say("p-st2", "Already taken by " + who(owner));
+	const id = CUR.id, old = CUR.u.nk, up = { ["users/" + id + "/name"]: nn, ["users/" + id + "/nk"]: key, ["users/" + id + "/nameSet"]: true };
+	if (key !== old) { up["usernames/" + key] = id; if (old) up["usernames/" + old] = null; }
+	await Promise.all(["leaderboard/" + id, "bestAll/" + id, ...Object.keys(OPSYM).map((o) => "best/" + o + "/" + id)].map(async (p) => { if ((await db.ref(p).get()).exists()) up[p + "/name"] = nn; }));
+	db.ref().update(up).then(done("p-st2"), fail("p-st2"));
+};
+$("p-lsv").onclick = () => {
+	if (!CUR) return say("p-st3", "Pick a player first.");
+	db.ref("leaderboard/" + CUR.id).update({ name: CUR.u.name || "Player", total: Math.max(0, Math.round(+$("p-lt").value || 0)), games: Math.max(0, Math.round(+$("p-lg").value || 0)), wins: Math.max(0, Math.round(+$("p-lw").value || 0)), lf: CUR.w.life || 0 }).then(done("p-st3"), fail("p-st3"));
+};
+$("p-bsv").onclick = async () => {
+	if (!CUR) return say("p-st3", "Pick a player first.");
+	const k = $("p-bb").value, path = k == "all" ? "bestAll/" + CUR.id : "best/" + k + "/" + CUR.id, sc = Math.max(0, Math.round(+$("p-bs").value || 0));
+	const ex = (await db.ref(path).get()).exists();
+	if (!ex && k == "all") return say("p-st3", "No best record yet for this board.");
+	db.ref(path).update(ex ? { score: sc } : { name: CUR.u.name || "Player", score: sc, diff: "hard", op: OPSYM[k], lf: CUR.w.life || 0 }).then(done("p-st3"), fail("p-st3"));
+};
+$("p-reset").onclick = () => {
+	if (!CUR || !confirm("Delete all leaderboard and best-score records of " + who(CUR.id) + "?")) return;
+	const up = { ["leaderboard/" + CUR.id]: null, ["bestAll/" + CUR.id]: null };
+	Object.keys(OPSYM).forEach((o) => (up["best/" + o + "/" + CUR.id] = null));
+	db.ref().update(up).then(done("p-st3"), fail("p-st3"));
+};
+$("g-reset").onclick = () => {
+	if (prompt("This deletes ALL leaderboards and best scores for every player (coins and ranks stay). Type RESET to confirm.") !== "RESET") return;
+	db.ref().update({ leaderboard: null, best: null, bestAll: null }).then(() => say("p-st3", "All leaderboards reset."), fail("p-st3"));
+};
+
+// ---- ranks, cost, prices ----
+function drawRanks(list, cost) {
+	$("t-rank").innerHTML = "<tr><th>Needs coins</th><th>English</th><th>Bangla</th><th>Color</th><th></th></tr>" + list.map((r, i) => "<tr><td><input type='number' min='0' class='rk-m' value='" + r[0] + "'" + (i == 0 ? " readonly" : "") + "></td><td><input class='rk-e' value='" + esc(r[1]) + "' maxlength='16'></td><td><input class='rk-b' value='" + esc(r[2]) + "' maxlength='16'></td><td><input type='color' class='rk-c' value='" + r[3] + "'></td><td>" + (i ? "<button class='alt' data-d='" + i + "'>✕</button>" : "") + "</td></tr>").join("");
+	if (cost != null) $("rk-nc").value = cost;
+}
+const readRanks = () => [...$("t-rank").querySelectorAll("tr")].slice(1).map((tr) => [Math.max(0, Math.round(+tr.querySelector(".rk-m").value || 0)), tr.querySelector(".rk-e").value.trim(), tr.querySelector(".rk-b").value.trim(), tr.querySelector(".rk-c").value]);
+$("rk-add").onclick = () => { const l = readRanks(); l.push([(l.length ? l[l.length - 1][0] : 0) + 1000, "New rank", "নতুন র‍্যাঙ্ক", "#ffffff"]); drawRanks(l); };
+$("t-rank").onclick = (e) => { const b = e.target.closest("button[data-d]"); if (!b) return; const l = readRanks(); l.splice(+b.dataset.d, 1); drawRanks(l); };
+$("rk-sv").onclick = () => {
+	const l = readRanks().sort((a, b) => a[0] - b[0]);
+	if (!l.length || l[0][0] !== 0 || l.some((r) => !r[1])) return say("rk-st", "The first rank must need 0 coins and every rank needs an English name.");
+	db.ref("config").update({ ranks: l.map((r) => ({ m: r[0], e: r[1], b: r[2] || r[1], c: r[3] })), nameCost: Math.max(0, Math.round(+$("rk-nc").value || 0)) }).then(() => say("rk-st", "Saved. Players see the new ranks."), fail("rk-st"));
+};
+$("pr-ap").onclick = () => { const x = +$("pr-x").value; if (x > 0) ITEMS.forEach(([id]) => { const e = $("pr-" + id); e.value = Math.round(e.value * x); }); };
+$("pr-sv").onclick = () => {
+	const o = {};
+	ITEMS.forEach(([id]) => (o[id] = Math.max(0, Math.round(+$("pr-" + id).value || 0))));
+	db.ref("shop/prices").set(o).then(() => say("pr-st", "Saved. Players now see these prices."), fail("pr-st"));
+};
+
+// ---- login log ----
+function drawLog() {
+	const q = $("lg-q").value.trim().toLowerCase(), ids = Object.keys(Object.assign({}, U, LOG)), cnt = {};
+	ids.forEach((id) => { const ip = LOG[id] && LOG[id].ip; if (ip) cnt[ip] = (cnt[ip] || 0) + 1; });
+	const rows = ids.map((id) => ({ id, l: LOG[id] || {}, ll: (U[id] && U[id].ll) || (LOG[id] && LOG[id].t) || 0 })).filter((x) => !q || (who(x.id) + " " + (x.l.ip || "") + " " + (x.l.cc || "") + " " + (x.l.ct || "")).toLowerCase().includes(q)).sort((a, b) => b.ll - a.ll).slice(0, 300);
+	tbl("t-log", ["Player", "Last login", "Location", "IP", "Logins", ""], rows.map((x) => [(P.includes(x.id) ? "🟢 " : "") + who(x.id), x.ll ? new Date(x.ll).toLocaleString() : "–", [x.l.ct, x.l.cc].filter(Boolean).join(", ") || "–", x.l.ip || "–", x.l.n || "–", x.l.ip && cnt[x.l.ip] > 1 ? { h: "<span class='warn'>⚠ " + cnt[x.l.ip] + " accounts share this IP</span>" } : ""]));
+}
+$("lg-q").oninput = drawLog;
+
+auth.onAuthStateChanged(async (u) => {
+	$("app").hidden = true; $("gate").hidden = false;
+	if (!u) return;
+	let ok = false;
+	try { ok = (await db.ref("admins/" + u.uid).get()).val() === true; } catch (e) {}
+	if (!ok) { $("msg").innerHTML = "Not an admin. Your UID: <code>" + esc(u.uid) + "</code>"; return; }
+	$("gate").hidden = true; $("app").hidden = false;
+	db.ref("presence").on("value", (s) => { P = Object.keys(s.val() || {}); $("k-on").textContent = P.length; fillPlayers(); });
+	db.ref("users").on("value", (s) => { U = s.val() || {}; $("k-tot").textContent = s.numChildren(); fillPlayers(); drawLog(); if (!CUR) loadP(); });
+	db.ref("loginlog").on("value", (s) => { LOG = s.val() || {}; drawLog(); });
+	db.ref("config").on("value", (s) => {
+		const c = s.val() || {}, r = Object.values(c.ranks || {}).filter((x) => x && x.e).map((x) => [+x.m, x.e, x.b || x.e, x.c]).sort((a, b) => a[0] - b[0]);
+		RANKS = r.length && r[0][0] === 0 ? r : DEF_RANKS;
+		$("p-rank").innerHTML = RANKS.map((x, i) => "<option value='" + i + "'>" + esc(x[1]) + " (" + x[0] + ")</option>").join("");
+		drawRanks(RANKS, c.nameCost != null ? c.nameCost : 1000);
+	});
+	db.ref("shop/prices").once("value").then((s) => {
+		const v = s.val() || {};
+		$("t-pr").innerHTML = ITEMS.map(([id, n, d]) => "<tr><td>" + n + "</td><td><input type='number' min='0' id='pr-" + id + "' value='" + (v[id] != null ? v[id] : d) + "'></td></tr>").join("");
+	});
+	db.ref("stats/daily").orderByKey().limitToLast(14).on("value", (s) => {
+		const d = s.val() || {}, t = d[today()] || {};
+		$("k-pk").textContent = t.peakOnline || 0; $("k-new").textContent = t.newPlayers || 0; $("k-g").textContent = t.games || 0;
+		tbl("t-day", ["Date (UTC)", "New players", "Games", "Peak online"], Object.keys(d).sort().reverse().map((k) => [k, d[k].newPlayers || 0, d[k].games || 0, d[k].peakOnline || 0]));
+	});
+	db.ref("stats/games").on("value", (s) => { const d = s.val() || {}; tbl("t-mode", ["Mode", "Level", "Games"], Object.keys(d).sort((a, b) => d[b] - d[a]).map((k) => [k.split("_")[0], k.split("_")[1], d[k]])); });
+	db.ref("leaderboard").orderByChild("total").limitToLast(20).on("value", (s) => {
+		const a = []; s.forEach((c) => a.push(Object.assign({ uid: c.key }, c.val())));
+		tbl("t-top", ["#", "Player", "Points", "Games", "Wins"], a.reverse().map((v, i) => [i + 1, { h: esc(v.name) + " <small style='color:var(--mu)'>" + esc((U[v.uid] && U[v.uid].em) || v.uid.slice(0, 6)) + "</small>" }, v.total || 0, v.games || 0, v.wins || 0]));
+	});
+	db.ref("bestAll").orderByChild("score").limitToLast(10).on("value", (s) => {
+		const a = []; s.forEach((c) => a.push(Object.assign({ uid: c.key }, c.val())));
+		tbl("t-best", ["#", "Player", "Score", "Mode", "Level"], a.reverse().map((v, i) => [i + 1, { h: esc(v.name) + " <small style='color:var(--mu)'>" + esc((U[v.uid] && U[v.uid].em) || v.uid.slice(0, 6)) + "</small>" }, v.score, v.op, v.diff]));
+	});
+	$("a-send").onclick = () => {
+		const text = $("a-t").value.trim(), h = +$("a-h").value;
+		if (!text) return say("a-st", "Write a message first.");
+		db.ref("announce").set({ text, type: $("a-ty").value, ts: TS, exp: h ? Date.now() + h * 3600000 : 0 }).then(() => say("a-st", "Published."), fail("a-st"));
+	};
+	$("a-clr").onclick = () => db.ref("announce").remove().then(() => say("a-st", "Cleared."), fail("a-st"));
+	$("m-send").onclick = async () => {
+		const to = $("m-to").value, text = $("m-x").value.trim(), title = $("m-t").value.trim();
+		if (!to || !text) return say("m-st", "Pick a player and write a message.");
+		try {
+			await db.ref("inbox/" + to).push({ title, text, ts: TS });
+			let note = "Saved for " + who(to) + " (popup when they next open the game).";
+			if ($("m-push").checked) {
+				const r = await fetch(WORKER + "/push", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + (await auth.currentUser.getIdToken()) }, body: JSON.stringify({ to, title: title || "Math Duel", text }) }), j = await r.json();
+				note += j.ok ? " Push sent." : " Push not sent: " + j.error;
+			}
+			say("m-st", note); $("m-x").value = "";
+		} catch (e) { say("m-st", e.code || String(e)); }
+	};
+});
+</script>
+</body>
+</html>
