@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="en" class="pre">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+		<title>হিসাবের লড়াই</title>
+		<script>
+			setTimeout(function () {
+				document.documentElement.classList.remove("pre");
+			}, 4000);
+		</script>
+		<link rel="manifest" href="manifest.webmanifest" />
+		<meta name="theme-color" content="#0d1126" />
+		<link rel="apple-touch-icon" href="icon-192.png" />
+		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800&display=swap" rel="stylesheet" />
+		<style>
+			:root {
+				--bg: #0d1126;
+				--pn: #171c3d;
+				--pn2: #222855;
+				--tx: #f3f0ff;
+				--mu: #9498cc;
+				--me: #10b981;
+				--me-sub: #059669;
+				--op: #f43f5e;
+				--sun: #fbbf24;
+				--sun-sub: #d97706;
+			}
+			* {
+				box-sizing: border-box;
+				-webkit-tap-highlight-color: transparent;
+			}
+			[hidden] {
+				display: none !important;
+			}
+			html,
+			body {
+				margin: 0;
+				min-height: 100%;
+			}
+			body {
+				font-family: "Noto Sans Bengali", system-ui, sans-serif;
+				background: radial-gradient(1200px 600px at 50% -10%, #1e2663, var(--bg));
+				color: var(--tx);
+				padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+			}
+			main {
+				max-width: 460px;
+				margin: 0 auto;
+				padding: 16px;
+			}
+			h1 {
+				font-size: 2rem;
+				margin: 0.4em 0 0.1em;
+				text-align: center;
+				color: var(--sun);
+				letter-spacing: 0.5px;
+				text-shadow: 0 2px 10px rgba(251, 191, 36, 0.2);
+			}
+			.sub {
+				color: var(--mu);
+				text-align: center;
+				margin: 0 0 16px;
+				font-size: 0.9rem;
+			}
+			.card {
+				background: var(--pn);
+				border: 1px solid rgba(255, 255, 255, 0.06);
+				border-radius: 24px;
+				padding: 18px;
+				margin-bottom: 14px;
+				box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+			}
+			label {
+				display: block;
+				color: var(--mu);
+				font-size: 0.85rem;
+				font-weight: 600;
+				margin: 12px 0 6px;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+			}
+			input {
+				width: 100%;
+				font: inherit;
+				font-size: 1.1rem;
+				padding: 12px 16px;
+				border-radius: 14px;
+				border: 2px solid var(--pn2);
+				background: var(--bg);
+				color: var(--tx);
+				transition: border-color 0.2s, box-shadow 0.2s;
+			}
+			input:focus {
+				outline: none;
+				border-color: var(--sun);
+				box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.15);
+			}
+			button {
+				font: inherit;
+				font-weight: 600;
+				color: var(--tx);
+				background: var(--pn2);
+				border: 0;
+				border-radius: 14px;
+				padding: 12px 14px;
+				cursor: pointer;
+				transition: transform 0.1s ease, filter 0.15s ease, background 0.15s;
+			}
+			button:active {
+				transform: scale(0.96);
+			}
+			button:hover {
+				filter: brightness(1.15);
+			}
+			button:focus-visible,
+			input:focus-visible {
+				outline: 3px solid var(--sun);
+			}
+			.big {
+				width: 100%;
+				font-size: 1.1rem;
+				padding: 14px;
+				margin-top: 10px;
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+			}
+			.pri {
+				background: linear-gradient(135deg, #10b981, #059669);
+				color: #fff;
+				text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+			}
+			.sec {
+				background: linear-gradient(135deg, #fbbf24, #d97706);
+				color: #1a1500;
+				font-weight: 700;
+			}
+			.seg {
+				display: flex;
+				gap: 6px;
+				flex-wrap: wrap;
+			}
+			.seg button {
+				flex: 1;
+				min-width: 52px;
+				background: var(--bg);
+				border: 1px solid rgba(255, 255, 255, 0.04);
+				font-size: 0.95rem;
+				padding: 10px 6px;
+			}
+			.seg button.on {
+				background: var(--sun);
+				color: #1a1500;
+				font-weight: 700;
+				border-color: var(--sun);
+				box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+			}
+			.row {
+				display: flex;
+				gap: 8px;
+			}
+			.row input {
+				flex: 1;
+			}
+			.top {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				font-size: 0.9rem;
+				color: var(--mu);
+				margin-bottom: 8px;
+			}
+			.top button {
+				padding: 6px 12px;
+				background: var(--pn);
+				border: 1px solid rgba(255, 255, 255, 0.05);
+			}
+			.duel {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 10px;
+			}
+			.pl {
+				background: var(--pn);
+				border-radius: 16px;
+				padding: 10px 14px;
+				border-bottom: 4px solid;
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+			}
+			.pl.m {
+				border-color: var(--me);
+			}
+			.pl.o {
+				border-color: var(--op);
+				text-align: right;
+			}
+			.pl b {
+				display: block;
+				font-size: 0.85rem;
+				color: var(--mu);
+				font-weight: 600;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			.pl span {
+				font-size: 1.8rem;
+				font-weight: 800;
+				display: inline-block;
+			}
+			.m span {
+				color: var(--me);
+			}
+			.o span {
+				color: var(--op);
+			}
+			.pop {
+				animation: pop 0.35s ease;
+			}
+			@keyframes pop {
+				50% {
+					transform: scale(1.25);
+				}
+			}
+			.track {
+				height: 8px;
+				background: var(--pn);
+				border-radius: 9px;
+				margin: 12px 0 6px;
+				overflow: hidden;
+				border: 1px solid rgba(255, 255, 255, 0.04);
+			}
+			#bar {
+				height: 100%;
+				width: 100%;
+				background: linear-gradient(90deg, var(--op), var(--sun), var(--me));
+				border-radius: 9px;
+				transition: width 0.12s linear;
+			}
+			.qn {
+				display: flex;
+				justify-content: space-between;
+				color: var(--mu);
+				font-size: 0.85rem;
+			}
+			#sec {
+				color: var(--sun);
+				font-weight: 700;
+				font-size: 1.1rem;
+			}
+			.slate {
+				background: #080b1a;
+				border: 2px solid var(--pn2);
+				border-radius: 24px;
+				text-align: center;
+				padding: 20px 8px 12px;
+				margin: 10px 0;
+				box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.5);
+			}
+			#qtxt {
+				font-size: clamp(2.4rem, 10vw, 3.2rem);
+				font-weight: 800;
+				min-height: 1.4em;
+				letter-spacing: 0.05em;
+			}
+			#ans {
+				font-size: clamp(2rem, 9vw, 2.8rem);
+				font-weight: 800;
+				color: var(--sun);
+				min-height: 1.3em;
+				border-top: 2px dashed var(--pn2);
+				margin: 8px 24px 0;
+				padding-top: 6px;
+				letter-spacing: 0.08em;
+			}
+			#fb {
+				text-align: center;
+				font-weight: 600;
+				height: 2.5em;
+				overflow: hidden;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			#pad {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 8px;
+			}
+			#pad button {
+				font-size: 1.8rem;
+				font-weight: 800;
+				padding: 14px 0;
+				background: var(--pn);
+				border: 1px solid rgba(255, 255, 255, 0.06);
+				box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+			}
+			#pad button.go {
+				background: linear-gradient(135deg, #10b981, #059669);
+				color: #fff;
+			}
+			#pad button.bk {
+				background: var(--pn2);
+			}
+			#pad button:active {
+				transform: translateY(3px);
+				box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+			}
+			#pad.off {
+				opacity: 0.6;
+				pointer-events: none;
+			}
+			.shake {
+				animation: sh 0.3s ease;
+			}
+			@keyframes sh {
+				25% {
+					transform: translateX(-8px);
+				}
+				75% {
+					transform: translateX(8px);
+				}
+			}
+			.code {
+				font-size: 2.8rem;
+				font-weight: 800;
+				color: var(--sun);
+				letter-spacing: 6px;
+				text-align: center;
+			}
+			.mid {
+				text-align: center;
+			}
+			.res {
+				font-size: 2rem;
+				font-weight: 800;
+				animation: pop 0.6s ease;
+			}
+			.lb {
+				list-style: none;
+				padding: 0;
+				margin: 0;
+			}
+			.lb li {
+				display: grid;
+				grid-template-columns: 32px 1fr auto auto;
+				gap: 8px;
+				padding: 12px 8px;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+				align-items: center;
+			}
+			.lb li:first-child {
+				color: var(--sun);
+				font-weight: 700;
+			}
+			.lb small {
+				color: var(--mu);
+			}
+			#toast {
+				position: fixed;
+				left: 50%;
+				bottom: 24px;
+				transform: translateX(-50%);
+				background: var(--sun);
+				color: #1a1500;
+				padding: 12px 20px;
+				border-radius: 14px;
+				font-weight: 700;
+				box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+				opacity: 0;
+				pointer-events: none;
+				transition: opacity 0.3s ease, transform 0.3s ease;
+				z-index: 100;
+			}
+			#toast.on {
+				opacity: 1;
+				transform: translateX(-50%) translateY(-4px);
+			}
+			#game:not([hidden]) {
+				display: flex;
+				flex-direction: column;
+				min-height: calc(100vh - 24px);
+				min-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+			}
+			#game .slate {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+			}
+			.hint {
+				color: var(--mu);
+				font-size: 0.8rem;
+				margin: 0 0 10px;
+				text-align: center;
+			}
+			.sw {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				margin-top: 14px;
+				color: var(--tx);
+				cursor: pointer;
+				font-size: 0.9rem;
+			}
+			.sw input {
+				position: absolute;
+				opacity: 0;
+				width: 0;
+			}
+			.slider {
+				flex: none;
+				width: 44px;
+				height: 24px;
+				border-radius: 12px;
+				background: var(--bg);
+				border: 2px solid var(--pn2);
+				position: relative;
+				transition: 0.2s;
+			}
+			.slider::after {
+				content: "";
+				position: absolute;
+				top: 2px;
+				left: 2px;
+				width: 16px;
+				height: 16px;
+				border-radius: 50%;
+				background: var(--mu);
+				transition: 0.2s;
+			}
+			.sw input:checked + .slider {
+				background: var(--op);
+				border-color: var(--op);
+			}
+			.sw input:checked + .slider::after {
+				left: 20px;
+				background: #fff;
+			}
+			.duel.sm .pl {
+				padding: 6px 10px;
+				border-bottom-width: 3px;
+			}
+			.duel.sm .pl span {
+				font-size: 1.4rem;
+			}
+			.wl,
+			.board {
+				list-style: none;
+				padding: 0;
+				margin: 14px 0;
+				display: grid;
+				gap: 8px;
+			}
+			.wl li {
+				background: var(--bg);
+				border-left: 5px solid var(--c);
+				border-radius: 10px;
+				padding: 10px 14px;
+				text-align: left;
+				font-weight: 600;
+			}
+			.rk {
+				position: relative;
+				overflow: hidden;
+				display: grid;
+				grid-template-columns: 36px 1fr auto auto;
+				gap: 8px;
+				align-items: center;
+				text-align: left;
+				background: var(--bg);
+				border-radius: 12px;
+				padding: 10px 12px;
+				border: 1px solid rgba(255, 255, 255, 0.04);
+			}
+			.rk i {
+				position: absolute;
+				inset: 0 auto 0 0;
+				width: var(--w);
+				background: rgba(34, 40, 85, 0.4);
+			}
+			.rk > *:not(i) {
+				position: relative;
+			}
+			.rk.me i {
+				background: rgba(16, 185, 129, 0.2);
+			}
+			.rk.win1 {
+				border-color: var(--sun);
+			}
+			.rk em {
+				font-style: normal;
+				font-size: 1.3rem;
+				text-align: center;
+			}
+			.rk b {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+			.rk small {
+				color: var(--mu);
+				font-size: 0.8rem;
+			}
+			.rk strong {
+				font-size: 1.2rem;
+				color: var(--sun);
+			}
+			.stats {
+				display: flex;
+				gap: 8px;
+				flex-wrap: wrap;
+				justify-content: center;
+				margin: 12px 0;
+			}
+			.stats span {
+				background: var(--bg);
+				border: 1px solid rgba(255, 255, 255, 0.05);
+				border-radius: 12px;
+				padding: 8px 12px;
+				font-weight: 600;
+				font-size: 0.9rem;
+			}
+			.hd {
+				display: grid;
+				grid-template-columns: 1fr auto 1fr;
+				align-items: center;
+				gap: 8px;
+				margin-bottom: 6px;
+			}
+			.hd h1 {
+				text-align: center;
+				margin: 0;
+			}
+			.hd button {
+				justify-self: end;
+				font-size: 0.85rem;
+			}
+			.nm {
+				margin-bottom: 4px;
+			}
+			.tabs {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 6px;
+				margin-bottom: 12px;
+			}
+			.tabs button {
+				background: var(--bg);
+				padding: 10px 4px;
+				font-size: 0.85rem;
+				border: 1px solid rgba(255, 255, 255, 0.04);
+			}
+			.tabs button.on {
+				background: var(--sun);
+				color: #1a1500;
+				font-weight: 700;
+				border-color: var(--sun);
+			}
+			.mxbox {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 8px;
+				margin-top: 12px;
+			}
+			.mxbox > div {
+				background: var(--bg);
+				border: 1px solid rgba(255, 255, 255, 0.04);
+				border-radius: 14px;
+				padding: 10px;
+				text-align: center;
+			}
+			.mxbox small {
+				display: block;
+				color: var(--mu);
+				font-size: 0.72rem;
+			}
+			.mxbox b {
+				display: block;
+				font-size: 1.5rem;
+				font-weight: 800;
+				color: var(--sun);
+				line-height: 1.2;
+			}
+			.mxbox em {
+				font-style: normal;
+				color: var(--mu);
+				font-size: 0.75rem;
+			}
+			#lbTabs {
+				margin-bottom: 10px;
+				overflow-x: auto;
+				flex-wrap: pre-line;
+				justify-content: flex-start;
+				padding-bottom: 4px;
+			}
+			#lbTabs button {
+				padding: 8px 10px;
+				font-size: 0.8rem;
+				/* white-space: nowrap; */
+			}
+			.lb li.meRow {
+				background: rgba(16, 185, 129, 0.15);
+				border-radius: 10px;
+			}
+			.pre main {
+				visibility: hidden;
+			}
+			@media (prefers-reduced-motion: reduce) {
+				* {
+					animation: none !important;
+					transition: none !important;
+				}
+			}
+			.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#555a80;margin-right:8px}
+			.dot.on{background:var(--me);box-shadow:0 0 8px var(--me)}
+			.fr li{display:flex;justify-content:space-between;align-items:center;gap:8px}
+			.fr button{padding:6px 10px;font-size:.8rem}
+			.gn{color:var(--g);text-shadow:0 0 6px var(--g),0 0 14px var(--g);font-weight:700}
+			#ann{position:sticky;top:0;z-index:150;display:flex;gap:10px;align-items:center;justify-content:space-between;background:var(--sun);color:#1a1500;font-weight:700;padding:10px 14px}
+			#ann button{background:transparent;color:#1a1500;padding:2px 8px}
+			.ov{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:20px;z-index:200}
+			.ov .card{max-width:380px;width:100%}
+			#tmx details{margin:10px 0;text-align:left}
+			#tmx th,#tmx td{padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.06)}
+			.pc{display:flex;gap:14px;align-items:center;border-radius:20px;padding:14px;margin:0 0 14px;box-shadow:0 10px 30px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);text-align:left}
+			.av{flex:none;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:1.6rem;font-weight:800;background:rgba(0,0,0,.35);color:var(--g);border:2px solid var(--g);box-shadow:0 0 14px var(--g)}
+			.pi{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+			.pi b{font-size:1.2rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+			.pi small{font-size:.85rem}
+			.pb{height:6px;border-radius:6px;background:rgba(0,0,0,.35);margin-top:4px;overflow:hidden}
+			.pb i{display:block;height:100%;background:#fff;opacity:.85}
+			.gn.pulse{animation:gp 2s ease-in-out infinite alternate}
+			@keyframes gp{from{text-shadow:0 0 3px var(--g)}to{text-shadow:0 0 10px var(--g),0 0 22px var(--g)}}
+			.gn.fire{animation:gf 1s ease-in-out infinite alternate}
+			@keyframes gf{from{text-shadow:0 0 4px #f97316,0 -2px 8px #ef4444}to{text-shadow:0 0 12px #fbbf24,0 -4px 16px #f97316}}
+			.gn.rainbow{background:linear-gradient(90deg,#f43f5e,#fbbf24,#10b981,#38bdf8,#c084fc,#f43f5e);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;animation:rb 3s linear infinite}
+			@keyframes rb{to{background-position:200% 0}}
+			.shopL{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+			.shopL li{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg);border-radius:14px;padding:10px 12px}
+			.sw8{display:inline-block;width:44px;height:28px;border-radius:8px}
+		</style>
+	</head>
+	<body>
+		<div id="ann" hidden><span id="annT"></span><button id="annX" aria-label="close">✕</button></div>
+			<div id="pop" class="ov" hidden><div class="card mid"><h2 id="popT" style="color:var(--sun)"></h2><p id="popX"></p><button class="big pri" id="popOk">OK</button></div></div>
+<div id="cpop" class="ov" hidden><div class="card mid"><h2 id="cpT" style="color:var(--sun)"></h2><div id="cpB"></div><div class="row"><button class="big pri" id="cpY"></button><button class="big" id="cpN"></button></div></div></div>
+<main>
+			<section id="login" hidden>
+				<div class="hd">
+					<span></span>
+					<h1>হিসাবের লড়াই</h1>
+					<button id="langBtn2" onclick="toggleLang()"></button>
+				</div>
+				<p class="sub">দ্রুত অঙ্ক করার প্রতিযোগিতা</p>
+				<div class="card">
+					<button class="big pri" onclick="guestLogin()">অতিথি হিসেবে খেলুন</button>
+					<button class="big sec" onclick="gLogin()">Google দিয়ে সাইন ইন</button>
+					<button class="big" onclick="goHome()">🎯 একা অনুশীলন (লগইন ছাড়া)</button>
+				</div>
+			</section>
+
+			<section id="home" hidden>
+				<div class="hd">
+					<span></span>
+					<h1>হিসাবের লড়াই</h1>
+					<button id="langBtn" onclick="toggleLang()"></button>
+				</div>
+				<p class="sub" id="onl" style="margin-bottom:4px"></p>
+				<div id="wal"></div>
+				<div class="card">
+					<input id="nm" class="nm" maxlength="16" placeholder="আপনার নাম" />
+					<label>অপারেশন</label>
+					<div class="seg" id="modes">
+						<button data-v="+" class="on">+ যোগ</button><button data-v="-">− বিয়োগ</button><button data-v="×">× গুণ</button><button data-v="÷">÷ ভাগ</button><button data-v="mix">মিশ্র</button>
+					</div>
+					<label>কঠিনতা</label>
+					<div class="seg" id="diffs"><button data-v="easy" class="on">সহজ ×১</button><button data-v="medium">মাঝারি ×১.৫</button><button data-v="hard">কঠিন ×৩</button></div>
+					<div class="mxbox">
+						<div><small>⭐ প্রতি প্রশ্নে সর্বোচ্চ</small><b id="mxq"></b><em id="mxqs"></em></div>
+						<div><small>🏆 পুরো খেলায় সর্বোচ্চ</small><b id="mxg"></b><em id="mxgs"></em></div>
+					</div>
+					<label class="sw" hidden><input type="checkbox" id="strictSw" /><span class="slider"></span><span>কঠোর মোড — ভুল হলে প্রশ্ন বাদ</span></label>
+				</div>
+				<div class="card">
+					<div class="tabs" id="tabs"><button data-v="solo">🎯 একা</button><button data-v="duo" class="on">⚔️ দুজন</button><button data-v="multi">👥 মাল্টিপ্লেয়ার</button></div>
+					<div id="p-solo" hidden>
+						<p class="hint">হাইস্কোরে যোগ হয় না · অফলাইনেও চলে</p>
+						<div class="seg" id="soloSeg"><button data-v="10" class="on">১০টি প্রশ্ন</button><button data-v="0">অসীম</button></div>
+						<button class="big pri" onclick="startSolo()">অনুশীলন শুরু করুন</button>
+					</div>
+					<div id="p-duo">
+						<button class="big pri" onclick="rnd()">র‍্যান্ডম প্রতিপক্ষ খুঁজুন</button>
+						<button class="big sec" onclick="create()">বন্ধুর জন্য রুম তৈরি করুন</button>
+					</div>
+					<div id="p-multi" hidden>
+						<p class="hint">২–৬ জন · শেষে র‍্যাংকিং</p>
+						<button class="big pri" onclick="lobby()">র‍্যান্ডম লবিতে যোগ দিন</button>
+						<button class="big sec" onclick="create(false,null,6)">বন্ধুদের জন্য রুম তৈরি করুন</button>
+					</div>
+					<div class="row" id="joinRow" style="margin-top: 12px"><input id="jc" inputmode="numeric" maxlength="5" placeholder="রুম কোড" /><button onclick="joinCode()">যোগ দিন</button></div>
+				</div>
+				<div class="card" id="frCard" hidden>
+					<label class="sw" style="margin-top: 0"><input type="checkbox" id="notifSw" /><span class="slider"></span><span id="notifTx"></span></label>
+					<ul class="wl fr" id="frList"></ul>
+				</div>
+				<div class="row"><button class="big" id="shopBtn" onclick="openShop()"></button><button class="big" id="lbBtn" onclick="showLB()">🏆 লিডারবোর্ড</button><button class="big" id="outBtn" onclick="signOut()">সাইন আউট</button></div>
+
+				<div style="padding: 10px; font-size: 10px; color: #353953; text-align: center">Created by : Mehedi, Prapti and Trisha</div>
+			</section>
+
+			<section id="wait" hidden class="card mid">
+				<p id="wmsg" class="sub">প্রতিপক্ষের অপেক্ষায়…</p>
+				<div id="wcodebox">
+					<p class="sub">রুম কোড — বন্ধুকে এটি দিন</p>
+					<div class="code" id="code"></div>
+				</div>
+				<ul id="wl" class="wl"></ul>
+				<button class="big pri" id="startBtn" hidden onclick="startMulti()"></button>
+				<button class="big" onclick="exit()">বাতিল</button>
+			</section>
+
+			<section id="game" hidden>
+				<div class="top">
+					<span id="qn"></span
+					><span><button id="stopBtn" onclick="stopGame()"></button><button id="dgBtn" onclick="toggleDigits()">123</button><button id="mt" onclick="toggleMute()">🔊</button></span>
+				</div>
+				<div id="duel" class="duel"></div>
+				<div class="track"><div id="bar"></div></div>
+				<div class="qn"><span>সময়</span><span id="sec"></span></div>
+				<div class="slate" id="slate">
+					<div id="qtxt"></div>
+					<div id="ans"></div>
+				</div>
+				<div id="fb"></div>
+				<div id="pad"></div>
+			</section>
+
+			<section id="end" hidden class="card mid">
+				<div class="res" id="res"></div>
+				<p id="fin" class="sub"></p>
+				<div id="stats" class="stats"></div>
+				<p class="sub" id="coinMsg"></p>
+				<ol id="board" class="board"></ol>
+				<div id="tmx"></div>
+				<div id="mf"></div>
+				<button class="big pri" id="rm" onclick="rematchReq()">🔁 রিম্যাচ</button>
+				<button class="big" onclick="exit()">হোমে ফিরুন</button>
+				<button class="big" onclick="showLB()">🏆 লিডারবোর্ড</button>
+			</section>
+
+			<section id="shop" hidden>
+				<h1>🛍️ <span id="shopT"></span></h1>
+				<div id="shopCard"></div>
+				<div class="card">
+					<div class="seg" id="shopTabs"><button data-v="ef" class="on" id="shTe"></button><button data-v="th" id="shTt"></button></div>
+					<ul class="shopL" id="shopL" style="margin-top:12px"></ul>
+				</div>
+				<button class="big" onclick="goHome()" id="shopBack"></button>
+			</section>
+			<section id="lb" hidden>
+				<h1>সেরা খেলোয়াড়</h1>
+				<div class="card">
+					<div class="seg" id="lbTabs">
+						<button data-v="best" class="on">🏅 সেরা স্কোর</button><button data-v="total">📈 মোট পয়েন্ট</button><button style="font-size: 2rem" data-v="+">+</button
+						><button style="font-size: 2rem" data-v="-">−</button><button style="font-size: 2rem" data-v="×">×</button><button style="font-size: 2rem" data-v="÷">÷</button
+						><button data-v="mix">মিশ্র</button>
+					</div>
+					<ul class="lb" id="lbl"></ul>
+				</div>
+				<button class="big" onclick="backLB()">ফিরে যান</button>
+			</section>
+		</main>
+		<div id="toast"></div>
+
+		<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+		<script>
+			// ====== Firebase Config ======
+			const CFG = {
+				apiKey: "AIzaSyDsQeD1b0djnMP7U8Yewy6oHD_oePokjAU",
+				authDomain: "math-calculation-dual.firebaseapp.com",
+				projectId: "math-calculation-dual",
+				appId: "1:813391290745:web:24f92a97c58a4da5bacfa8",
+				databaseURL: "https://math-calculation-dual-default-rtdb.asia-southeast1.firebasedatabase.app",
+			};
+			let FB = typeof firebase !== "undefined",
+				auth = null,
+				db = null;
+			if (FB) {
+				try {
+					firebase.initializeApp(CFG);
+					auth = firebase.auth();
+					db = firebase.database();
+				} catch (e) {
+					FB = false;
+				}
+			}
+			const $ = (id) => document.getElementById(id);
+			let lang = "en";
+			try {
+				lang = localStorage.getItem("mdLang") || "en";
+			} catch (e) {}
+			const EN = {
+				"সাইন ইন": "Sign in",
+				"টি প্রশ্ন": " questions",
+				ন্যূনতম: "Min",
+				"⭐ প্রতি প্রশ্নে সর্বোচ্চ": "⭐ Max per question",
+				"🏆 পুরো খেলায় সর্বোচ্চ": "🏆 Max for the game",
+				যোগ: "Add",
+				বিয়োগ: "Subtract",
+				গুণ: "Multiply",
+				ভাগ: "Divide",
+				সহজ: "Easy",
+				মাঝারি: "Medium",
+				কঠিন: "Hard",
+				জয়: "wins",
+				"এখনও কেউ খেলেনি। প্রথম হোন!": "Nobody has played yet. Be the first!",
+				"লোড হচ্ছে…": "Loading…",
+				"লিডারবোর্ড লোড হয়নি": "Could not load the leaderboard",
+				"🏅 সেরা স্কোর": "🏅 Best score",
+				"📈 মোট পয়েন্ট": "📈 Total points",
+				" (আপনি)": " (you)",
+				" · অন্যদের অপেক্ষা…": " · waiting for others…",
+				" · কঠোর": " · Strict",
+				" জন)": " players)",
+				" জয়</small></li>": " wins</small></li>",
+				" রাজি)": " ready)",
+				" হয়েছেন": "",
+				"%</span><span>🔥 সেরা স্ট্রিক ": "%</span><span>🔥 Best streak ",
+				"</span><span>🎯 নির্ভুলতা ": "</span><span>🎯 Accuracy ",
+				"<span>✔ সঠিক ": "<span>✔ Correct ",
+				"<span>⭐ স্কোর ": "<span>⭐ Score ",
+				"অনুশীলন — স্কোর হাইস্কোরে যোগ হয়নি": "Practice — score not added to the leaderboard",
+				"অপেক্ষা… (": "Waiting… (",
+				"ইন্টারনেট নেই": "No internet",
+				"এই মোডের জন্য ইন্টারনেট ও লগইন দরকার": "This mode needs internet and sign-in",
+				"কমপক্ষে ২ জন লাগবে": "At least 2 players needed",
+				"কেউ কেউ খেলা ছেড়ে গেছেন · স্কোর লিডারবোর্ডে যোগ হয়েছে": "Some players left · score added to the leaderboard",
+				"কোড লিখুন": "Enter a code",
+				"খেলা ছেড়ে চলে যাবেন?": "Leave the game?",
+				খেলোয়াড়: "Player",
+				"খেলোয়াড় খোঁজা হচ্ছে…": "Looking for players…",
+				"ঠিক! +": "Correct! +",
+				"প্রতিপক্ষ পাওয়া যায়নি, আবার চেষ্টা করুন": "No opponent found, try again",
+				"প্রতিপক্ষের অপেক্ষায়…": "Waiting for opponent…",
+				"প্রশ্ন ": "Question ",
+				"প্রস্তুত হোন…": "Get ready…",
+				"বন্ধুদের কোড দিন, তারপর শুরু করুন": "Share the code, then start",
+				"ভুল! প্রশ্নটি বাদ · উত্তর: ": "Wrong! Question skipped · answer: ",
+				"ভুল! −": "Wrong! −",
+				"রুম পাওয়া যায়নি, ভর্তি, বা খেলা শুরু হয়ে গেছে": "Room not found, full, or already started",
+				"রুম বন্ধ হয়ে গেছে": "The room was closed",
+				"র‍্যান্ডম প্রতিপক্ষ খোঁজা হচ্ছে…": "Finding a random opponent…",
+				"লবি পাওয়া যায়নি, আবার চেষ্টা করুন": "No lobby found, try again",
+				"লিডারবোর্ডের জন্য ইন্টারনেট ও লগইন দরকার": "The leaderboard needs internet and sign-in",
+				"শুরু হতে বাকি ": "Starts in ",
+				"সবাই চলে গেছেন": "Everyone has left",
+				"সময় শেষ! উত্তর: ": "Time's up! Answer: ",
+				"সর্বোচ্চ স্কোর: ": "Max score: ",
+				"সাইন ইন হয়নি: ": "Sign-in failed: ",
+				"সে.": "s",
+				"স্কোর লিডারবোর্ডে যোগ হয়েছে": "Score added to the leaderboard",
+				"হোস্টের শুরু করার অপেক্ষায়…": "Waiting for the host to start…",
+				"⏹ শেষ করুন": "⏹ Finish",
+				"▶ খেলা শুরু করুন (": "▶ Start game (",
+				"🎉 আপনি জিতেছেন!": "🎉 You won!",
+				"🎖 আপনি ": "🎖 You finished ",
+				"🎯 অনুশীলন শেষ": "🎯 Practice complete",
+				"🏆 আপনি প্রথম!": "🏆 You came first!",
+				"🔁 আবার খেলুন": "🔁 Play again",
+				"🔁 রিম্যাচ": "🔁 Rematch",
+				"😮 আপনি হেরেছেন": "😮 You lost",
+				"🚪 ছাড়ুন": "🚪 Leave",
+				"🤝 ড্র!": "🤝 Draw!",
+				"🤝 সেরা স্কোর (ড্র)": "🤝 Top score (tie)",
+				"আপনার নাম": "Your name",
+				"রুম কোড": "Room code",
+				"+ যোগ": "+ Add",
+				"Google দিয়ে সাইন ইন": "Sign in with Google",
+				"× গুণ": "× Multiply",
+				"÷ ভাগ": "÷ Divide",
+				"হিসাবের লড়াই": "Math Duel",
+				"অতিথি হিসেবে খেলুন": "Play as guest",
+				"অনুশীলন শুরু করুন": "Start practice",
+				অপারেশন: "Operation",
+				অসীম: "Endless",
+				"সহজ ×১": "Easy ×1",
+				"মাঝারি ×১.৫": "Medium ×1.5",
+				"কঠিন ×৩": "Hard ×3",
+				কঠিনতা: "Difficulty",
+				"কঠোর মোড — ভুল হলে প্রশ্ন বাদ, দ্বিতীয় সুযোগ নেই": "Strict mode — a wrong answer skips the question, no second try",
+				"দ্রুত অঙ্কের লড়াই": "A fast head-to-head maths battle",
+				"ফিরে যান": "Back",
+				"বন্ধুদের জন্য রুম তৈরি করুন": "Create a room for friends",
+				"বন্ধুর জন্য রুম তৈরি করুন": "Create a room for a friend",
+				বাতিল: "Cancel",
+				মিশ্র: "Mixed",
+				"যোগ দিন": "Join",
+				"রুম কোড — বন্ধুকে এটি দিন": "Room code — share it with a friend",
+				"র‍্যান্ডম প্রতিপক্ষ খুঁজুন": "Find a random opponent",
+				"র‍্যান্ডম লবিতে যোগ দিন": "Join a random lobby",
+				সময়: "Time",
+				"সাইন আউট": "Sign out",
+				"সেরা খেলোয়াড়": "Top players",
+				"হাইস্কোরে যোগ হয় না · অফলাইনেও চলে": "Not added to the leaderboard · works offline",
+				"হোমে ফিরুন": "Back to home",
+				"১০টি প্রশ্ন": "10 questions",
+				"২–৬ জন · শেষে র‍্যাংকিং · হাইস্কোরে যোগ হয়": "2–6 players · ranking at the end · counts for the leaderboard",
+				"− বিয়োগ": "− Subtract",
+				"⚔️ দুজন": "⚔️ 2 players",
+				"🎯 একা": "🎯 Solo",
+				"🎯 একা অনুশীলন (লগইন ছাড়া, অফলাইনেও)": "🎯 Solo practice (no login, works offline)",
+				"🏆 লিডারবোর্ড": "🏆 Leaderboard",
+				"👥 মাল্টিপ্লেয়ার": "👥 Multiplayer",
+			};
+			const t = (s) => (lang == "en" && EN[s] !== undefined ? EN[s] : s);
+			const ORD_T = (n) => (lang == "en" ? ["", "1st", "2nd", "3rd", "4th", "5th", "6th"] : ["", "১ম", "২য়", "৩য়", "৪র্থ", "৫ম", "৬ষ্ঠ"])[n];
+			let dg = lang == "en";
+			try {
+				const v = localStorage.getItem("mdDg2");
+				if (v !== null) dg = v == "1";
+			} catch (e) {}
+			const BD = "০১২৩৪৫৬৭৮৯",
+				bn = (n) => (dg ? String(n) : String(n).replace(/\d/g, (d) => BD[d]));
+			const toAscii = (s) => s.replace(/[০-৯]/g, (d) => BD.indexOf(d));
+			const N = 10,
+				MUL = { easy: 1, medium: 1.5, hard: 3 },
+				TM = { easy: 15000, medium: 25000, hard: 35000 };
+			let me = null,
+				name = "",
+				mode = "+",
+				diff = "easy",
+				room = null,
+				ref = null,
+				S = null,
+				curQ = -1,
+				off = 0,
+				input = "",
+				advKey = null,
+				doneSeen = 0,
+				saved = false,
+				started = false,
+				qkey = null,
+				muted = false,
+				endPlayed = false;
+			if (FB) db.ref(".info/serverTimeOffset").on("value", (s) => (off = s.val() || 0));
+			const now = () => Date.now() + off;
+			function toast(t) {
+				const e = $("toast");
+				e.textContent = t;
+				e.classList.add("on");
+				setTimeout(() => e.classList.remove("on"), 2600);
+			}
+			function show(id) {
+				["login", "home", "wait", "game", "end", "lb", "shop"].forEach((s) => ($(s).hidden = s != id));
+			}
+
+			// ---- Sound Engine ----
+			let ac;
+			function tone(f, d = 0.12, t = "sine", v = 0.15, w = 0) {
+				if (muted) return;
+				try {
+					ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+					const o = ac.createOscillator(),
+						g = ac.createGain(),
+						s = ac.currentTime + w;
+					o.type = t;
+					o.frequency.value = f;
+					g.gain.setValueAtTime(v, s);
+					g.gain.exponentialRampToValueAtTime(0.001, s + d);
+					o.connect(g);
+					g.connect(ac.destination);
+					o.start(s);
+					o.stop(s + d);
+				} catch (e) {}
+			}
+			const sfx = {
+				key: () => tone(660, 0.04, "square", 0.04),
+				ok: () => [523, 659, 784].forEach((f, i) => tone(f, 0.16, "triangle", 0.18, i * 0.07)),
+				no: () => tone(150, 0.25, "sawtooth", 0.12),
+				tick: () => tone(900, 0.05, "sine", 0.06),
+				win: () => [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, 0.22, "triangle", 0.18, i * 0.12)),
+				lose: () => [392, 330, 262].forEach((f, i) => tone(f, 0.3, "triangle", 0.15, i * 0.2)),
+			};
+			function toggleMute() {
+				muted = !muted;
+				$("mt").textContent = muted ? "🔇" : "🔊";
+			}
+
+			// ---- Auth & App States ----
+			let strict = false,
+				soloN = 10,
+				SOLO = false,
+				UID = "",
+				seen = false,
+				ST = null,
+				PL = null,
+				pen = 0,
+				ended = false,
+				lastTick = -1,
+				wrote = false,
+				rmGo = false,
+				padOn = true,
+				lbCache = null,
+				lbAt = 0,
+				lst = null,
+				lpl = null,
+				streak = 0,
+				best = 0,
+				hostArmed = false,
+				prevSc = {};
+			let endShown = false,
+				lbFrom = "home",
+				LBC = {},
+				lbTab = "best",
+				hideCode = false,
+				connRef = null,
+				rdyAt = 0,
+				tab = "duo";
+			const COL = ["#10b981", "#f43f5e", "#fbbf24", "#38bdf8", "#c084fc", "#f472b6"];
+			const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+			const put = (id, v) => {
+				const e = $(id);
+				if (e.textContent !== v) e.textContent = v;
+			};
+			const setFb = (t, c) => {
+				$("fb").style.color = c;
+				put("fb", t);
+			};
+			const setPad = (on) => {
+				if (padOn === on) return;
+				padOn = on;
+				$("pad").classList.toggle("off", !on);
+			};
+			const need = () => {
+				if (FB && me && navigator.onLine) return true;
+				toast(t("এই মোডের জন্য ইন্টারনেট ও লগইন দরকার"));
+				return false;
+			};
+			function gLogin() {
+				if (!FB) return toast(t("ইন্টারনেট নেই"));
+				auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch((e) => toast(t("সাইন ইন হয়নি: ") + e.code));
+			}
+			function guestLogin() {
+				if (!FB) return toast(t("ইন্টারনেট নেই"));
+				auth.signInAnonymously().catch((e) => toast(e.message));
+			}
+			function signOut() {
+				if (me && auth) stopPresence().then(() => auth.signOut());
+				else show("login");
+			}
+			function loadName(u) {
+				let sv = "";
+				try {
+					sv = localStorage.getItem("mdName") || "";
+				} catch (e) {}
+				$("nm").value = sv || (u && u.displayName) || "";
+			}
+			function goHome() {
+				loadName(me);
+				applyHome();
+				show("home");
+			}
+			if (FB)
+				auth.onAuthStateChanged((u) => {
+					me = u;
+					if (u) startPresence(u);
+					else stopPresence();
+					if (!u) {
+						if (!SOLO && !room) show("login");
+						return;
+					}
+					loadName(u);
+					applyHome();
+					if (!SOLO && !room) show("home");
+				});
+			function getName() {
+				name = $("nm").value.trim() || t("খেলোয়াড়");
+				try {
+					localStorage.setItem("mdName", name);
+				} catch (e) {}
+				return name;
+			}
+			function seg(id, cb) {
+				$(id).onclick = (e) => {
+					const b = e.target.closest("button");
+					if (!b) return;
+					[...$(id).children].forEach((x) => x.classList.toggle("on", x == b));
+					cb(b.dataset.v);
+				};
+			}
+			const maxScore = (d, n) => Math.round(n * 100 * MUL[d]);
+			const curTab = () => (me ? tab : "solo");
+			function updMx() {
+				const so = curTab() == "solo",
+					endless = so && !soloN,
+					n = so ? soloN : N,
+					mq = Math.round(100 * MUL[diff]),
+					mn = Math.round(10 * MUL[diff]);
+				put("mxq", bn(mq));
+				put("mxqs", t("ন্যূনতম") + " " + bn(mn) + " · ⏱ " + bn(TM[diff] / 1000) + t("সে."));
+				put("mxg", endless ? "∞" : bn(maxScore(diff, n)));
+				put("mxgs", endless ? t("অসীম") : bn(n) + t("টি প্রশ্ন"));
+			}
+			function applyHome() {
+				const so = !me;
+				$("tabs").hidden = so;
+				["solo", "duo", "multi"].forEach((k) => ($("p-" + k).hidden = so ? k != "solo" : k != tab));
+				$("joinRow").hidden = so || tab == "solo";
+				$("lbBtn").hidden = so;
+				put("outBtn", me ? t("সাইন আউট") : t("সাইন ইন"));
+				drawOnl();
+				drawWal();
+				drawFr();
+				updMx();
+			}
+			seg("modes", (v) => (mode = v));
+			seg("diffs", (v) => {
+				diff = v;
+				updMx();
+			});
+			seg("soloSeg", (v) => {
+				soloN = +v;
+				updMx();
+			});
+			seg("tabs", (v) => {
+				tab = v;
+				applyHome();
+			});
+			$("strictSw").onchange = (e) => (strict = e.target.checked);
+
+			// ---- Question Generation ----
+			const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+			const L = {
+				easy: { a: [5, 20], m: [[4, 9], [4, 9]], d: [[3, 9], [4, 12]] },
+				medium: { a: [20, 99], m: [[6, 15], [6, 12]], d: [[6, 12], [6, 15]] },
+				hard: { a: [100, 500], m: [[12, 25], [7, 19]], d: [[7, 19], [11, 30]] },
+			};
+			function mk(m, df) {
+				const l = L[df];
+				if (m == "mix") m = ["+", "-", "×", "÷"][R(0, 3)];
+				if (m == "+") {
+					const x = R(...l.a), y = R(...l.a);
+					return { t: x + " + " + y, a: x + y };
+				}
+				let x, y, k = 0;
+				if (m == "-") {
+					do {
+						x = R(...l.a); y = R(...l.a);
+						if (y > x) [x, y] = [y, x];
+					} while (x - y < l.a[0] && ++k < 40);
+					return { t: x + " − " + y, a: x - y };
+				}
+				const P = m == "×" ? l.m : l.d;
+				do { x = R(...P[0]); y = R(...P[1]); } while ((x == 10 || y == 10) && ++k < 40);
+				return m == "×" ? { t: x + " × " + y, a: x * y } : { t: x * y + " ÷ " + x, a: y };
+			}
+
+			// ---- Multiplayer Handling ----
+			async function create(rand, code, max, pub) {
+				if (!need()) return;
+				getName();
+				code = code || String(R(10000, 99999));
+				max = max || 2;
+				const qs = Array.from({ length: N }, () => mk(mode, diff));
+				await db.ref("rooms/" + code).set({ st: { host: me.uid, mode, diff, strict, max, n: N, pub: !!pub, status: "waiting", q: 0, qs }, players: { [me.uid]: { name, score: 0, ok: 0, lf: LF, ef: EQ.ef || "" } } });
+				enter(code, true, rand);
+				return code;
+			}
+			async function join(code) {
+				if (!need()) return false;
+				getName();
+				const g = await db.ref("rooms/" + code + "/st").get(),
+					st = g.val();
+				if (!st || st.status != "waiting") return false;
+				const max = st.max || 2;
+				const r = await db.ref("rooms/" + code + "/players").transaction((p) => {
+					p = p || {};
+					if (p[me.uid]) return p;
+					if (Object.keys(p).length >= max) return;
+					p[me.uid] = { name, score: 0, ok: 0, lf: LF, ef: EQ.ef || "" };
+					return p;
+				});
+				if (!r.committed) return false;
+				enter(code, false);
+				return true;
+			}
+			async function joinCode() {
+				const c = toAscii($("jc").value.trim());
+				if (!c) return toast(t("কোড লিখুন"));
+				if (!(await join(c))) toast(t("রুম পাওয়া যায়নি, ভর্তি, বা খেলা শুরু হয়ে গেছে"));
+			}
+			async function rnd() {
+				if (!need()) return;
+				getName();
+				qkey = "queue/" + mode + "_" + diff + "_" + (strict ? 1 : 0);
+				for (let i = 0; i < 4; i++) {
+					const code = String(R(10000, 99999));
+					let taken = null;
+					await db.ref(qkey).transaction((v) => {
+						taken = v;
+						return v ? null : code;
+					});
+					if (taken) {
+						if (await join(taken)) return;
+						continue;
+					}
+					await create(true, code);
+					db.ref(qkey).onDisconnect().remove();
+					return;
+				}
+				toast(t("প্রতিপক্ষ পাওয়া যায়নি, আবার চেষ্টা করুন"));
+			}
+			async function lobby() {
+				if (!need()) return;
+				getName();
+				qkey = "queue/m_" + mode + "_" + diff + "_" + (strict ? 1 : 0);
+				for (let i = 0; i < 4; i++) {
+					const code = String(R(10000, 99999));
+					let cur = null;
+					await db.ref(qkey).transaction((v) => {
+						cur = v;
+						return v || code;
+					});
+					if (cur) {
+						if (await join(cur)) return;
+						await new Promise((r) => setTimeout(r, 700));
+						if (await join(cur)) return;
+						await db.ref(qkey).transaction((v) => (v == cur ? null : v));
+						continue;
+					}
+					await create(true, code, 6, true);
+					db.ref(qkey).onDisconnect().remove();
+					return;
+				}
+				toast(t("লবি পাওয়া যায়নি, আবার চেষ্টা করুন"));
+			}
+			function lobbyCheck() {
+				const n = Object.keys(PL).length;
+				if (n < 2) {
+					if (ST.lobbyEnd) ref.child("st/lobbyEnd").remove();
+					return;
+				}
+				if (!ST.lobbyEnd) {
+					ref.child("st/lobbyEnd").set(now() + 20000);
+					return;
+				}
+				if ((n >= (ST.max || 6) || now() >= ST.lobbyEnd) && !started) {
+					started = true;
+					if (qkey) db.ref(qkey).transaction((v) => (v == room ? null : v));
+					stUp({ status: "playing", q: 0, qStart: now() + 3000 });
+				}
+			}
+			function coord() {
+				const a = Object.keys(PL).filter((i) => !PL[i].gone);
+				return a.includes(ST.host) ? ST.host : a.sort()[0];
+			}
+			function armConn() {
+				if (!FB || connRef) return;
+				connRef = db.ref(".info/connected");
+				connRef.on("value", (s) => {
+					if (!s.val() || !room || !ST || !PL || !PL[UID]) return;
+					const g = ref.child("players/" + UID + "/gone");
+					if (ST.status == "waiting" && ST.host == UID) ref.onDisconnect().remove();
+					else g.onDisconnect().set(true);
+					if (PL[UID].gone) g.remove();
+				});
+			}
+			armConn();
+
+			// ====== Presence, online count, friends, stats (Phase 1) ======
+			const LL = (e, b) => (lang == "en" ? e : b),
+				isG = (u) => !!u && u.providerData.some((p) => p.providerId == "google.com"),
+				dk = () => new Date(now()).toISOString().slice(0, 10),
+				SV = () => firebase.database.ServerValue;
+			let pUid = null, pConn = null, pRef = null, onlN = 0, onlRef = null, peakSent = 0, FR = {}, frL = null, frRefs = {}, frOn = {}, frAt = {}, frSt = {}, chSent = null, chSentL = null, chSentT = null, shopTab = "ef";
+			let notifOn = true;
+			try { notifOn = localStorage.getItem("mdNotif") !== "0"; } catch (e) {}
+			function drawOnl() {
+				const e = $("onl");
+				if (e) put("onl", me && onlN ? "🟢 " + bn(onlN) + LL(" online", " জন অনলাইনে") : "");
+			}
+			function startPresence(u) {
+				if (!FB || pUid === u.uid) return;
+				stopPresence();
+				pUid = u.uid;
+				startMsgs(u);
+				if (isG(u)) setTimeout(() => pushInit(u), 2500);
+				pRef = db.ref("presence/" + u.uid);
+				pConn = db.ref(".info/connected");
+				pConn.on("value", async (s) => {
+					if (!s.val() || pUid !== u.uid) return;
+					pRef.onDisconnect().remove();
+					pRef.set(room ? "g" : "i").catch(() => {});
+					try {
+						const ur = db.ref("users/" + u.uid), ex = (await ur.get()).exists();
+						let nm = "";
+						try { nm = localStorage.getItem("mdName") || ""; } catch (e) {}
+						nm = (nm || u.displayName || "Player").slice(0, 16);
+						await ur.update({ name: nm, g: isG(u), seen: SV().TIMESTAMP });
+						if (!ex) db.ref("stats/daily/" + dk()).update({ newPlayers: SV().increment(1) }).catch(() => {});
+					} catch (e) {}
+				});
+				onlRef = db.ref("presence");
+				onlRef.on("value", (s) => {
+					onlN = s.numChildren();
+					drawOnl();
+					if (onlN > peakSent) {
+						peakSent = onlN;
+						db.ref("stats/daily/" + dk() + "/peakOnline").transaction((v) => ((v || 0) < onlN ? onlN : v)).catch(() => {});
+					}
+				});
+				if (isG(u)) {
+					frL = db.ref("follows/" + u.uid);
+					frL.on("value", (s) => { FR = s.val() || {}; syncFr(); drawFr(); });
+				}
+				drawFr();
+			}
+			async function stopPresence() {
+				const p = pRef, uid0 = pUid;
+				if (pConn) pConn.off();
+				if (onlRef) onlRef.off();
+				if (frL) frL.off();
+				[annL, inL, walL, profL, chL, prL].forEach((r) => r && r.off());
+				annL = inL = walL = profL = chL = prL = null; LF = 0; W = {}; EQ = {}; PR = {}; FRpn = {}; endSent(false);
+				$("ann").hidden = true;
+				Object.values(frRefs).forEach((r) => r.off());
+				pConn = onlRef = frL = pRef = null; pUid = null; frRefs = {}; frOn = {}; FR = {}; onlN = 0; peakSent = 0;
+				try { if (p) { p.onDisconnect().cancel(); await p.remove(); } } catch (e) {}
+				if (uid0) await Promise.all([db.ref("fcmTokens/" + uid0).remove(), db.ref("users/" + uid0 + "/pn").set(false)].map((x) => x.catch(() => {})));
+				drawOnl();
+				drawFr();
+				drawWal();
+			}
+			function syncFr() {
+				Object.keys(frRefs).forEach((id) => { if (!FR[id]) { frRefs[id].off(); delete frRefs[id]; delete frOn[id]; } });
+				Object.keys(FR).forEach((id) => {
+					if (frRefs[id]) return;
+					db.ref("users/" + id + "/pn").get().then((x) => { FRpn[id] = !!x.val(); drawFr(); }).catch(() => {});
+					const r = db.ref("presence/" + id);
+					let first = true;
+					frRefs[id] = r;
+					r.on("value", (s) => {
+						const on = !!s.val(), was = frOn[id];
+						frOn[id] = on;
+						frSt[id] = s.val();
+						drawFr();
+						if (!first && on && !was && notifOn && Date.now() - (frAt[id] || 0) > 30000) {
+							frAt[id] = Date.now();
+							const msg = "🟢 " + FR[id] + LL(" is online", " অনলাইনে এসেছেন");
+							toast(msg);
+							sfx.ok();
+							try { if (document.hidden && Notification.permission == "granted") new Notification(LL("Math Duel", "হিসাবের লড়াই"), { body: msg }); } catch (e) {}
+						}
+						first = false;
+					});
+				});
+			}
+			function drawFr() {
+				const c = $("frCard");
+				if (!c) return;
+				const ok = !!(me && isG(me));
+				c.hidden = !ok;
+				if (!ok) return;
+				$("notifSw").checked = notifOn;
+				put("notifTx", LL("🔔 Notify me when friends come online", "🔔 বন্ধু অনলাইনে এলে জানান"));
+				const ids = Object.keys(FR),
+					h = ids.length
+						? ids.map((id) => '<li><span><i class="dot' + (frOn[id] ? " on" : "") + '"></i>' + esc(FR[id]) + (frSt[id] == "g" ? " 🎮" : "") + "</span><span>" + ((frSt[id] == "i" || (!frOn[id] && FRpn[id])) ? '<button data-c="' + esc(id) + '">' + (frOn[id] ? "⚔️" : "⚔️🔔") + "</button> " : "") + '<button data-u="' + esc(id) + '">' + LL("Unfollow", "আনফলো") + "</button></span></li>").join("")
+						: '<li style="color:var(--mu)">' + LL("No friends yet. Play a match, then follow your opponent.", "এখনও কেউ নেই। ম্যাচ খেলে প্রতিপক্ষকে ফলো করুন।") + "</li>";
+				const l = $("frList");
+				if (l.dataset.h !== h) { l.dataset.h = h; l.innerHTML = h; }
+			}
+			$("notifSw").onchange = (e) => {
+				notifOn = e.target.checked;
+				try { localStorage.setItem("mdNotif", notifOn ? "1" : "0"); } catch (x) {}
+				try { if (notifOn && "Notification" in window && Notification.permission == "default") Notification.requestPermission(); } catch (x) {}
+			};
+			$("frList").onclick = (e) => {
+				const cb = e.target.closest("button[data-c]");
+				if (cb) return challenge(cb.dataset.c);
+				const b = e.target.closest("button[data-u]");
+				if (!b || !me) return;
+				db.ref().update({ ["follows/" + me.uid + "/" + b.dataset.u]: null, ["followers/" + b.dataset.u + "/" + me.uid]: null }).catch(() => toast(LL("Could not unfollow", "আনফলো হয়নি")));
+			};
+			$("mf").onclick = async (e) => {
+				const b = e.target.closest("button[data-f]");
+				if (!b || !me) return;
+				b.disabled = true;
+				try {
+					await db.ref().update({ ["follows/" + me.uid + "/" + b.dataset.f]: b.dataset.n, ["followers/" + b.dataset.f + "/" + me.uid]: true });
+					b.remove();
+					toast(LL("Following ", "ফলো করছেন ") + b.dataset.n);
+				} catch (x) { b.disabled = false; toast(LL("Could not follow", "ফলো করা যায়নি")); }
+			};
+
+			// ====== Coins, ranks, announcements, inbox, response times ======
+			const RK = [
+				[0, "Rookie", "নতুন", "#9aa0c8"], [500, "Bronze", "ব্রোঞ্জ", "#e08a4b"], [2000, "Silver", "সিলভার", "#d6dcff"], [5000, "Gold", "গোল্ড", "#fbbf24"],
+				[10000, "Platinum", "প্লাটিনাম", "#2dd4bf"], [20000, "Diamond", "ডায়মন্ড", "#38bdf8"], [40000, "Master", "মাস্টার", "#c084fc"], [80000, "Legend", "লেজেন্ড", "#f43f5e"],
+			];
+			let LF = 0, W = {}, walL = null, annL = null, inL = null, profL = null, chL = null;
+			const NM = {
+				mint: { c: "#34d399", p: 900, n: ["Mint", "পুদিনা"] }, coral: { c: "#fb7185", p: 900, n: ["Coral", "প্রবাল"] }, ocean: { c: "#22d3ee", p: 900, n: ["Ocean", "সাগর"] },
+				sunset: { c: "#fb923c", p: 1500, n: ["Sunset", "সূর্যাস্ত"] }, lilac: { c: "#c084fc", p: 1500, n: ["Lilac", "লাইলাক"] },
+				pulse: { c: "#fbbf24", k: "pulse", p: 3000, n: ["Pulse glow", "স্পন্দন"] }, fire: { c: "#f97316", k: "fire", p: 4500, n: ["Fire", "আগুন"] }, rainbow: { k: "rainbow", p: 6000, n: ["Rainbow", "রংধনু"] },
+			},
+				TH = {
+					mid: { g: ["#171c3d", "#2f3a8f"], p: 0, n: ["Midnight", "মধ্যরাত"] }, aurora: { g: ["#0f766e", "#4338ca"], p: 2400, n: ["Aurora", "মেরুজ্যোতি"] }, dusk: { g: ["#be123c", "#f59e0b"], p: 2400, n: ["Dusk", "গোধূলি"] },
+					sea: { g: ["#0369a1", "#0e7490"], p: 3600, n: ["Deep sea", "গভীর সাগর"] }, neon: { g: ["#701a75", "#0891b2"], p: 6000, n: ["Neon", "নিয়ন"] }, gold: { g: ["#92400e", "#fbbf24"], p: 7500, n: ["Gold", "স্বর্ণ"] },
+				};
+			let EQ = {};
+			const rkI = (lf) => RK.reduce((a, r, j) => ((lf || 0) >= r[0] ? j : a), 0),
+				nameH = (n, lf, ef) => {
+					const e = NM[ef], i = rkI(lf);
+					if (e) return '<span class="gn ' + (e.k || "") + '" style="--g:' + (e.c || "#fff") + '">' + esc(n) + "</span>";
+					return i ? '<span class="gn" style="--g:' + RK[i][3] + '">' + esc(n) + "</span>" : esc(n);
+				},
+				myName = () => (($("nm").value || "").trim() || (me && me.displayName) || "Player").slice(0, 16);
+			function cardH(n, lf, coins, th, ef) {
+				const i = rkI(lf), r = RK[i], nx = RK[i + 1], T = (TH[th] || TH.mid).g, pct = nx ? Math.min(100, Math.round(((lf - r[0]) / (nx[0] - r[0])) * 100)) : 100;
+				return '<div class="pc" style="background:linear-gradient(135deg,' + T[0] + "," + T[1] + ')"><div class="av" style="--g:' + r[3] + '">' + esc((n || "?").trim().charAt(0).toUpperCase()) + '</div><div class="pi"><b>' + nameH(n, lf, ef) + '</b><small style="color:' + r[3] + '">🏅 ' + LL(r[1], r[2]) + (nx ? " · " + bn(lf || 0) + "/" + bn(nx[0]) : "") + "</small>" + (coins != null ? "<small>🪙 " + bn(coins) + "</small>" : "") + '<div class="pb"><i style="width:' + pct + '%"></i></div></div></div>';
+			}
+			function drawWal() {
+				const e = $("wal"), sb = $("shopBtn");
+				if (sb) { put("shopBtn", "🛍️ " + LL("Shop", "দোকান")); sb.hidden = !me; }
+				if (e) e.innerHTML = me ? cardH(myName(), LF, W.coins || 0, EQ.th, EQ.ef) : "";
+			}
+			$("nm").addEventListener("input", drawWal);
+			const pq = [];
+			function nextPop() {
+				const m = pq.shift();
+				if (!m) return void ($("pop").hidden = true);
+				$("popT").textContent = m[0];
+				$("popX").textContent = m[1];
+				$("pop").hidden = false;
+				$("popOk").onclick = () => { try { m[2] && m[2](); } catch (e) {} nextPop(); };
+			}
+			function showPop(t1, x, cb) {
+				pq.push([t1, x, cb]);
+				if ($("pop").hidden) nextPop();
+			}
+			function startMsgs(u) {
+				walL = db.ref("wallet/" + u.uid);
+				walL.on("value", (s) => { W = s.val() || {}; LF = W.life || 0; drawWal(); });
+				profL = db.ref("profile/" + u.uid);
+				profL.on("value", (s) => { EQ = s.val() || {}; drawWal(); drawShop(); });
+				if (isG(u)) startCh(u);
+				prL = db.ref("shop/prices");
+				prL.on("value", (s) => { PR = s.val() || {}; drawShop(); });
+				annL = db.ref("announce");
+				annL.on("value", (s) => {
+					const a = s.val();
+					if (!a || !a.text || (a.exp && a.exp < now())) return void ($("ann").hidden = true);
+					let seen = 0;
+					try { seen = +localStorage.getItem("mdAnn") || 0; } catch (e) {}
+					if (a.ts <= seen) return;
+					const done = () => { try { localStorage.setItem("mdAnn", a.ts); } catch (e) {} };
+					if (a.type == "popup") showPop(LL("Announcement", "ঘোষণা"), a.text, done);
+					else {
+						$("annT").textContent = "📢 " + a.text;
+						$("ann").hidden = false;
+						$("annX").onclick = () => { $("ann").hidden = true; done(); };
+					}
+				});
+				inL = db.ref("inbox/" + u.uid);
+				inL.on("child_added", (s) => {
+					const m = s.val() || {};
+					sfx.ok();
+					showPop(m.title || LL("Message from admin", "অ্যাডমিনের বার্তা"), m.text || "", () => s.ref.remove().catch(() => {}));
+				});
+			}
+			function drawTimes() {
+				const e = $("tmx");
+				if (!e) return;
+				if (!ST || !PL || SOLO || !ST.n) return void (e.innerHTML = "");
+				const ids = sortedIds(), n = ST.n;
+				let h = "<details><summary>⏱ " + LL("Response times", "উত্তরের সময়") + '</summary><div style="overflow-x:auto"><table style="width:100%;font-size:.8rem;border-collapse:collapse"><tr><th>#</th>' + ids.map((id) => "<th>" + nameH(PL[id].name, PL[id].lf, PL[id].ef) + "</th>").join("") + "</tr>";
+				for (let i = 0; i < n; i++) {
+					const ts = ids.map((id) => { const p = PL[id]; return { ok: ((p.ans && p.ans["q" + i]) || 0) > 0, m: p.tm && p.tm["q" + i] }; }),
+						fast = Math.min(...ts.filter((x) => x.ok && x.m != null).map((x) => x.m));
+					h += "<tr><td>" + bn(i + 1) + "</td>" + ts.map((x) => '<td style="' + (x.ok && x.m === fast ? "color:var(--sun);font-weight:700" : x.ok ? "" : "color:var(--mu)") + '">' + (x.m == null ? "–" : (x.ok ? "✔ " : "✖ ") + bn((x.m / 1000).toFixed(1)) + LL("s", "সে.")) + "</td>").join("") + "</tr>";
+				}
+				h += "</table></div></details>";
+				if (e.dataset.h !== h) {
+					const d = e.querySelector("details"), o = d && d.open;
+					e.dataset.h = h;
+					e.innerHTML = h;
+					if (o) e.querySelector("details").open = true;
+				}
+			}
+
+			// ====== Challenges and shop ======
+			function setPS(v) { if (pRef) pRef.set(v).catch(() => {}); }
+			let chRes = null, chTimer = null, chOpen = null;
+			function choice(title, html, yes, no, ms) {
+				return new Promise((res) => {
+					$("cpT").textContent = title; $("cpB").innerHTML = html; $("cpY").textContent = yes; $("cpN").textContent = no; $("cpop").hidden = false;
+					const done = (v) => { clearTimeout(chTimer); chRes = null; $("cpop").hidden = true; res(v); };
+					chRes = done; $("cpY").onclick = () => done(true); $("cpN").onclick = () => done(false);
+					if (ms) chTimer = setTimeout(() => done(false), ms);
+				});
+			}
+			const setTxt = (m, d, st) => opLbl(m) + " · " + t(DL[d]) + " ×" + bn(MUL[d]) + " · ⭐ " + bn(Math.round(100 * MUL[d])) + " · ⏱ " + bn(TM[d] / 1000) + t("সে.") + " · " + bn(N) + LL(" questions", " প্রশ্ন") + (st ? t(" · কঠোর") : "");
+			function endSent(rm) {
+				if (chSentL) chSentL.off();
+				clearTimeout(chSentT);
+				if (rm && chSent && me) db.ref("challenges/" + chSent + "/" + me.uid).remove().catch(() => {});
+				$("ann").hidden = true;
+				chSentL = null; chSent = null;
+			}
+			async function challenge(to) {
+				if (!need() || !isG(me)) return;
+				if (room || SOLO) return toast(LL("Finish your current game first", "আগে বর্তমান খেলা শেষ করুন"));
+				if (chSent) return toast(LL("A challenge is already pending", "একটি চ্যালেঞ্জ অপেক্ষমান"));
+				const off = !frOn[to];
+				if (frSt[to] === "g" || (off && !FRpn[to])) return toast(LL("Player is busy or has notifications off", "খেলোয়াড় ব্যস্ত বা নোটিফিকেশন বন্ধ"));
+				const ok = await choice(LL("Challenge ", "চ্যালেঞ্জ ") + FR[to], "<p>" + LL("These settings will be shown to " + esc(FR[to]) + ":", esc(FR[to]) + " কে এই সেটিংস দেখানো হবে:") + '</p><p class="hint">' + setTxt(mode, diff, strict) + "</p>" + (off ? '<p class="hint">🔔 ' + LL("Offline: they get a notification and have 2 minutes. Keep this game open.", "অফলাইন: নোটিফিকেশন যাবে, ২ মিনিট সময় পাবেন। গেমটি খোলা রাখুন।") + "</p>" : ""), LL("Send", "পাঠান"), LL("Cancel", "বাতিল"));
+				if (!ok) return;
+				const c = { m: mode, d: diff, s: strict ? 1 : 0, n: getName().slice(0, 16), lf: LF, ef: EQ.ef || "", th: EQ.th || "mid", off: off ? 1 : 0, ts: SV().TIMESTAMP };
+				try { await db.ref("challenges/" + to + "/" + me.uid).set(c); } catch (e) { return toast(LL("Could not send — player is busy", "পাঠানো যায়নি — খেলোয়াড় ব্যস্ত")); }
+				chSent = to;
+				if (off) {
+					$("annT").textContent = "⏳ " + LL("Waiting for ", "অপেক্ষা: ") + FR[to] + " (2 min)";
+					$("ann").hidden = false;
+					$("annX").onclick = () => endSent(true);
+					try {
+						const r = await fetch(PUSH_URL + "/challenge", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + (await me.getIdToken()) }, body: JSON.stringify({ to }) }), j = await r.json();
+						if (!j.ok) throw j.error;
+					} catch (e) { toast(LL("Could not send the notification", "নোটিফিকেশন পাঠানো যায়নি")); if (chSent === to) endSent(true); return; }
+					if (chSent !== to) return;
+				}
+				toast(LL("Challenge sent to ", "চ্যালেঞ্জ পাঠানো হয়েছে: ") + FR[to]);
+				chSentL = db.ref("challenges/" + to + "/" + me.uid);
+				chSentL.on("value", (s) => {
+					const v = s.val();
+					if (!v) return;
+					if (v.st == "d") { toast(LL("Challenge declined", "চ্যালেঞ্জ বাতিল হয়েছে")); endSent(true); }
+					else if (v.st == "a" && v.room) { const rc = v.room; endSent(true); join(rc).then((ok2) => { if (!ok2) toast(LL("Could not join the match", "ম্যাচে যোগ দেওয়া যায়নি")); }); }
+				});
+				chSentT = setTimeout(() => { if (chSent) { toast(LL("No response", "উত্তর আসেনি")); endSent(true); } }, off ? 120000 : 30000);
+			}
+			async function acceptCh(from, c) {
+				const sm = mode, sd = diff, ss = strict;
+				mode = c.m; diff = c.d; strict = !!c.s;
+				try {
+					const code = await create(false, null, 2, false);
+					if (code) await db.ref("challenges/" + me.uid + "/" + from).update({ st: "a", room: String(code) }).catch(() => { toast(LL("Challenge was cancelled", "চ্যালেঞ্জ বাতিল হয়েছে")); exit(); });
+				} finally { mode = sm; diff = sd; strict = ss; }
+			}
+			function startCh(u) {
+				chL = db.ref("challenges/" + u.uid);
+				chL.on("value", async (s) => {
+					const all = s.val() || {};
+					if (chOpen && !all[chOpen]) return void (chRes && chRes(null));
+					if (chOpen) return;
+					for (const from of Object.keys(all)) {
+						const c = all[from], rf = db.ref("challenges/" + u.uid + "/" + from);
+						if (!c || c.st || !c.m || now() - (c.ts || 0) > (c.off ? 120000 : 30000)) continue;
+						if (room || SOLO || ST || !$("cpop").hidden) { rf.update({ st: "d" }).catch(() => {}); continue; }
+						chOpen = from; sfx.ok();
+						const ok = await choice(LL("⚔️ Challenge!", "⚔️ চ্যালেঞ্জ!"), cardH(c.n, c.lf, null, c.th, c.ef) + "<p>" + esc(c.n) + LL(" challenges you", " আপনাকে চ্যালেঞ্জ করেছেন") + '</p><p class="hint">' + setTxt(c.m, c.d, c.s) + "</p>", LL("Accept", "গ্রহণ"), LL("Decline", "বাতিল"), Math.max(3000, (c.off ? 120000 : 30000) - (now() - (c.ts || 0))));
+						chOpen = null;
+						if (ok === null) continue;
+						if (ok) await acceptCh(from, c); else rf.update({ st: "d" }).catch(() => {});
+						break;
+					}
+				});
+			}
+			function openShop() {
+				if (!me) return;
+				show("shop");
+				drawShop();
+			}
+			function drawShop() {
+				if (!$("shop") || $("shop").hidden) return;
+				put("shopT", LL("Shop", "দোকান")); put("shTe", "✨ " + LL("Name effects", "নামের ইফেক্ট")); put("shTt", "🎨 " + LL("Card themes", "কার্ড থিম")); put("shopBack", LL("Back", "ফিরে যান"));
+				$("shopCard").innerHTML = cardH(myName(), LF, W.coins || 0, EQ.th, EQ.ef);
+				const own = W.own || {}, cat = shopTab == "ef" ? NM : TH, cur = EQ[shopTab] || (shopTab == "th" ? "mid" : ""), coins = W.coins || 0;
+				let h = shopTab == "ef" ? "<li><span>" + LL("Default (rank color)", "ডিফল্ট (র‍্যাঙ্কের রং)") + "</span>" + (cur === "" ? "<button disabled>✓</button>" : '<button data-e="">' + LL("Equip", "পরুন") + "</button>") + "</li>" : "";
+				h += Object.keys(cat).map((id) => {
+					const it = cat[id], pr = PO(id), o = pr == 0 || own[id],
+						pv = shopTab == "ef" ? nameH(LL("Player", "খেলোয়াড়"), 0, id) : '<i class="sw8" style="background:linear-gradient(135deg,' + it.g[0] + "," + it.g[1] + ')"></i>',
+						b = id == cur ? "<button disabled>✓ " + LL("Equipped", "পরা আছে") + "</button>" : o ? '<button data-e="' + id + '">' + LL("Equip", "পরুন") + "</button>" : '<button data-b="' + id + '"' + (coins < pr ? " disabled" : "") + ">🪙 " + bn(pr) + "</button>";
+					return '<li><span style="display:flex;gap:10px;align-items:center">' + pv + "<small>" + LL(it.n[0], it.n[1]) + "</small></span>" + b + "</li>";
+				}).join("");
+				$("shopL").innerHTML = h;
+			}
+			$("shopTabs").onclick = (e) => {
+				const b = e.target.closest("button");
+				if (!b) return;
+				[...$("shopTabs").children].forEach((x) => x.classList.toggle("on", x == b));
+				shopTab = b.dataset.v;
+				drawShop();
+			};
+			$("shopL").onclick = async (e) => {
+				const b = e.target.closest("button");
+				if (!b || !me) return;
+				if (b.dataset.b !== undefined) {
+					const id = b.dataset.b, it = NM[id] || TH[id], pr = PO(id);
+					b.disabled = true;
+					const r = await db.ref("wallet/" + me.uid).transaction((w) => {
+						w = w || {};
+						if ((w.coins || 0) < pr || (w.own && w.own[id])) return;
+						w.coins = (w.coins || 0) - pr; w.own = w.own || {}; w.own[id] = true;
+						return w;
+					}).catch(() => null);
+					if (r && r.committed) { toast("✓ " + LL(it.n[0], it.n[1])); sfx.ok(); } else toast(LL("Not enough coins, or purchase failed", "পর্যাপ্ত কয়েন নেই, অথবা কেনা যায়নি"));
+				} else if (b.dataset.e !== undefined) db.ref("profile/" + me.uid).update({ [shopTab]: b.dataset.e }).catch(() => toast(LL("Could not equip", "পরা যায়নি")));
+			};
+
+			// ====== Shop prices + push notifications ======
+			const PUSH_URL = "https://math-duel-push.showrove1.workers.dev",
+				VAPID = "BBOH4AeOXYAssAs-Ce5pLpgmMnu559MbWYIoZNdSdwtd0juZzmSTD0xWoAoP7JL4WC52Vgp_M6slrWO7OrxaIcc",
+				PO = (id) => (PR[id] != null ? PR[id] : (NM[id] || TH[id]).p);
+			let PR = {}, prL = null, FRpn = {};
+			async function pushInit(u) {
+				try {
+					if (!("Notification" in window) || !("serviceWorker" in navigator) || !firebase.messaging || !(await firebase.messaging.isSupported())) return;
+					if (Notification.permission == "default") {
+						let asked = "0";
+						try { asked = localStorage.getItem("mdPushAsk") || "0"; } catch (e) {}
+						if (asked == "1" || room || SOLO || !$("cpop").hidden || !me || me.uid != u.uid) return;
+						try { localStorage.setItem("mdPushAsk", "1"); } catch (e) {}
+						const ok = await choice(LL("🔔 Notifications", "🔔 নোটিফিকেশন"), "<p>" + LL("Allow notifications so friends can challenge you even when you are offline?", "অফলাইনে থাকলেও বন্ধুরা চ্যালেঞ্জ পাঠাতে পারবে — নোটিফিকেশন চালু করবেন?") + "</p>", LL("Allow", "চালু করুন"), LL("Not now", "এখন নয়"));
+						if (!ok) return;
+						await Notification.requestPermission();
+					}
+					if (Notification.permission != "granted") return void db.ref("users/" + u.uid + "/pn").set(false).catch(() => {});
+					const reg = await navigator.serviceWorker.register("firebase-messaging-sw.js"),
+						tok = await firebase.messaging().getToken({ vapidKey: VAPID, serviceWorkerRegistration: reg });
+					if (tok) { await db.ref("fcmTokens/" + u.uid).set(tok); await db.ref("users/" + u.uid + "/pn").set(true); }
+				} catch (e) {}
+			}
+			async function afterGame() {
+				if (!FB || !me) return;
+				const d = dk(), rc = String(room), ids = Object.keys(PL || {}).filter((i) => i != me.uid), nmOf = (i) => String((PL[i] && PL[i].name) || "?").slice(0, 16);
+				db.ref("stats/daily/" + d).update({ games: SV().increment(1) }).catch(() => {});
+				if (ST && OPS[ST.mode]) db.ref("stats/games/" + opKey(ST.mode) + "_" + ST.diff).set(SV().increment(1)).catch(() => {});
+				put("coinMsg", "");
+				const gross = Object.values((PL[me.uid] && PL[me.uid].ans) || {}).reduce((a, b) => a + (b || 0), 0), coins = Math.round(gross / (ST.n || N));
+				if (coins > 0) {
+					db.ref("wallet/" + me.uid).update({ life: SV().increment(coins), coins: SV().increment(coins) }).catch(() => {});
+					db.ref("leaderboard/" + me.uid).update({ lf: LF + coins, ef: EQ.ef || "" }).catch(() => {});
+					put("coinMsg", "🪙 +" + bn(coins) + LL(" coins", " কয়েন"));
+				}
+				const box = $("mf");
+				box.innerHTML = "";
+				if (!isG(me)) return;
+				await Promise.all(ids.map((i) => db.ref("met/" + me.uid + "/" + i).set(rc).catch(() => {})));
+				for (const i of ids) {
+					if (FR[i]) continue;
+					try {
+						if ((await db.ref("users/" + i + "/g").get()).val() !== true) continue;
+						box.insertAdjacentHTML("beforeend", '<button class="big" data-f="' + esc(i) + '" data-n="' + esc(nmOf(i)) + '">➕ ' + LL("Follow ", "ফলো করুন ") + esc(nmOf(i)) + "</button>");
+					} catch (e) {}
+				}
+			}
+			function enter(code, host, rand) {
+				SOLO = false;
+				setPS("g");
+				UID = me.uid;
+				room = code;
+				ref = db.ref("rooms/" + code);
+				ST = PL = null;
+				seen = false;
+				curQ = -1;
+				saved = false;
+				started = false;
+				advKey = null;
+				endPlayed = false;
+				ended = false;
+				endShown = false;
+				rmGo = false;
+				pen = 0;
+				wrote = false;
+				hostArmed = false;
+				streak = 0;
+				best = 0;
+				prevSc = {};
+				if (host) ref.onDisconnect().remove();
+				else
+					ref
+						.child("players/" + me.uid + "/gone")
+						.onDisconnect()
+						.set(true);
+				hideCode = !!rand;
+				$("code").textContent = bn(code);
+				show("wait");
+				lst = (s) => {
+					ST = s.val();
+					sync();
+				};
+				lpl = (s) => {
+					PL = s.val();
+					sync();
+				};
+				ref.child("st").on("value", lst);
+				ref.child("players").on("value", lpl);
+			}
+			function detach() {
+				if (ref) {
+					if (lst) ref.child("st").off("value", lst);
+					if (lpl) ref.child("players").off("value", lpl);
+				}
+				room = ref = null;
+				ST = PL = null;
+				setPS("i");
+			}
+			function exit() {
+				if (SOLO) {
+					SOLO = false;
+					ST = PL = null;
+					show("home");
+					return;
+				}
+				if (ref && ST) {
+					const host = ST.host == UID;
+					ref
+						.child("players/" + UID + "/gone")
+						.onDisconnect()
+						.cancel();
+					if (host && ST.status == "waiting") ref.onDisconnect().cancel();
+					if (ST.status == "waiting") {
+						if (host) {
+							ref.remove();
+							if (qkey) db.ref(qkey).transaction((v) => (v == room ? null : v));
+						} else ref.child("players/" + UID).remove();
+					} else {
+						const oth = Object.keys(PL || {}).filter((i) => i != UID);
+						if (oth.every((i) => PL[i].gone)) ref.remove();
+						else ref.child("players/" + UID + "/gone").set(true);
+					}
+				}
+				detach();
+				show("home");
+			}
+			const sortedIds = () => Object.keys(PL).sort((a, b) => (a == UID ? -1 : b == UID ? 1 : a < b ? -1 : 1));
+			const hasRes = (p) => p.ans && p.ans["q" + ST.q] !== undefined;
+			function stUp(u) {
+				if (SOLO) {
+					Object.assign(ST, u);
+					sync();
+				} else ref.child("st").update(u);
+			}
+			function startMulti() {
+				if (ST && ST.host == UID && Object.keys(PL).length >= 2 && !started) {
+					started = true;
+					stUp({ status: "playing", q: 0, qStart: now() + 3000 });
+				}
+			}
+			function renderWait() {
+				const ids = sortedIds(),
+					max = ST.max || 2,
+					multi = max > 2,
+					host = ST.host == UID;
+				const h = ids.map((id, i) => '<li style="--c:' + COL[i % 6] + '">' + esc(PL[id].name || "…") + (id == UID ? t(" (আপনি)") : "") + (id == ST.host ? " 👑" : "") + "</li>").join("");
+				const wl = $("wl");
+				if (wl.dataset.h !== h) {
+					wl.dataset.h = h;
+					wl.innerHTML = h;
+				}
+				$("wcodebox").hidden = hideCode || !!ST.pub;
+				const b = $("startBtn");
+				b.hidden = !(multi && host && !ST.pub);
+				b.disabled = ids.length < 2;
+				put("startBtn", ids.length < 2 ? t("কমপক্ষে ২ জন লাগবে") : t("▶ খেলা শুরু করুন (") + bn(ids.length) + t(" জন)"));
+				let m;
+				if (ST.pub)
+					m =
+						(ST.lobbyEnd && ids.length > 1 ? t("শুরু হতে বাকি ") + bn(Math.max(0, Math.ceil((ST.lobbyEnd - now()) / 1000))) + t("সে.") : t("খেলোয়াড় খোঁজা হচ্ছে…")) +
+						" · " +
+						bn(ids.length) +
+						"/" +
+						bn(max);
+				else if (multi) m = (host ? t("বন্ধুদের কোড দিন, তারপর শুরু করুন") : t("হোস্টের শুরু করার অপেক্ষায়…")) + " · " + bn(ids.length) + "/" + bn(max);
+				else m = hideCode ? t("র‍্যান্ডম প্রতিপক্ষ খোঁজা হচ্ছে…") : t("প্রতিপক্ষের অপেক্ষায়…");
+				put("wmsg", m);
+			}
+
+			// ---- Solo Mode ----
+			function startSolo() {
+				getName();
+				SOLO = true;
+				UID = "solo";
+				room = ref = null;
+				seen = true;
+				ST = { host: UID, mode, diff, strict, n: soloN, status: "playing", q: 0, qStart: now() + 1500, qs: Array.from({ length: soloN || 1 }, () => mk(mode, diff)) };
+				PL = { solo: { name, score: 0, ok: 0, lf: LF, ef: EQ.ef || "" } };
+				curQ = -1;
+				saved = true;
+				ended = false;
+				endShown = false;
+				endPlayed = false;
+				advKey = null;
+				streak = 0;
+				best = 0;
+				pen = 0;
+				wrote = false;
+				prevSc = {};
+				show("game");
+				scrollTo(0, 0);
+				sync();
+			}
+			function stopGame() {
+				if (SOLO) {
+					if (ST && ST.status == "playing") {
+						ST.status = "done";
+						sync();
+					}
+				} else if (confirm(t("খেলা ছেড়ে চলে যাবেন?"))) exit();
+			}
+			function sync() {
+				if (!room && !SOLO) return;
+				if (!ST) {
+					if (seen && !SOLO) {
+						toast(t("রুম বন্ধ হয়ে গেছে"));
+						detach();
+						show("home");
+					}
+					return;
+				}
+				seen = true;
+				if (!PL) return;
+				const ids = Object.keys(PL);
+				if (ST.status == "waiting") {
+					renderWait();
+					if (ST.host == UID && (ST.max || 2) == 2 && ids.length == 2 && !started) {
+						started = true;
+						stUp({ status: "playing", q: 0, qStart: now() + 3000 });
+					}
+				} else if (ST.status == "playing") {
+					if ($("game").hidden) {
+						show("game");
+						scrollTo(0, 0);
+					}
+					if (!SOLO && ST.host == UID && !hostArmed) {
+						hostArmed = true;
+						ref.onDisconnect().cancel();
+						ref
+							.child("players/" + UID + "/gone")
+							.onDisconnect()
+							.set(true);
+					}
+					if (ended) {
+						ended = false;
+						endShown = false;
+						saved = false;
+						endPlayed = false;
+						advKey = null;
+						rmGo = false;
+						curQ = -1;
+					}
+					if (ST.q !== curQ) {
+						curQ = ST.q;
+						input = "";
+						pen = 0;
+						doneSeen = 0;
+						wrote = false;
+						lastTick = -1;
+						put("ans", "");
+						put("fb", "");
+						setPad(true);
+					}
+					put("stopBtn", SOLO ? t("⏹ শেষ করুন") : t("🚪 ছাড়ুন"));
+					renderScores();
+				} else if (ST.status == "done") {
+					renderScores();
+					endGame();
+				}
+			}
+			function renderScores() {
+				if (!ST || !PL) return;
+				const ids = sortedIds(),
+					n = ids.length,
+					pl = ST.status == "playing";
+				const h = ids
+					.map((id, i) => {
+						const p = PL[id],
+							sc = id == UID ? Math.max(0, (p.score || 0) - (pl ? pen : 0)) : p.score || 0,
+							a = pl && hasRes(p),
+							ch = prevSc[id] !== undefined && prevSc[id] !== sc;
+						prevSc[id] = sc;
+						return (
+							'<div class="pl" style="--c:' +
+							COL[i % 6] +
+							'"><b>' +
+							nameH(p.name || "…", p.lf, p.ef) +
+							(id == UID && n > 1 ? " ★" : "") +
+							(a ? " ✓" : "") +
+							(p.gone ? " 🚪" : "") +
+							"</b><span" +
+							(ch ? ' class="pop"' : "") +
+							">" +
+							bn(sc) +
+							"</span></div>"
+						);
+					})
+					.join("");
+				const d = $("duel");
+				d.style.gridTemplateColumns = "repeat(" + (n <= 2 ? n : 3) + ",1fr)";
+				d.classList.toggle("sm", n > 2);
+				if (d.dataset.h !== h) {
+					d.dataset.h = h;
+					d.innerHTML = h;
+				}
+			}
+
+			// ---- Game Loop Timer ----
+			function finish(pts) {
+				if (wrote) return;
+				wrote = true;
+				setPad(false);
+				const m = PL[UID],
+					ns = Math.max(0, (m.score || 0) + pts - pen),
+					ok = (m.ok || 0) + (pts > 0 ? 1 : 0);
+				pen = 0;
+				if (SOLO) {
+					m.score = ns;
+					m.ok = ok;
+					m.ans = m.ans || {};
+					m.ans["q" + curQ] = pts;
+					renderScores();
+				} else ref.child("players/" + UID).update({ score: ns, ok, ["ans/q" + curQ]: pts, ["tm/q" + curQ]: Math.round(Math.min(Math.max(0, now() - ST.qStart), TM[ST.diff])) });
+			}
+			setInterval(() => {
+				if (!ST || !PL) return;
+				if (ST.status == "waiting") {
+					renderWait();
+					if (ST.pub && ST.host == UID && !SOLO) lobbyCheck();
+					return;
+				}
+				if (ST.status == "done") {
+					if (!SOLO && coord() == UID) rematchCheck();
+					return;
+				}
+				if (ST.status != "playing") return;
+				const el = now() - ST.qStart,
+					T = TM[ST.diff],
+					rem = T - el,
+					q = ST.qs[ST.q];
+				$("bar").style.width = Math.max(0, Math.min(100, (rem / T) * 100)).toFixed(1) + "%";
+				put("sec", bn(el < 0 ? Math.ceil(-el / 1000) : Math.max(0, Math.ceil(rem / 1000))));
+				put("qtxt", el < 0 ? t("প্রস্তুত হোন…") : bn(q.t) + " = ?");
+				put("qn", t("প্রশ্ন ") + bn(ST.q + 1) + (ST.n ? "/" + bn(ST.n) : "") + (SOLO && streak > 1 ? " · 🔥" + bn(streak) : "") + (ST.strict ? t(" · কঠোর") : ""));
+				const sc = Math.ceil(rem / 1000);
+				if (el >= 0 && rem > 0 && sc <= 3 && sc !== lastTick && !wrote) {
+					lastTick = sc;
+					sfx.tick();
+				}
+				if (el >= 0 && rem <= 0 && !wrote) {
+					streak = 0;
+					setFb(t("সময় শেষ! উত্তর: ") + bn(q.a), "var(--sun)");
+					finish(0);
+				}
+				if (coord() == UID) {
+					const A = Object.values(PL).filter((p) => !p.gone);
+					const all = A.length > 0 && A.every(hasRes),
+						quit = !SOLO && A.length < 2;
+					if (all && !doneSeen) doneSeen = Date.now();
+					if ((quit || (all && Date.now() - doneSeen > (SOLO ? 900 : 1500)) || rem < -2500) && advKey !== ST.q) {
+						advKey = ST.q;
+						if (quit || (ST.n && ST.q + 1 >= ST.n)) stUp({ status: "done" });
+						else {
+							if (SOLO && !ST.qs[ST.q + 1]) ST.qs.push(mk(ST.mode, ST.diff));
+							stUp({ q: ST.q + 1, qStart: now() + (SOLO ? 900 : 1200) });
+						}
+					}
+				}
+			}, 100);
+
+			// ---- Keypad & Input Handling ----
+			function drawPad() {
+				$("pad").innerHTML = [1, 2, 3, 4, 5, 6, 7, 8, 9, "⌫", 0, "✓"]
+					.map((k) => '<button class="' + (k == "✓" ? "go" : k == "⌫" ? "bk" : "") + '" data-k="' + k + '">' + (typeof k == "number" ? bn(k) : k) + "</button>")
+					.join("");
+			}
+			drawPad();
+			$("dgBtn").textContent = dg ? "১২৩" : "123";
+			function toggleDigits() {
+				dg = !dg;
+				try {
+					localStorage.setItem("mdDg2", dg ? "1" : "0");
+				} catch (e) {}
+				$("dgBtn").textContent = dg ? "১২৩" : "123";
+				drawPad();
+				put("ans", bn(input));
+				if (room) $("code").textContent = bn(room);
+				renderScores();
+			}
+			$("pad").addEventListener("pointerdown", (e) => {
+				const b = e.target.closest("button");
+				if (!b) return;
+				e.preventDefault();
+				press(b.dataset.k);
+			});
+			$("pad").addEventListener("click", (e) => e.preventDefault());
+			document.addEventListener("keydown", (e) => {
+				if ($("game").hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+				let k = null;
+				const m = /^(?:Digit|Numpad)([0-9])$/.exec(e.code || "");
+				if (m) k = m[1];
+				else if (/^[0-9]$/.test(e.key)) k = e.key;
+				else if (/^[০-৯]$/.test(e.key)) k = toAscii(e.key);
+				else if (e.key == "Backspace" || e.key == "Delete") k = "⌫";
+				else if (e.key == "Enter" || e.key == "NumpadEnter") k = "✓";
+				if (k === null) return;
+				e.preventDefault();
+				if (e.repeat && k != "⌫") return;
+				press(k);
+			});
+			function press(k) {
+				if (!ST || ST.status != "playing" || wrote || now() < ST.qStart) return;
+				if (k == "⌫") input = input.slice(0, -1);
+				else if (k == "✓") {
+					submit();
+					return;
+				} else if (input.length < 6) input += k;
+				else return;
+				sfx.key();
+				put("ans", bn(input));
+			}
+			function shake() {
+				const sl = $("slate");
+				sl.classList.remove("shake");
+				void sl.offsetWidth;
+				sl.classList.add("shake");
+			}
+			function submit() {
+				if (!input || wrote) return;
+				const q = ST.qs[ST.q],
+					T = TM[ST.diff],
+					rem = T - (now() - ST.qStart);
+				if (parseInt(input) == q.a) {
+					const pts = Math.round((10 + (90 * Math.max(0, rem)) / T) * MUL[ST.diff]),
+						pn = pen;
+					streak++;
+					best = Math.max(best, streak);
+					finish(pts);
+					sfx.ok();
+					setFb(t("ঠিক! +") + bn(pts) + (pn ? " (−" + bn(pn) + ")" : "") + (SOLO ? "" : t(" · অন্যদের অপেক্ষা…")), "var(--me)");
+				} else {
+					streak = 0;
+					sfx.no();
+					shake();
+					if (ST.strict) {
+						setFb(t("ভুল! প্রশ্নটি বাদ · উত্তর: ") + bn(q.a), "var(--op)");
+						finish(0);
+					} else {
+						const pl = Math.round(25 * MUL[ST.diff]);
+						pen += pl;
+						setFb(t("ভুল! −") + bn(pl), "var(--op)");
+						input = "";
+						put("ans", "");
+						renderScores();
+					}
+				}
+			}
+
+			// ---- End Game & Leaderboard ----
+			function ranking() {
+				const early = !SOLO && !!ST.n && ST.q + 1 < ST.n,
+					sc = (p) => p.score || 0;
+				const ids = Object.keys(PL).sort((a, b) => {
+					const A = PL[a],
+						B = PL[b];
+					if (early && !!A.gone !== !!B.gone) return A.gone ? 1 : -1;
+					return sc(B) - sc(A);
+				});
+				let r = 0;
+				return {
+					early,
+					rows: ids.map((id, i) => {
+						const p = PL[id],
+							q = i && PL[ids[i - 1]];
+						if (!i || sc(p) !== sc(q) || (early && !!p.gone !== !!q.gone)) r = i + 1;
+						return { id, p, r };
+					}),
+				};
+			}
+			function endGame() {
+				if (!endShown) {
+					endShown = true;
+					show("end");
+				}
+				ended = true;
+				const { rows, early } = ranking(),
+					mine = rows.find((x) => x.id == UID),
+					mp = mine.p,
+					mr = mine.r,
+					multi = rows.length > 2,
+					top = Math.max(1, ...rows.map((x) => x.p.score || 0));
+				const uniq = rows.filter((x) => x.r == 1).length == 1,
+					win = !SOLO && mr == 1 && uniq,
+					last = rows[rows.length - 1].r;
+				let h,
+					c = "var(--sun)";
+				if (SOLO) h = t("🎯 অনুশীলন শেষ");
+				else if (multi) {
+					if (win) {
+						h = t("🏆 আপনি প্রথম!");
+						c = "var(--me)";
+					} else if (mr == 1) h = t("🤝 সেরা স্কোর (ড্র)");
+					else {
+						h = t("🎖 আপনি ") + ORD_T(mr) + t(" হয়েছেন");
+						if (mr == last) c = "var(--op)";
+					}
+				} else {
+					if (win) {
+						h = t("🎉 আপনি জিতেছেন!");
+						c = "var(--me)";
+					} else if (mr == 1) h = t("🤝 ড্র!");
+					else {
+						h = t("😮 আপনি হেরেছেন");
+						c = "var(--op)";
+					}
+				}
+				put("res", h);
+				$("res").style.color = c;
+				put("fin", SOLO ? t("অনুশীলন — স্কোর হাইস্কোরে যোগ হয়নি") : early ? t("কেউ কেউ খেলা ছেড়ে গেছেন · স্কোর লিডারবোর্ডে যোগ হয়েছে") : t("স্কোর লিডারবোর্ডে যোগ হয়েছে"));
+				const played = Object.keys(mp.ans || {}).length,
+					ok = mp.ok || 0;
+				const mx = ST.n ? maxScore(ST.diff, ST.n) : 0,
+					pct = mx ? Math.round(((mp.score || 0) / mx) * 100) : 0;
+				const st =
+					(SOLO
+						? t("<span>✔ সঠিক ") +
+						  bn(ok) +
+						  "/" +
+						  bn(played) +
+						  t("</span><span>🎯 নির্ভুলতা ") +
+						  bn(played ? Math.round((ok / played) * 100) : 0) +
+						  t("%</span><span>🔥 সেরা স্ট্রিক ") +
+						  bn(best) +
+						  "</span>"
+						: "") + (mx ? t("<span>⭐ স্কোর ") + bn(mp.score || 0) + "/" + bn(mx) + " (" + bn(pct) + "%)</span>" : "");
+				if ($("stats").innerHTML !== st) $("stats").innerHTML = st;
+				const medal = ["", "🥇", "🥈", "🥉"];
+				const bh = rows
+					.map(
+						({ id, p, r }) =>
+							'<li class="rk' +
+							(id == UID ? " me" : "") +
+							(r == 1 && !SOLO ? " win1" : "") +
+							'" style="--w:' +
+							Math.round(((p.score || 0) / top) * 100) +
+							'%"><i></i><em>' +
+							(SOLO ? "⭐" : medal[r] || bn(r)) +
+							"</em><b>" +
+							nameH(p.name, p.lf, p.ef) +
+							(id == UID && rows.length > 1 ? t(" (আপনি)") : "") +
+							(p.gone ? " 🚪" : "") +
+							(p.rm ? " 🔁" : "") +
+							"</b><small>✔ " +
+							bn(p.ok || 0) +
+							(SOLO ? "/" + bn(played) : ST.n ? "/" + bn(ST.n) : "") +
+							"</small><strong>" +
+							bn(p.score || 0) +
+							"</strong></li>"
+					)
+					.join("");
+				const bd = $("board");
+				if (bd.dataset.h !== bh) {
+					bd.dataset.h = bh;
+					bd.innerHTML = bh;
+				}
+				drawTimes();
+				if (!endPlayed) {
+					endPlayed = true;
+					win || SOLO ? sfx.win() : (multi || rows.length == 2) && mr == last && mr > 1 ? sfx.lose() : sfx.ok();
+				}
+				if (!saved && !SOLO && FB) {
+					saved = true;
+					LBC = {};
+					saveBest(mp.score || 0, ST.mode, ST.diff, mp.name);
+					const inc = firebase.database.ServerValue.increment;
+					db.ref("leaderboard/" + UID).update({ name: mp.name, total: inc(mp.score || 0), games: inc(1), wins: inc(win ? 1 : 0) });
+					afterGame();
+				}
+				const rb = $("rm");
+				if (SOLO) {
+					rb.disabled = false;
+					put("rm", t("🔁 আবার খেলুন"));
+				} else {
+					const A = Object.values(PL).filter((p) => !p.gone),
+						rdy = A.filter((p) => p.rm).length;
+					rb.disabled = !!mp.rm || A.length < 2;
+					put(
+						"rm",
+						A.length < 2 ? t("সবাই চলে গেছেন") : mp.rm ? t("অপেক্ষা… (") + bn(rdy) + "/" + bn(A.length) + ")" : t("🔁 রিম্যাচ") + (rdy ? " (" + bn(rdy) + "/" + bn(A.length) + t(" রাজি)") : "")
+					);
+					if (coord() == UID) rematchCheck();
+				}
+			}
+			function rematchCheck() {
+				if (!ST || !PL || ST.status != "done" || rmGo) return;
+				const all = Object.values(PL),
+					A = all.filter((p) => !p.gone),
+					rdy = A.filter((p) => p.rm).length,
+					g = all.length - A.length;
+				if (A.length < 2 || rdy < A.length) {
+					rdyAt = 0;
+					return;
+				}
+				if (g) {
+					if (!rdyAt) rdyAt = Date.now();
+					if (Date.now() - rdyAt < 6000) return;
+				}
+				rmGo = true;
+				rdyAt = 0;
+				const u = { "st/status": "playing", "st/q": 0, "st/qStart": now() + 3000, "st/qs": Array.from({ length: N }, () => mk(ST.mode, ST.diff)) };
+				Object.keys(PL).forEach((id) => {
+					if (PL[id].gone) u["players/" + id] = null;
+					else {
+						u["players/" + id + "/score"] = 0;
+						u["players/" + id + "/ok"] = 0;
+						u["players/" + id + "/ans"] = null;
+						u["players/" + id + "/rm"] = null;
+					}
+				});
+				ref.update(u);
+			}
+			function rematchReq() {
+				if (SOLO) return startSolo();
+				if (ref && PL && PL[UID]) ref.child("players/" + UID + "/rm").set(true);
+			}
+			const OPS = { "+": ["add", "+", "যোগ"], "-": ["sub", "−", "বিয়োগ"], "×": ["mul", "×", "গুণ"], "÷": ["div", "÷", "ভাগ"], mix: ["mix", "±", "মিশ্র"] },
+				DL = { easy: "সহজ", medium: "মাঝারি", hard: "কঠিন" };
+			const opKey = (m) => OPS[m][0],
+				opLbl = (m) => (OPS[m] ? OPS[m][1] + " " + t(OPS[m][2]) : "");
+			function saveBest(sc, op, df, nm) {
+				if (!FB || sc <= 0 || !OPS[op]) return;
+				const rec = { name: nm, score: sc, diff: df, op, lf: LF, ef: EQ.ef || "" };
+				const up = (v) => (v && v.score >= sc ? v : rec);
+				db.ref("best/" + opKey(op) + "/" + UID)
+					.transaction(up)
+					.catch(() => {});
+				db.ref("bestAll/" + UID)
+					.transaction(up)
+					.catch(() => {});
+			}
+			function drawLB(a, k) {
+				$("lbl").innerHTML = a.length
+					? a
+							.map(
+								(v, i) =>
+									"<li" +
+									(me && v.uid == me.uid ? ' class="meRow"' : "") +
+									"><span>" +
+									bn(i + 1) +
+									"</span><span>" +
+									nameH(v.name, v.lf, v.ef) +
+									"</span><b>" +
+									bn(k == "total" ? v.total : v.score) +
+									"</b><small>" +
+									esc(k == "total" ? bn(v.wins || 0) + " " + t("জয়") : k == "best" ? opLbl(v.op) + " · " + t(DL[v.diff]) : t(DL[v.diff])) +
+									"</small></li>"
+							)
+							.join("")
+					: "<li>" + t("এখনও কেউ খেলেনি। প্রথম হোন!") + "</li>";
+			}
+			async function loadLB() {
+				const k = lbTab,
+					c = LBC[k];
+				if (c && Date.now() - c.at < 30000) return drawLB(c.rows, k);
+				$("lbl").innerHTML = "<li>" + t("লোড হচ্ছে…") + "</li>";
+				try {
+					const path = k == "total" ? "leaderboard" : k == "best" ? "bestAll" : "best/" + opKey(k),
+						f = k == "total" ? "total" : "score";
+					const s = await db.ref(path).orderByChild(f).limitToLast(20).get(),
+						a = [];
+					s.forEach((c) => {
+						a.push({ uid: c.key, ...c.val() });
+					});
+					a.reverse();
+					LBC[k] = { at: Date.now(), rows: a };
+					if (lbTab == k) drawLB(a, k);
+				} catch (e) {
+					$("lbl").innerHTML = "<li>" + t("লিডারবোর্ড লোড হয়নি") + "</li>";
+				}
+			}
+			async function showLB() {
+				if (!FB || !navigator.onLine || !me) return toast(t("লিডারবোর্ডের জন্য ইন্টারনেট ও লগইন দরকার"));
+				lbFrom = $("end").hidden ? "home" : "end";
+				show("lb");
+				loadLB();
+			}
+			function backLB() {
+				show(lbFrom == "end" && ST && ST.status == "done" ? "end" : "home");
+			}
+			seg("lbTabs", (v) => {
+				lbTab = v;
+				loadLB();
+			});
+
+			// ---- Language Handling ----
+			const TN = [];
+			(() => {
+				const w = document.createTreeWalker(document.querySelector("main"), NodeFilter.SHOW_TEXT);
+				let n;
+				while ((n = w.nextNode())) if (/[\u0980-\u09FF]/.test(n.nodeValue)) TN.push([n, n.nodeValue]);
+			})();
+			function applyLang() {
+				document.documentElement.lang = lang;
+				document.documentElement.classList.remove("pre");
+				TN.forEach(([n, o]) => {
+					const k = o.trim();
+					n.nodeValue = lang == "en" && EN[k] !== undefined ? o.replace(k, () => EN[k]) : o;
+				});
+				$("nm").placeholder = t("আপনার নাম");
+				$("jc").placeholder = t("রুম কোড");
+				document.title = t("হিসাবের লড়াই");
+				["langBtn", "langBtn2"].forEach((i) => ($(i).textContent = lang == "en" ? "বাংলা" : "English"));
+				applyHome();
+			}
+			function toggleLang() {
+				lang = lang == "en" ? "bn" : "en";
+				dg = lang == "en";
+				try {
+					localStorage.setItem("mdLang", lang);
+					localStorage.setItem("mdDg2", dg ? "1" : "0");
+				} catch (e) {}
+				$("dgBtn").textContent = dg ? "১২৩" : "123";
+				drawPad();
+				applyLang();
+				if (room) $("code").textContent = bn(room);
+				if (ST && PL) {
+					put("ans", bn(input));
+					sync();
+				}
+			}
+			applyLang();
+			if (!FB) goHome();
+		</script>
+	</body>
+</html>
