@@ -638,6 +638,16 @@
 			.shopL{list-style:none;padding:0;margin:0;display:grid;gap:8px}
 			.shopL li{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg);border-radius:14px;padding:10px 12px}
 			.sw8{display:inline-block;width:44px;height:28px;border-radius:8px}
+			.mini{padding:6px 12px;font-size:.85rem}
+			.ph{margin:0 0 10px;color:var(--sun);font-size:1rem}
+			.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px}
+			.sg div{background:var(--bg);border-radius:12px;padding:10px;text-align:center}
+			.sg b{display:block;font-size:1.2rem;color:var(--sun)}
+			.sg small{color:var(--mu)}
+			#wal .pc{cursor:pointer}
+			#wal .pc::after{content:"›";font-size:2rem;opacity:.7;margin-left:auto}
+			#frStrip{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;align-items:center}
+			.chip{padding:6px 12px;font-size:.85rem;border-radius:999px}
 		</style>
 	</head>
 	<body>
@@ -656,7 +666,7 @@
 				<div class="card">
 					<button class="big pri" onclick="gLogin()">Google দিয়ে সাইন ইন</button>
 					<button class="big" onclick="goHome()">🎯 একা অনুশীলন (লগইন ছাড়া)</button>
-					<p class="hint" id="privNote" hidden style="margin-top:12px"></p>
+					<p class="hint" id="privNote" style="margin-top:12px"></p>
 				</div>
 			</section>
 
@@ -668,7 +678,7 @@
 				</div>
 				<p class="sub" id="onl" style="margin-bottom:4px"></p>
 				<div id="wal"></div>
-				<div class="row"><button class="big" id="unBtn" hidden></button></div>
+				<div id="frStrip" hidden></div>
 				<div class="card">
 					<input id="nm" class="nm" maxlength="16" placeholder="আপনার নাম" />
 					<label>অপারেশন</label>
@@ -701,11 +711,7 @@
 					</div>
 					<div class="row" id="joinRow" style="margin-top: 12px"><input id="jc" inputmode="numeric" maxlength="5" placeholder="রুম কোড" /><button onclick="joinCode()">যোগ দিন</button></div>
 				</div>
-				<div class="card" id="frCard" hidden>
-					<label class="sw" style="margin-top: 0"><input type="checkbox" id="notifSw" /><span class="slider"></span><span id="notifTx"></span></label>
-					<ul class="wl fr" id="frList"></ul>
-				</div>
-				<div class="row"><button class="big" id="shopBtn" onclick="openShop()"></button><button class="big" id="lbBtn" onclick="showLB()">🏆 লিডারবোর্ড</button><button class="big" id="outBtn" onclick="signOut()">সাইন আউট</button></div>
+<div class="row"><button class="big" id="shopBtn" onclick="openShop()"></button><button class="big" id="lbBtn" onclick="showLB()">🏆 লিডারবোর্ড</button><button class="big" id="outBtn" onclick="signOut()">সাইন আউট</button></div>
 
 				<div style="padding: 10px; font-size: 10px; color: #353953; text-align: center">Created by : Mehedi, Prapti and Trisha</div>
 			</section>
@@ -750,6 +756,18 @@
 				<button class="big" onclick="showLB()">🏆 লিডারবোর্ড</button>
 			</section>
 
+			<section id="prof" hidden>
+				<h1>👤 <span id="profT"></span></h1>
+				<div id="profCard"></div>
+				<div class="card"><div class="row" style="align-items:center"><b id="profUN" style="flex:1;font-size:1.1rem"></b><button class="mini" id="profName"></button></div></div>
+				<div class="card"><h3 class="ph" id="profSh"></h3><div class="sg" id="profStats"></div></div>
+				<div class="card" id="frCard" hidden><h3 class="ph" id="frH"></h3><ul class="wl fr" id="frList"></ul></div>
+				<div class="card"><h3 class="ph" id="ntH"></h3>
+					<label class="sw" style="margin-top: 0"><input type="checkbox" id="notifSw" /><span class="slider"></span><span id="notifTx"></span></label>
+					<p class="hint" id="pnSt"></p><button class="big" id="pnBtn"></button></div>
+				<div class="card"><h3 class="ph" id="shH"></h3><p class="hint" id="profEq"></p><button class="big" id="profShop"></button></div>
+				<button class="big" onclick="goHome()" id="profBack"></button>
+			</section>
 			<section id="shop" hidden>
 				<h1>🛍️ <span id="shopT"></span></h1>
 				<div id="shopCard"></div>
@@ -956,7 +974,7 @@
 				setTimeout(() => e.classList.remove("on"), 2600);
 			}
 			function show(id) {
-				["login", "home", "wait", "game", "end", "lb", "shop"].forEach((s) => ($(s).hidden = s != id));
+				["login", "home", "wait", "game", "end", "lb", "shop", "prof"].forEach((s) => ($(s).hidden = s != id));
 			}
 
 			// ---- Sound Engine ----
@@ -1316,8 +1334,8 @@
 				if (pConn) pConn.off();
 				if (onlRef) onlRef.off();
 				if (frL) frL.off();
-				[annL, inL, walL, profL, chL, prL, crL, cfgL].forEach((r) => r && r.off());
-				annL = inL = walL = profL = chL = prL = crL = cfgL = null; UN = ""; UNK = ""; CR = {}; LF = 0; W = {}; EQ = {}; PR = {}; FRpn = {}; endSent(false);
+				[annL, inL, walL, profL, chL, prL, crL, cfgL, pnL].forEach((r) => r && r.off());
+				annL = inL = walL = profL = chL = prL = crL = cfgL = pnL = null; PN = false; UN = ""; UNK = ""; CR = {}; LF = 0; W = {}; EQ = {}; PR = {}; FRpn = {}; endSent(false);
 				$("ann").hidden = true;
 				Object.values(frRefs).forEach((r) => r.off());
 				pConn = onlRef = frL = pRef = null; pUid = null; frRefs = {}; frOn = {}; FR = {}; onlN = 0; peakSent = 0;
@@ -1356,6 +1374,7 @@
 				if (!c) return;
 				const ok = !!(me && isG(me));
 				c.hidden = !ok;
+				$("frStrip").hidden = true;
 				if (!ok) return;
 				$("notifSw").checked = notifOn;
 				put("notifTx", LL("🔔 Notify me when friends come online", "🔔 বন্ধু অনলাইনে এলে জানান"));
@@ -1365,6 +1384,10 @@
 						: '<li style="color:var(--mu)">' + LL("No friends yet. Play a match, then follow your opponent.", "এখনও কেউ নেই। ম্যাচ খেলে প্রতিপক্ষকে ফলো করুন।") + "</li>";
 				const l = $("frList");
 				if (l.dataset.h !== h) { l.dataset.h = h; l.innerHTML = h; }
+				const on = ids.filter((id) => frOn[id]), fs = $("frStrip"),
+					sh = on.slice(0, 6).map((id) => '<button class="chip" data-c="' + esc(id) + '"' + (frSt[id] == "i" ? "" : " disabled") + ">" + (frSt[id] == "g" ? "🎮 " : "🟢 ") + esc(FR[id]) + (frSt[id] == "i" ? " ⚔️" : "") + "</button>").join("") + (on.length > 6 ? " <small>+" + (on.length - 6) + "</small>" : "");
+				fs.hidden = !on.length;
+				if (fs.dataset.h !== sh) { fs.dataset.h = sh; fs.innerHTML = sh; }
 			}
 			$("notifSw").onchange = (e) => {
 				notifOn = e.target.checked;
@@ -1422,10 +1445,9 @@
 			function drawWal() {
 				const e = $("wal"), sb = $("shopBtn");
 				if (sb) { put("shopBtn", "🛍️ " + LL("Shop", "দোকান")); sb.hidden = !me; }
-				const ub = $("unBtn");
-				if (ub) { ub.hidden = !me; put("unBtn", "✏️ " + LL("Change username", "ইউজারনেম বদলান") + " (" + bn(NC) + " 🪙)"); }
 				put("privNote", LL("We record your last login time, approximate location and IP address to prevent abuse.", "অপব্যবহার ঠেকাতে আমরা আপনার শেষ লগইনের সময়, আনুমানিক অবস্থান ও আইপি ঠিকানা সংরক্ষণ করি।"));
 				if (e) e.innerHTML = me ? cardH(myName(), LF, W.coins || 0, EQ.th, EQ.ef, me.uid) : "";
+				drawProf();
 			}
 			$("nm").addEventListener("input", drawWal);
 			const pq = [];
@@ -1447,6 +1469,8 @@
 				profL = db.ref("profile/" + u.uid);
 				profL.on("value", (s) => { EQ = s.val() || {}; drawWal(); drawShop(); });
 				if (isG(u)) startCh(u);
+				pnL = db.ref("users/" + u.uid + "/pn");
+				pnL.on("value", (s) => { PN = !!s.val(); drawNotif(); });
 				crL = db.ref("crank");
 				crL.on("value", (s) => { CR = s.val() || {}; drawWal(); drawShop(); });
 				cfgL = db.ref("config");
@@ -1624,10 +1648,12 @@
 				VAPID = "BBOH4AeOXYAssAs-Ce5pLpgmMnu559MbWYIoZNdSdwtd0juZzmSTD0xWoAoP7JL4WC52Vgp_M6slrWO7OrxaIcc",
 				PO = (id) => (PR[id] != null ? PR[id] : (NM[id] || TH[id]).p);
 			let PR = {}, prL = null, FRpn = {};
-			async function pushInit(u) {
+			async function pushInit(u, force) {
 				try {
 					if (!("Notification" in window) || !("serviceWorker" in navigator) || !firebase.messaging || !(await firebase.messaging.isSupported())) return;
-					if (Notification.permission == "default") {
+					if (Notification.permission == "default" && force) {
+						await Notification.requestPermission();
+					} else if (Notification.permission == "default") {
 						let asked = "0";
 						try { asked = sessionStorage.getItem("mdPushAsk") || "0"; } catch (e) {}
 						if (asked == "1" || room || SOLO || !$("cpop").hidden || !$("unPop").hidden || !me || me.uid != u.uid) return;
@@ -1691,7 +1717,7 @@
 					$("unNo").onclick = () => { $("unPop").hidden = true; res(false); };
 				});
 			}
-			$("unBtn").onclick = () => { if (me && UN) askName(false); };
+			$("profName").onclick = () => { if (me && UN) askName(false); };
 			async function ensureUsername(u) {
 				try {
 					const v = (await db.ref("users/" + u.uid).get()).val() || {};
@@ -1712,6 +1738,56 @@
 				} catch (e) {}
 			}
 			put("privNote", LL("We record your last login time, approximate location and IP address to prevent abuse.", "অপব্যবহার ঠেকাতে আমরা আপনার শেষ লগইনের সময়, আনুমানিক অবস্থান ও আইপি ঠিকানা সংরক্ষণ করি।"));
+
+			// ====== Profile page ======
+			let PN = false, pnL = null;
+			const OPSYM2 = { add: "+", sub: "-", mul: "×", div: "÷", mix: "mix" },
+				opName = (x) => { try { return opLbl(x); } catch (e) { return x; } };
+			function openProf() {
+				if (!me || !UN) return;
+				show("prof");
+				drawProf(); drawFr(); loadStats();
+			}
+			async function loadStats() {
+				if (!me) return;
+				const u = me.uid, g = (p) => db.ref(p).get().then((x) => x.val()).catch(() => null), ops = Object.keys(OPSYM2);
+				const [l, ba, ...bs] = await Promise.all([g("leaderboard/" + u), g("bestAll/" + u), ...ops.map((o) => g("best/" + o + "/" + u))]);
+				const tile = (k, v) => "<div><b>" + v + "</b><small>" + esc(k) + "</small></div>", gm = (l && l.games) || 0, wn = (l && l.wins) || 0;
+				$("profStats").innerHTML = tile(LL("Games", "খেলা"), bn(gm)) + tile(LL("Wins", "জয়"), bn(wn)) + tile(LL("Win rate", "জয়ের হার"), bn(gm ? Math.round((wn / gm) * 100) : 0) + "%") + tile(LL("Total points", "মোট পয়েন্ট"), bn((l && l.total) || 0)) + tile(LL("Best game", "সেরা খেলা"), ba ? bn(ba.score) : "–") + ops.map((o, i) => tile(LL("Best ", "সেরা ") + opName(OPSYM2[o]), bs[i] ? bn(bs[i].score) : "–")).join("");
+			}
+			function drawNotif() {
+				const st = $("pnSt"), b = $("pnBtn");
+				if (!st) return;
+				b.hidden = false; b.disabled = false;
+				if (!("Notification" in window)) { put("pnSt", LL("This browser does not support notifications.", "এই ব্রাউজারে নোটিফিকেশন সমর্থিত নয়।")); b.hidden = true; }
+				else if (Notification.permission == "denied") { put("pnSt", LL("Blocked in your browser settings. Allow notifications for this site to turn push on.", "ব্রাউজার সেটিংসে ব্লক করা আছে। পুশ চালু করতে এই সাইটের নোটিফিকেশন অনুমতি দিন।")); b.hidden = true; }
+				else if (Notification.permission == "granted" && PN) { put("pnSt", LL("Push is ON for this device. You get challenges and messages even when the game is closed.", "এই ডিভাইসে পুশ চালু আছে। গেম বন্ধ থাকলেও চ্যালেঞ্জ ও বার্তা পাবেন।")); put("pnBtn", LL("Turn off push", "পুশ বন্ধ করুন")); }
+				else { put("pnSt", LL("Push is OFF. Turn it on so friends can challenge you when the game is closed.", "পুশ বন্ধ। চালু করলে গেম বন্ধ থাকলেও বন্ধুরা চ্যালেঞ্জ পাঠাতে পারবে।")); put("pnBtn", LL("Turn on push", "পুশ চালু করুন")); }
+			}
+			$("pnBtn").onclick = async () => {
+				if (!me) return;
+				$("pnBtn").disabled = true;
+				if (PN && Notification.permission == "granted") {
+					try { await firebase.messaging().deleteToken(); } catch (e) {}
+					await Promise.all([db.ref("fcmTokens/" + me.uid).remove(), db.ref("users/" + me.uid + "/pn").set(false)].map((x) => x.catch(() => {})));
+				} else await pushInit(me, true);
+				drawNotif();
+			};
+			function drawProf() {
+				const p = $("prof");
+				if (!p || p.hidden || !me) return;
+				put("profT", LL("Profile", "প্রোফাইল")); put("profUN", UN || myName());
+				put("profName", "✏️ " + LL("Change name", "নাম বদলান") + " (" + bn(NC) + " 🪙)");
+				put("profSh", LL("Stats", "পরিসংখ্যান")); put("frH", LL("Friends — tap ⚔️ to challenge", "বন্ধু — চ্যালেঞ্জ করতে ⚔️ চাপুন")); put("ntH", LL("Notifications", "নোটিফিকেশন")); put("shH", LL("Shop", "দোকান"));
+				put("profShop", "🛍️ " + LL("Open shop", "দোকানে যান")); put("profBack", LL("Back", "ফিরে যান"));
+				$("profCard").innerHTML = cardH(myName(), LF, W.coins || 0, EQ.th, EQ.ef, me.uid);
+				const en = NM[EQ.ef], tn = TH[EQ.th || "mid"] || TH.mid;
+				put("profEq", LL("Name effect: ", "নামের ইফেক্ট: ") + (en ? LL(en.n[0], en.n[1]) : LL("none", "নেই")) + " · " + LL("Card theme: ", "কার্ড থিম: ") + LL(tn.n[0], tn.n[1]));
+				drawNotif();
+			}
+			$("wal").onclick = openProf;
+			$("profShop").onclick = openShop;
+			$("frStrip").onclick = (e) => { const b = e.target.closest("button[data-c]"); if (b && !b.disabled) challenge(b.dataset.c); };
 			async function afterGame() {
 				if (!FB || !me) return;
 				const d = dk(), rc = String(room), ids = Object.keys(PL || {}).filter((i) => i != me.uid), nmOf = (i) => String((PL[i] && PL[i].name) || "?").slice(0, 16);
