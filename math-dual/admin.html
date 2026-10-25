@@ -61,7 +61,7 @@ label.l{display:block;color:var(--mu);font-size:.8rem;margin-top:8px}
 <div class="card"><h2>Coins and rank</h2>
 <div class="r"><div><label class="l">Award coins (negative removes; positive also counts toward rank)</label><input id="p-coins" type="number" value="500" /></div><button id="p-award">Apply</button></div>
 <div class="r"><div><label class="l">Set rank (sets lifetime coins to the rank's requirement)</label><select id="p-rank"></select></div><button id="p-setrank">Set rank</button></div>
-<div class="r"><div><label class="l">Custom title (replaces the rank name and glow color on card and name)</label><input id="p-ct" maxlength="16" placeholder="e.g. Moderator" /></div><div style="flex:0 0 70px"><label class="l">Color</label><input id="p-cc" type="color" value="#fbbf24" /></div><button id="p-ctsv">Save</button><button id="p-ctdel" class="alt">Remove</button></div>
+<div class="r"><div><label class="l">Custom title (replaces the rank name and glow color on card and name)</label><input id="p-ct" maxlength="16" placeholder="e.g. Moderator" /></div><div style="flex:0 0 70px"><label class="l">Icon</label><input id="p-ci" maxlength="4" placeholder="⭐" /></div><div style="flex:0 0 70px"><label class="l">Color</label><input id="p-cc" type="color" value="#fbbf24" /></div><button id="p-ctsv">Save</button><button id="p-ctdel" class="alt">Remove</button></div>
 <p id="p-st1" class="st"></p></div>
 <div class="card"><h2>Username</h2>
 <div class="r"><div><input id="p-un" maxlength="16" /></div><button id="p-unsv">Rename</button></div><p id="p-st2" class="st"></p></div>
@@ -114,7 +114,7 @@ const auth = firebase.auth(), db = firebase.database(), $ = (i) => document.getE
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const say = (id, m) => ($(id).textContent = m), today = () => new Date().toISOString().slice(0, 10);
 const tbl = (id, head, rows) => ($(id).innerHTML = "<tr>" + head.map((h) => "<th>" + h + "</th>").join("") + "</tr>" + (rows.length ? rows.map((r) => "<tr>" + r.map((c) => "<td>" + (c && c.h != null ? c.h : esc(c)) + "</td>").join("") + "</tr>").join("") : '<tr><td colspan="' + head.length + '">No data yet</td></tr>'));
-const DEF_RANKS = [[0, "Rookie", "নতুন", "#9aa0c8"], [500, "Bronze", "ব্রোঞ্জ", "#e08a4b"], [2000, "Silver", "সিলভার", "#d6dcff"], [5000, "Gold", "গোল্ড", "#fbbf24"], [10000, "Platinum", "প্লাটিনাম", "#2dd4bf"], [20000, "Diamond", "ডায়মন্ড", "#38bdf8"], [40000, "Master", "মাস্টার", "#c084fc"], [80000, "Legend", "লেজেন্ড", "#f43f5e"]];
+const DEF_RANKS = [[0, "Rookie", "নতুন", "#9aa0c8", "🌱"], [500, "Bronze", "ব্রোঞ্জ", "#e08a4b", "🥉"], [2000, "Silver", "সিলভার", "#d6dcff", "🥈"], [5000, "Gold", "গোল্ড", "#fbbf24", "🥇"], [10000, "Platinum", "প্লাটিনাম", "#2dd4bf", "💠"], [20000, "Diamond", "ডায়মন্ড", "#38bdf8", "💎"], [40000, "Master", "মাস্টার", "#c084fc", "👑"], [80000, "Legend", "লেজেন্ড", "#f43f5e", "🔥"]];
 const ITEMS = [["mint", "Name: Mint", 900], ["coral", "Name: Coral", 900], ["ocean", "Name: Ocean", 900], ["sunset", "Name: Sunset", 1500], ["lilac", "Name: Lilac", 1500], ["pulse", "Name: Pulse glow", 3000], ["fire", "Name: Fire", 4500], ["rainbow", "Name: Rainbow", 6000], ["aurora", "Theme: Aurora", 2400], ["dusk", "Theme: Dusk", 2400], ["sea", "Theme: Deep sea", 3600], ["neon", "Theme: Neon", 6000], ["gold", "Theme: Gold", 7500]];
 const OPSYM = { add: "+", sub: "-", mul: "×", div: "÷", mix: "mix" };
 let U = {}, P = [], LOG = {}, RANKS = DEF_RANKS, CUR = null;
@@ -150,7 +150,7 @@ async function loadP() {
 	say("p-info", "Coins " + (CUR.w.coins || 0) + " · lifetime " + (CUR.w.life || 0) + " · rank " + RANKS[ri][1] + (c ? " · title “" + c.t + "”" : "") + " · points " + (l ? l.total || 0 : "–") + " · games " + (l ? l.games || 0 : "–") + " · best " + (b ? b.score : "–"));
 	$("p-un").value = (CUR.u && CUR.u.name) || "";
 	$("p-lt").value = l ? l.total || 0 : 0; $("p-lg").value = l ? l.games || 0 : 0; $("p-lw").value = l ? l.wins || 0 : 0;
-	$("p-ct").value = c ? c.t : ""; $("p-cc").value = c ? c.c : "#fbbf24";
+	$("p-ct").value = c ? c.t : ""; $("p-ci").value = c ? c.i || "" : ""; $("p-cc").value = c ? c.c : "#fbbf24";
 	$("p-rank").value = ri;
 	await loadBest();
 }
@@ -178,7 +178,7 @@ $("p-ctsv").onclick = () => {
 	if (!need()) return;
 	const t = $("p-ct").value.trim();
 	if (!t) return say("p-st1", "Enter a title.");
-	db.ref("crank/" + CUR.id).set({ t, c: $("p-cc").value }).then(done("p-st1"), fail("p-st1"));
+	db.ref("crank/" + CUR.id).set({ t, c: $("p-cc").value, i: $("p-ci").value.trim() }).then(done("p-st1"), fail("p-st1"));
 };
 $("p-ctdel").onclick = () => { if (need()) db.ref("crank/" + CUR.id).remove().then(done("p-st1"), fail("p-st1")); };
 $("p-unsv").onclick = async () => {
@@ -216,16 +216,16 @@ $("g-reset").onclick = () => {
 
 // ---- ranks, cost, prices ----
 function drawRanks(list, cost) {
-	$("t-rank").innerHTML = "<tr><th>Needs coins</th><th>English</th><th>Bangla</th><th>Color</th><th></th></tr>" + list.map((r, i) => "<tr><td><input type='number' min='0' class='rk-m' value='" + r[0] + "'" + (i == 0 ? " readonly" : "") + "></td><td><input class='rk-e' value='" + esc(r[1]) + "' maxlength='16'></td><td><input class='rk-b' value='" + esc(r[2]) + "' maxlength='16'></td><td><input type='color' class='rk-c' value='" + r[3] + "'></td><td>" + (i ? "<button class='alt' data-d='" + i + "'>✕</button>" : "") + "</td></tr>").join("");
+	$("t-rank").innerHTML = "<tr><th>Needs coins</th><th>English</th><th>Bangla</th><th>Icon</th><th>Color</th><th></th></tr>" + list.map((r, i) => "<tr><td><input type='number' min='0' class='rk-m' value='" + r[0] + "'" + (i == 0 ? " readonly" : "") + "></td><td><input class='rk-e' value='" + esc(r[1]) + "' maxlength='16'></td><td><input class='rk-b' value='" + esc(r[2]) + "' maxlength='16'></td><td><input class='rk-i' value='" + esc(r[4] || '') + "' maxlength='4' style='width:70px'></td><td><input type='color' class='rk-c' value='" + r[3] + "'></td><td>" + (i ? "<button class='alt' data-d='" + i + "'>✕</button>" : "") + "</td></tr>").join("");
 	if (cost != null) $("rk-nc").value = cost;
 }
-const readRanks = () => [...$("t-rank").querySelectorAll("tr")].slice(1).map((tr) => [Math.max(0, Math.round(+tr.querySelector(".rk-m").value || 0)), tr.querySelector(".rk-e").value.trim(), tr.querySelector(".rk-b").value.trim(), tr.querySelector(".rk-c").value]);
-$("rk-add").onclick = () => { const l = readRanks(); l.push([(l.length ? l[l.length - 1][0] : 0) + 1000, "New rank", "নতুন র‍্যাঙ্ক", "#ffffff"]); drawRanks(l); };
+const readRanks = () => [...$("t-rank").querySelectorAll("tr")].slice(1).map((tr) => [Math.max(0, Math.round(+tr.querySelector(".rk-m").value || 0)), tr.querySelector(".rk-e").value.trim(), tr.querySelector(".rk-b").value.trim(), tr.querySelector(".rk-c").value, tr.querySelector(".rk-i").value.trim()]);
+$("rk-add").onclick = () => { const l = readRanks(); l.push([(l.length ? l[l.length - 1][0] : 0) + 1000, "New rank", "নতুন র‍্যাঙ্ক", "#ffffff", "⭐"]); drawRanks(l); };
 $("t-rank").onclick = (e) => { const b = e.target.closest("button[data-d]"); if (!b) return; const l = readRanks(); l.splice(+b.dataset.d, 1); drawRanks(l); };
 $("rk-sv").onclick = () => {
 	const l = readRanks().sort((a, b) => a[0] - b[0]);
 	if (!l.length || l[0][0] !== 0 || l.some((r) => !r[1])) return say("rk-st", "The first rank must need 0 coins and every rank needs an English name.");
-	db.ref("config").update({ ranks: l.map((r) => ({ m: r[0], e: r[1], b: r[2] || r[1], c: r[3] })), nameCost: Math.max(0, Math.round(+$("rk-nc").value || 0)) }).then(() => say("rk-st", "Saved. Players see the new ranks."), fail("rk-st"));
+	db.ref("config").update({ ranks: l.map((r) => ({ m: r[0], e: r[1], b: r[2] || r[1], c: r[3], i: r[4] || "" })), nameCost: Math.max(0, Math.round(+$("rk-nc").value || 0)) }).then(() => say("rk-st", "Saved. Players see the new ranks."), fail("rk-st"));
 };
 $("pr-ap").onclick = () => { const x = +$("pr-x").value; if (x > 0) ITEMS.forEach(([id]) => { const e = $("pr-" + id); e.value = Math.round(e.value * x); }); };
 $("pr-sv").onclick = () => {
@@ -254,7 +254,7 @@ auth.onAuthStateChanged(async (u) => {
 	db.ref("users").on("value", (s) => { U = s.val() || {}; $("k-tot").textContent = s.numChildren(); fillPlayers(); drawLog(); if (!CUR) loadP(); });
 	db.ref("loginlog").on("value", (s) => { LOG = s.val() || {}; drawLog(); });
 	db.ref("config").on("value", (s) => {
-		const c = s.val() || {}, r = Object.values(c.ranks || {}).filter((x) => x && x.e).map((x) => [+x.m, x.e, x.b || x.e, x.c]).sort((a, b) => a[0] - b[0]);
+		const c = s.val() || {}, r = Object.values(c.ranks || {}).filter((x) => x && x.e).map((x) => [+x.m, x.e, x.b || x.e, x.c, x.i || ""]).sort((a, b) => a[0] - b[0]);
 		RANKS = r.length && r[0][0] === 0 ? r : DEF_RANKS;
 		$("p-rank").innerHTML = RANKS.map((x, i) => "<option value='" + i + "'>" + esc(x[1]) + " (" + x[0] + ")</option>").join("");
 		drawRanks(RANKS, c.nameCost != null ? c.nameCost : 1000);
