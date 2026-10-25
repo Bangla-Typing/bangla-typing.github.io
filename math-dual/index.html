@@ -202,15 +202,15 @@
 				overflow: hidden;
 				text-overflow: ellipsis;
 			}
-			.pl span {
+			.pl > span {
 				font-size: 1.8rem;
 				font-weight: 800;
 				display: inline-block;
 			}
-			.m span {
+			.m > span {
 				color: var(--me);
 			}
-			.o span {
+			.o > span {
 				color: var(--op);
 			}
 			.pop {
@@ -440,7 +440,7 @@
 				padding: 6px 10px;
 				border-bottom-width: 3px;
 			}
-			.duel.sm .pl span {
+			.duel.sm .pl > span {
 				font-size: 1.4rem;
 			}
 			.wl,
@@ -2486,7 +2486,7 @@
 						a.push({ uid: c.key, ...c.val() });
 					});
 					a.reverse();
-					await Promise.all(a.map(async (v) => { try { const x = (await db.ref("leaderboard/" + v.uid + "/lf").get()).val(); if (x != null) v.lf = x; } catch (e) {} }));
+					await Promise.all(a.map(async (v) => { try { const [x, f] = await Promise.all([db.ref("leaderboard/" + v.uid + "/lf").get(), db.ref("profile/" + v.uid + "/ef").get()]); if (x.val() != null) v.lf = x.val(); v.ef = f.val() || ""; } catch (e) {} }));
 					LBC[k] = { at: Date.now(), rows: a };
 					if (lbTab == k) drawLB(a, k);
 				} catch (e) {
