@@ -648,6 +648,8 @@
 			#wal .pc::after{content:"›";font-size:2rem;opacity:.7;margin-left:auto}
 			#frStrip{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;align-items:center}
 			.chip{padding:6px 12px;font-size:.85rem;border-radius:999px}
+			.rt{font-size:.72rem;font-weight:700;margin-left:6px;white-space:nowrap}
+			.pn[data-p]{cursor:pointer}
 		</style>
 	</head>
 	<body>
@@ -655,6 +657,7 @@
 			<div id="pop" class="ov" hidden><div class="card mid"><h2 id="popT" style="color:var(--sun)"></h2><p id="popX"></p><button class="big pri" id="popOk">OK</button></div></div>
 <div id="cpop" class="ov" hidden><div class="card mid"><h2 id="cpT" style="color:var(--sun)"></h2><div id="cpB"></div><div class="row"><button class="big pri" id="cpY"></button><button class="big" id="cpN"></button></div></div></div>
 <div id="unPop" class="ov" hidden><div class="card mid"><h2 id="unT" style="color:var(--sun)"></h2><input id="unIn" class="nm" maxlength="16" /><p class="hint" id="unMsg"></p><div class="row"><button class="big pri" id="unOk"></button><button class="big" id="unNo" hidden></button></div></div></div>
+<div id="ppop" class="ov" hidden><div class="card mid" style="max-height:90vh;overflow:auto"><div id="ppCard"></div><p class="hint" id="ppSeen"></p><div class="sg" id="ppStats"></div><p class="hint" id="ppLock" style="margin-top:10px"></p><div class="row" id="ppAct" style="flex-wrap:wrap"></div><button class="big" id="ppClose"></button></div></div>
 <main>
 			<section id="login" hidden>
 				<div class="hd">
@@ -765,6 +768,7 @@
 				<div class="card"><h3 class="ph" id="ntH"></h3>
 					<label class="sw" style="margin-top: 0"><input type="checkbox" id="notifSw" /><span class="slider"></span><span id="notifTx"></span></label>
 					<p class="hint" id="pnSt"></p><button class="big" id="pnBtn"></button></div>
+				<div class="card"><h3 class="ph" id="prH"></h3><label class="sw" style="margin-top: 0"><input type="checkbox" id="hideSw" /><span class="slider"></span><span id="hideTx"></span></label><p class="hint" id="hideN" style="margin-top:8px"></p></div>
 				<div class="card"><h3 class="ph" id="shH"></h3><p class="hint" id="profEq"></p><button class="big" id="profShop"></button></div>
 				<button class="big" onclick="goHome()" id="profBack"></button>
 			</section>
@@ -800,12 +804,10 @@
 			// ====== Firebase Config ======
 			const CFG = {
 				apiKey: "AIzaSyDsQeD1b0djnMP7U8Yewy6oHD_oePokjAU",
-  				authDomain: "math-calculation-dual.firebaseapp.com",
-  				databaseURL: "https://math-calculation-dual-default-rtdb.asia-southeast1.firebasedatabase.app",
-  				projectId: "math-calculation-dual",
-  				storageBucket: "math-calculation-dual.firebasestorage.app",
-  				messagingSenderId: "813391290745",
-  				appId: "1:813391290745:web:24f92a97c58a4da5bacfa8"
+				authDomain: "math-calculation-dual.firebaseapp.com",
+				projectId: "math-calculation-dual",
+				appId: "1:813391290745:web:24f92a97c58a4da5bacfa8",
+				databaseURL: "https://math-calculation-dual-default-rtdb.asia-southeast1.firebasedatabase.app",
 			};
 			let FB = typeof firebase !== "undefined",
 				auth = null,
@@ -1416,11 +1418,16 @@
 
 			// ====== Coins, ranks, announcements, inbox, response times ======
 			let RK = [
-				[0, "Rookie", "নতুন", "#9aa0c8"], [500, "Bronze", "ব্রোঞ্জ", "#e08a4b"], [2000, "Silver", "সিলভার", "#d6dcff"], [5000, "Gold", "গোল্ড", "#fbbf24"],
-				[10000, "Platinum", "প্লাটিনাম", "#2dd4bf"], [20000, "Diamond", "ডায়মন্ড", "#38bdf8"], [40000, "Master", "মাস্টার", "#c084fc"], [80000, "Legend", "লেজেন্ড", "#f43f5e"],
+				[0, "Rookie", "নতুন", "#9aa0c8", "🌱"], [500, "Bronze", "ব্রোঞ্জ", "#e08a4b", "🥉"], [2000, "Silver", "সিলভার", "#d6dcff", "🥈"], [5000, "Gold", "গোল্ড", "#fbbf24", "🥇"],
+				[10000, "Platinum", "প্লাটিনাম", "#2dd4bf", "💠"], [20000, "Diamond", "ডায়মন্ড", "#38bdf8", "💎"], [40000, "Master", "মাস্টার", "#c084fc", "👑"], [80000, "Legend", "লেজেন্ড", "#f43f5e", "🔥"],
 			];
 			let CR = {}, NC = 1000, cfgL = null, crL = null, UN = "", UNK = "";
 			let LF = 0, W = {}, walL = null, annL = null, inL = null, profL = null, chL = null;
+			const rkTag = (lf, uid) => {
+				const cr = uid && CR[uid], r = cr ? [0, cr.t, cr.t, hx(cr.c), cr.i || "⭐"] : RK[rkI(lf)];
+				return '<span class="rt" style="color:' + r[3] + '">' + esc(r[4] || "") + " " + esc(cr ? cr.t : LL(r[1], r[2])) + "</span>";
+			},
+				nameP = (n, lf, ef, uid, click) => '<span class="pn"' + (click && uid ? ' data-p="' + esc(uid) + '" data-n="' + esc(n) + '"' : "") + ">" + nameH(n, lf, ef, uid) + rkTag(lf, uid) + "</span>";
 			const hx = (c) => (/^#[0-9a-f]{6}$/i.test(c) ? c : "#fbbf24");
 			const NM = {
 				mint: { c: "#34d399", p: 900, n: ["Mint", "পুদিনা"] }, coral: { c: "#fb7185", p: 900, n: ["Coral", "প্রবাল"] }, ocean: { c: "#22d3ee", p: 900, n: ["Ocean", "সাগর"] },
@@ -1477,7 +1484,7 @@
 				crL.on("value", (s) => { CR = s.val() || {}; drawWal(); drawShop(); });
 				cfgL = db.ref("config");
 				cfgL.on("value", (s) => {
-					const c = s.val() || {}, r = Object.values(c.ranks || {}).filter((x) => x && isFinite(x.m) && x.e && /^#[0-9a-f]{6}$/i.test(x.c)).map((x) => [+x.m, String(x.e), String(x.b || x.e), x.c]).sort((a, b) => a[0] - b[0]);
+					const c = s.val() || {}, r = Object.values(c.ranks || {}).filter((x) => x && isFinite(x.m) && x.e && /^#[0-9a-f]{6}$/i.test(x.c)).map((x) => [+x.m, String(x.e), String(x.b || x.e), x.c, String(x.i || "").slice(0, 4)]).sort((a, b) => a[0] - b[0]);
 					if (r.length && r[0][0] === 0) RK = r;
 					NC = +c.nameCost > 0 ? +c.nameCost : 1000;
 					drawWal(); drawShop();
@@ -1781,6 +1788,7 @@
 				put("profT", LL("Profile", "প্রোফাইল")); put("profUN", UN || myName());
 				put("profName", "✏️ " + LL("Change name", "নাম বদলান") + " (" + bn(NC) + " 🪙)");
 				put("profSh", LL("Stats", "পরিসংখ্যান")); put("frH", LL("Friends — tap ⚔️ to challenge", "বন্ধু — চ্যালেঞ্জ করতে ⚔️ চাপুন")); put("ntH", LL("Notifications", "নোটিফিকেশন")); put("shH", LL("Shop", "দোকান"));
+				put("prH", LL("Privacy", "গোপনীয়তা")); put("hideTx", "🔒 " + LL("Hide my stats from other players", "অন্যদের থেকে আমার পরিসংখ্যান লুকান")); put("hideN", LL("Others still see your name, rank and card. Leaderboard tables stay public.", "অন্যরা নাম, র‍্যাঙ্ক ও কার্ড দেখবে। লিডারবোর্ড টেবিল প্রকাশ্য থাকে।")); $("hideSw").checked = !!EQ.hide;
 				put("profShop", "🛍️ " + LL("Open shop", "দোকানে যান")); put("profBack", LL("Back", "ফিরে যান"));
 				$("profCard").innerHTML = cardH(myName(), LF, W.coins || 0, EQ.th, EQ.ef, me.uid);
 				const en = NM[EQ.ef], tn = TH[EQ.th || "mid"] || TH.mid;
@@ -1790,6 +1798,51 @@
 			$("wal").onclick = openProf;
 			$("profShop").onclick = openShop;
 			$("frStrip").onclick = (e) => { const b = e.target.closest("button[data-c]"); if (b && !b.disabled) challenge(b.dataset.c); };
+
+			// ====== Public player profile + rank-up ======
+			$("hideSw").onchange = (e) => { if (me) db.ref("profile/" + me.uid).update({ hide: e.target.checked }).catch(() => toast(LL("Could not save", "সংরক্ষণ হয়নি"))); };
+			const ago = (ts) => {
+				const m = Math.max(0, Math.floor((Date.now() - ts) / 60000));
+				return m < 1 ? LL("just now", "এইমাত্র") : m < 60 ? bn(m) + LL(" min ago", " মিনিট আগে") : m < 1440 ? bn(Math.floor(m / 60)) + LL(" h ago", " ঘণ্টা আগে") : bn(Math.floor(m / 1440)) + LL(" d ago", " দিন আগে");
+			};
+			async function openPlayer(uid, fb) {
+				if (!me || !UN || !uid || uid == "solo") return;
+				$("ppop").hidden = false;
+				put("ppClose", LL("Close", "বন্ধ করুন"));
+				$("ppCard").innerHTML = ""; $("ppStats").innerHTML = ""; $("ppAct").innerHTML = ""; put("ppSeen", LL("Loading…", "লোড হচ্ছে…")); put("ppLock", "");
+				const g = (p) => db.ref(p).get().then((x) => x.val()).catch(() => null), ops = Object.keys(OPSYM2);
+				const [l, ba, pf, nm, sn, pr, met, ...bs] = await Promise.all([g("leaderboard/" + uid), g("bestAll/" + uid), g("profile/" + uid), g("users/" + uid + "/name"), g("users/" + uid + "/seen"), g("presence/" + uid), g("met/" + me.uid + "/" + uid), ...ops.map((o) => g("best/" + o + "/" + uid))]);
+				if ($("ppop").hidden) return;
+				const nme = String(nm || (l && l.name) || fb || "?").slice(0, 16), lf = (l && l.lf) || 0, hide = !!(pf && pf.hide) && uid != me.uid;
+				$("ppCard").innerHTML = cardH(nme, lf, null, pf && pf.th, pf && pf.ef, uid);
+				put("ppSeen", hide ? "" : pr ? "🟢 " + LL("Online now", "এখন অনলাইনে") + (pr == "g" ? " · 🎮" : "") : sn ? LL("Last seen ", "শেষ দেখা ") + ago(sn) : "");
+				const tile = (k, v) => "<div><b>" + v + "</b><small>" + esc(k) + "</small></div>", gm = (l && l.games) || 0, wn = (l && l.wins) || 0;
+				if (hide) put("ppLock", "🔒 " + LL("This player keeps their stats private.", "এই খেলোয়াড় পরিসংখ্যান গোপন রেখেছেন।"));
+				else $("ppStats").innerHTML = tile(LL("Lifetime coins", "মোট কয়েন"), "🪙 " + bn(lf)) + tile(LL("Games", "খেলা"), bn(gm)) + tile(LL("Wins", "জয়"), bn(wn)) + tile(LL("Win rate", "জয়ের হার"), bn(gm ? Math.round((wn / gm) * 100) : 0) + "%") + tile(LL("Total points", "মোট পয়েন্ট"), bn((l && l.total) || 0)) + tile(LL("Best game", "সেরা খেলা"), ba ? bn(ba.score) : "–") + ops.map((o, i) => tile(LL("Best ", "সেরা ") + opName(OPSYM2[o]), bs[i] ? bn(bs[i].score) : "–")).join("");
+				if (uid == me.uid) return;
+				const act = $("ppAct");
+				if (FR[uid]) {
+					act.innerHTML = '<button class="big" data-a="c">⚔️ ' + LL("Challenge", "চ্যালেঞ্জ") + '</button><button class="big" data-a="u">' + LL("Unfollow", "আনফলো") + "</button>";
+				} else if (met) act.innerHTML = '<button class="big pri" data-a="f">➕ ' + LL("Follow", "ফলো করুন") + "</button>";
+				else put("ppLock", $("ppLock").textContent || LL("Play a match with this player to follow them.", "ফলো করতে এই খেলোয়াড়ের সাথে একটি ম্যাচ খেলুন।"));
+				act.onclick = async (e) => {
+					const b = e.target.closest("button[data-a]");
+					if (!b) return;
+					if (b.dataset.a == "c") { $("ppop").hidden = true; return challenge(uid); }
+					b.disabled = true;
+					try {
+						await db.ref().update(b.dataset.a == "f" ? { ["follows/" + me.uid + "/" + uid]: nme, ["followers/" + uid + "/" + me.uid]: true } : { ["follows/" + me.uid + "/" + uid]: null, ["followers/" + uid + "/" + me.uid]: null });
+						toast(b.dataset.a == "f" ? LL("Following ", "ফলো করছেন ") + nme : LL("Unfollowed", "আনফলো হয়েছে"));
+						setTimeout(() => $("ppop").hidden || openPlayer(uid, nme), 300);
+					} catch (x) { b.disabled = false; toast(LL("Could not update", "আপডেট হয়নি")); }
+				};
+			}
+			$("ppClose").onclick = () => ($("ppop").hidden = true);
+			$("ppop").onclick = (e) => { if (e.target === $("ppop")) $("ppop").hidden = true; };
+			document.addEventListener("click", (e) => {
+				const a = e.target.closest("[data-p]");
+				if (a) { e.preventDefault(); openPlayer(a.dataset.p, a.dataset.n); }
+			});
 			async function afterGame() {
 				if (!FB || !me) return;
 				const d = dk(), rc = String(room), ids = Object.keys(PL || {}).filter((i) => i != me.uid), nmOf = (i) => String((PL[i] && PL[i].name) || "?").slice(0, 16);
@@ -1801,6 +1854,8 @@
 					db.ref("wallet/" + me.uid).update({ life: SV().increment(coins), coins: SV().increment(coins) }).catch(() => {});
 					db.ref("leaderboard/" + me.uid).update({ lf: LF + coins, ef: EQ.ef || "" }).catch(() => {});
 					put("coinMsg", "🪙 +" + bn(coins) + LL(" coins", " কয়েন"));
+					const ri0 = rkI(LF), ri1 = rkI(LF + coins);
+					if (ri1 > ri0) { sfx.win(); showPop("🎉 " + LL("Rank up!", "র‍্যাঙ্ক আপ!"), (RK[ri1][4] || "") + " " + LL("You reached ", "আপনি পৌঁছেছেন ") + LL(RK[ri1][1], RK[ri1][2]) + "!"); }
 				}
 				const box = $("mf");
 				box.innerHTML = "";
@@ -1912,7 +1967,7 @@
 					max = ST.max || 2,
 					multi = max > 2,
 					host = ST.host == UID;
-				const h = ids.map((id, i) => '<li style="--c:' + COL[i % 6] + '">' + esc(PL[id].name || "…") + (id == UID ? t(" (আপনি)") : "") + (id == ST.host ? " 👑" : "") + "</li>").join("");
+				const h = ids.map((id, i) => '<li style="--c:' + COL[i % 6] + '">' + nameP(PL[id].name || "…", PL[id].lf, PL[id].ef, id, true) + (id == UID ? t(" (আপনি)") : "") + (id == ST.host ? " 👑" : "") + "</li>").join("");
 				const wl = $("wl");
 				if (wl.dataset.h !== h) {
 					wl.dataset.h = h;
@@ -2043,7 +2098,7 @@
 							'<div class="pl" style="--c:' +
 							COL[i % 6] +
 							'"><b>' +
-							nameH(p.name || "…", p.lf, p.ef, id) +
+							nameP(p.name || "…", p.lf, p.ef, id, !pl) +
 							(id == UID && n > 1 ? " ★" : "") +
 							(a ? " ✓" : "") +
 							(p.gone ? " 🚪" : "") +
@@ -2305,7 +2360,7 @@
 							'%"><i></i><em>' +
 							(SOLO ? "⭐" : medal[r] || bn(r)) +
 							"</em><b>" +
-							nameH(p.name, p.lf, p.ef, id) +
+							nameP(p.name, p.lf, p.ef, id, id != "solo") +
 							(id == UID && rows.length > 1 ? t(" (আপনি)") : "") +
 							(p.gone ? " 🚪" : "") +
 							(p.rm ? " 🔁" : "") +
@@ -2407,7 +2462,7 @@
 									"><span>" +
 									bn(i + 1) +
 									"</span><span>" +
-									nameH(v.name, v.lf, v.ef, v.uid) +
+									nameP(v.name, v.lf, v.ef, v.uid, true) +
 									"</span><b>" +
 									bn(k == "total" ? v.total : v.score) +
 									"</b><small>" +
@@ -2431,6 +2486,7 @@
 						a.push({ uid: c.key, ...c.val() });
 					});
 					a.reverse();
+					await Promise.all(a.map(async (v) => { try { const x = (await db.ref("leaderboard/" + v.uid + "/lf").get()).val(); if (x != null) v.lf = x; } catch (e) {} }));
 					LBC[k] = { at: Date.now(), rows: a };
 					if (lbTab == k) drawLB(a, k);
 				} catch (e) {
